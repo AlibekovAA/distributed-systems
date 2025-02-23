@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  db_setup:
+    build: ./backend/db_setup
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      - db
+    volumes:
+      - ./backend/db_setup/logs:/logs
+
+  auth-service:
+    build: ./backend/auth-service
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+    depends_on:
+      - db
+      - db_setup
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/auth-service/logs:/logs
+
+  # product-catalog-service:
+  #   build: ./backend/product-catalog-service
+  #   command: >
+  #     sh -c "go run main.go"
+  #   environment:
+  #     DATABASE_URL: postgresql://user:password@db:5432/mydatabase
+  #   depends_on:
+  #     - db
+  #   ports:
+  #     - "8001:8001"
+
+  # recommendation-service:
+  #   build: ./backend/recommendation-service
+  #   command: >
+  #     sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8002"
+  #   environment:
+  #     DATABASE_URL: postgresql://user:password@db:5432/mydatabase
+  #   depends_on:
+  #     - db
+  #   ports:
+  #     - "8002:8002"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+volumes:
+  db_data:

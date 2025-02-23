@@ -16,4 +16,5 @@ Release/
 .DS_Store
 *.db
 *.pdf
+.env
 /Other
