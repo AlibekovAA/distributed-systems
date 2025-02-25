@@ -20,3 +20,5 @@ Thumbs.db
 *.exe
 
 Other/
+
+db/migrations.sql
