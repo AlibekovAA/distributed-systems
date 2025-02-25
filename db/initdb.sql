@@ -4,42 +4,41 @@ CREATE TABLE users (
   hashed_password TEXT  NOT NULL,
   name VARCHAR(255)  NOT NULL,
   balance BIGINT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE product (
-  id SERIAL PRIMARY KEY, 
-  name VARCHAR(255) NOT NULL, 
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
   description TEXT,
-  price BIGINT NOT NULL, 
+  price BIGINT NOT NULL,
   quantity INTEGER NOT NULL
 );
 
 CREATE TABLE "history" (
-  id SERIAL PRIMARY KEY, 
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   product_id INTEGER REFERENCES product(id) ON DELETE CASCADE
 );
 
 
 CREATE TABLE categories (
-    id SERIAL PRIMARY KEY, 
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE product_categories (
-    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE, 
-    category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE, 
+    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
+    category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
     PRIMARY KEY (product_id, category_id)
 );
 
 
 
 CREATE TABLE recommendations (
-    id SERIAL PRIMARY KEY, 
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
-    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE, 
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
     score INTEGER NOT NULL
 );
 

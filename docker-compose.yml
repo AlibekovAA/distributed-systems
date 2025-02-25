@@ -1,33 +1,52 @@
-
 version: '3.1'
 services:
   db:
-    build: 
+    build:
       context: ./db
       dockerfile: Dockerfile
+    container_name: postgres_db
+    restart: always
     env_file: ".env"
     ports:
       - "5432:5432"
     volumes:
       - data:/var/lib/postgresql/data:rw
-
-
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   auth-service:
+    profiles: ["auth", "backend"]
     build: ./backend/auth-service
+    container_name: auth_service
+    restart: always
     command: >
-      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000"
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: ${ALGORITHM}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      sh -c "
+        while ! nc -z db 5432; do
+          sleep 1
+        done &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    env_file: ".env"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/auth-service/logs:/logs
+      - ./backend/auth-service:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
 
   # product-catalog-service:
   #   build: ./backend/product-catalog-service
@@ -53,13 +72,19 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    container_name: pgadmin
+    restart: always
+    env_file: ".env"
     ports:
       - "5050:80"
     depends_on:
       - db
+    networks:
+      - app-network
 
 volumes:
   data:
+
+networks:
+  app-network:
+    driver: bridge

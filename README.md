@@ -8,23 +8,57 @@
 
 2. После успешного запуска:
 
-   - **Auth Service**: [http://localhost:8000/auth](http://localhost:8000/auth)
+   - **Frontend**: [http://localhost:3000](http://localhost:3000)
+   - **Auth Service API**: [http://localhost:8000/auth](http://localhost:8000/auth)
    - **PgAdmin**: [http://localhost:5050](http://localhost:5050)
 
-   Вход в pgAdmin с использованием следующих учетных данных:
+## Доступ к сервисам
+
+### Frontend
+- Откройте [http://localhost:3000](http://localhost:3000)
+- Доступны функции регистрации и входа
+
+### Auth Service API
+- Swagger документация: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Основные эндпоинты:
+  - POST `/auth/register` - регистрация
+  - POST `/auth/login` - вход
+  - GET `/auth/profile` - профиль пользователя
+
+### База данных (через pgAdmin)
+1. Откройте [http://localhost:5050](http://localhost:5050)
+2. Войдите в pgAdmin:
    - Email: `admin@admin.com`
    - Password: `admin`
+3. Добавьте новый сервер:
+   - Host: `db`
+   - Port: `5432`
+   - Database: `mydatabase`
+   - Username: `user`
+   - Password: `password`
 
-3. Чтобы подключиться к базе данных PostgreSQL, используй следующие параметры:
+## Разработка
 
-   - **Хост**: `db` (это имя сервиса базы данных в `docker-compose.yml`)
-   - **Порт**: `5432`
-   - **Имя базы данных**: `mydatabase`
-   - **Имя пользователя**: `user`
-   - **Пароль**: `password`
+### Frontend
+- Исходный код фронтенда находится в `frontend/src/`
+- Модули разделены по папкам в `src/modules/`
+- Общие стили в `src/styles/common/`
+- Для добавления нового модуля:
+  1. Создайте папку в `src/modules/`
+  2. Добавьте необходимые компоненты и стили
+  3. Импортируйте и инициализируйте в `src/main.ts`
 
-4. Очистка Docker окружения
-Остановка всех контейнеров: `docker stop $(docker ps -a -q)`
-Удаление всех контейнеров: `docker rm $(docker ps -a -q)`
-Удаление всех образов: `docker rmi $(docker images -q)`
-Полная очистка системы: `docker system prune -a --volumes -f`
+### Backend
+- Сервис аутентификации в `backend/auth-service/`
+
+## Очистка Docker окружения
+
+```bash
+docker stop $(docker ps -a -q)
+
+docker rm $(docker ps -a -q)
+
+docker rmi $(docker images -q)
+
+docker system prune -a --volumes -f
+```
