@@ -3,16 +3,16 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE,
   hashed_password TEXT  NOT NULL,
   name VARCHAR(255)  NOT NULL,
-  balance INTEGER DEFAULT 0,
+  balance BIGINT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMP
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE product (
   id SERIAL PRIMARY KEY, 
   name VARCHAR(255) NOT NULL, 
   description TEXT,
-  price INTEGER NOT NULL, 
+  price BIGINT NOT NULL, 
   quantity INTEGER NOT NULL
 );
 
