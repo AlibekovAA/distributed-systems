@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication | E-Commerce Platform</title>
+    <link rel="stylesheet" href="styles/common/base.css">
+    <link rel="stylesheet" href="modules/auth/auth.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="register">Register</button>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <input type="email" id="loginEmail" class="input" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" class="input" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn submit-btn">Sign In</button>
+            </form>
+
+            <form id="registerForm" class="auth-form hidden">
+                <div class="form-group">
+                    <input type="email" id="registerEmail" class="input" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="registerPassword" class="input" placeholder="Password" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="fullName" class="input" placeholder="Full Name">
+                </div>
+                <button type="submit" class="btn submit-btn">Create Account</button>
+            </form>
+        </div>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "port": 3000,
+  "files": ["./src/**/*.{html,htm,css,js}"],
+  "server": {
+    "baseDir": ".",
+    "routes": {
+      "/node_modules": "node_modules"
+    },
+    "middleware": {
+      "1": {
+        "route": "/auth",
+        "handle": {
+          "target": "http://auth-service:8000",
+          "pathRewrite": {
+            "^/auth": "/auth"
+          },
+          "changeOrigin": true
+        }
+      }
+    }
+  }
+}

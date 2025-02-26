@@ -1,16 +1,22 @@
-import logging
-
-from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
-from fastapi import status
+from fastapi import (APIRouter,
+                     Depends,
+                     HTTPException,
+                     status)
 
-from models.user_schemas import UserCreate, UserLogin, Token, User
-from services.auth_service import authenticate_user, create_user, create_access_token, create_refresh_token
-from database import get_db
+from models.user_schemas import (UserCreate,
+                                 UserLogin,
+                                 Token,
+                                 User)
+from services.auth_service import (authenticate_user,
+                                   create_user,
+                                   create_access_token,
+                                   create_refresh_token)
+from app.core.database import get_db
 from app.auth import get_current_user
-from config import SECRET_KEY, ALGORITHM
-from logger import log_time
+from app.core.config import SECRET_KEY, ALGORITHM
+from app.core.logger import log_time, logging
 
 router = APIRouter()
 
@@ -25,7 +31,12 @@ def register(user: UserCreate, db: Session = db_dependency):
         logging.info(f"{log_time()} - Registration failed: Email already registered - {user.email}")
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    new_user = create_user(db=db, email=user.email, password=user.password, full_name=user.full_name)
+    new_user = create_user(
+        db=db,
+        email=user.email,
+        password=user.password,
+        name=user.name
+    )
     logging.info(f"{log_time()} - User registered: {new_user.email}")
     return new_user
 
@@ -69,3 +80,8 @@ def refresh_token(refresh_token: str):
     access_token = create_access_token(data={"sub": email})
     logging.info(f"{log_time()} - Access token refreshed for: {email}")
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/health")
+async def health_check():
+    return {"status": "Auth service started"}
