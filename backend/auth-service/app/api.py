@@ -4,11 +4,13 @@ from fastapi import (APIRouter,
                      Depends,
                      HTTPException,
                      status)
+from datetime import datetime
 
 from models.user_schemas import (UserCreate,
                                  UserLogin,
                                  Token,
                                  User)
+from models.user_model import User as UserModel
 from services.auth_service import (authenticate_user,
                                    create_user,
                                    create_access_token,
@@ -26,7 +28,7 @@ current_user_dependency = Depends(get_current_user)
 
 @router.post("/register", response_model=User)
 def register(user: UserCreate, db: Session = db_dependency):
-    db_user = db.query(User).filter(User.email == user.email).first()
+    db_user = db.query(UserModel).filter(UserModel.email == user.email).first()
     if db_user:
         logging.info(f"{log_time()} - Registration failed: Email already registered - {user.email}")
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -69,6 +71,8 @@ def refresh_token(refresh_token: str):
     )
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if datetime.fromtimestamp(payload["exp"], tz=datetime.UTC) < datetime.now(datetime.UTC):
+            raise HTTPException(status_code=401, detail="Refresh token expired")
         email: str = payload.get("sub")
         if email is None:
             logging.warning(f"{log_time()} - Token refresh failed: No email found in token")

@@ -4,11 +4,11 @@ interface Recommendation {
 }
 
 export class RecommendationService {
-    static async getRecommendations(userId: number): Promise<Recommendation[]> {
+    static async getRecommendations(_userId: number): Promise<Recommendation[]> {
         return [];
     }
 
-    static async addUserPreference(userId: number, productId: number, rating: number): Promise<void> {
+    static async addUserPreference(_userId: number, _productId: number, _rating: number): Promise<void> {
         return;
     }
 }

@@ -1,4 +1,10 @@
 import { AuthService } from '../../services/authService.js';
+import NotificationManager from '../../utils/notifications.js';
+
+function validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
 
 export function initializeAuth() {
     const loginForm = document.getElementById('loginForm') as HTMLFormElement;
@@ -8,7 +14,6 @@ export function initializeAuth() {
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const tabName = button.getAttribute('data-tab');
-
             tabButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
 
@@ -28,15 +33,23 @@ export function initializeAuth() {
         const email = (document.getElementById('loginEmail') as HTMLInputElement).value;
         const password = (document.getElementById('loginPassword') as HTMLInputElement).value;
 
+        if (!validateEmail(email)) {
+            NotificationManager.error('Please enter a valid email address');
+            return;
+        }
+
         try {
             const response = await AuthService.login(email, password);
             localStorage.setItem('access_token', response.access_token);
-            alert('Successfully logged in!');
+            if (response.refresh_token) {
+                localStorage.setItem('refresh_token', response.refresh_token);
+            }
+            NotificationManager.success('Successfully logged in!');
         } catch (error) {
             if (error instanceof Error) {
-                alert(error.message);
+                NotificationManager.error(error.message);
             } else {
-                alert('An unknown error occurred');
+                NotificationManager.error('An unknown error occurred');
             }
         }
     });
@@ -46,23 +59,33 @@ export function initializeAuth() {
 
         const email = (document.getElementById('registerEmail') as HTMLInputElement).value;
         const password = (document.getElementById('registerPassword') as HTMLInputElement).value;
-        const name = (document.getElementById('fullName') as HTMLInputElement).value;
+        const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement).value;
+
+        if (!validateEmail(email)) {
+            NotificationManager.error('Please enter a valid email address');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            NotificationManager.error('Passwords do not match');
+            return;
+        }
 
         try {
             await AuthService.register({
                 email,
                 password,
-                name
+                name: email.split('@')[0]
             });
-            alert('Registration successful! You can now login.');
+            NotificationManager.success('Registration successful! You can now login.');
 
-            const loginTab = tabButtons[0] as HTMLElement;
+            const loginTab = document.querySelector('[data-tab="login"]') as HTMLElement;
             loginTab.click();
         } catch (error) {
             if (error instanceof Error) {
-                alert(error.message);
+                NotificationManager.error(error.message);
             } else {
-                alert('An unknown error occurred');
+                NotificationManager.error('An unknown error occurred');
             }
         }
     });
