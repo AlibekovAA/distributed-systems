@@ -11,10 +11,12 @@ interface UserData {
 }
 
 export class AuthService {
-    private static BASE_URL = '/auth';
+    private static FULL_URL = 'http://localhost:8000/auth';
 
     static async register(userData: UserData): Promise<void> {
-        const response = await fetch(`${this.BASE_URL}/register`, {
+        const url = `${this.FULL_URL}/register`;
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -27,10 +29,11 @@ export class AuthService {
             const error = await response.json();
             throw new Error(error.detail || 'Registration failed');
         }
+
     }
 
     static async login(email: string, password: string): Promise<AuthResponse> {
-        const response = await fetch(`${this.BASE_URL}/login`, {
+        const response = await fetch(`${this.FULL_URL}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -49,7 +52,7 @@ export class AuthService {
 
     static async getProfile(): Promise<any> {
         const token = localStorage.getItem('access_token');
-        const response = await fetch(`${this.BASE_URL}/profile`, {
+        const response = await fetch(`${this.FULL_URL}/profile`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -63,7 +66,7 @@ export class AuthService {
     }
 
     static async refreshToken(refresh_token: string): Promise<AuthResponse> {
-        const response = await fetch(`${this.BASE_URL}/token/refresh`, {
+        const response = await fetch(`${this.FULL_URL}/token/refresh`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
