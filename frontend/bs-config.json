@@ -1,8 +1,8 @@
 {
   "port": 3000,
-  "files": ["./dist/**/*.{html,htm,css,js}"],
+  "files": ["./src/**/*.{html,htm,css,js}"],
   "server": {
-    "baseDir": "./dist",
+    "baseDir": ".",
     "routes": {
       "/node_modules": "node_modules"
     },
@@ -10,7 +10,7 @@
       "1": {
         "route": "/auth",
         "handle": {
-          "target": "http://localhost:8000",
+          "target": "http://auth-service:8000",
           "pathRewrite": {
             "^/auth": "/auth"
           },

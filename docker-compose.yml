@@ -20,7 +20,6 @@ services:
       retries: 5
 
   auth-service:
-    profiles: ["auth", "backend"]
     build: ./backend/auth-service
     container_name: auth_service
     restart: always
@@ -40,13 +39,28 @@ services:
     volumes:
       - ./backend/auth-service:/app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/auth/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     networks:
       - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - app-network
+    depends_on:
+      - auth-service
 
   # product-catalog-service:
   #   build: ./backend/product-catalog-service

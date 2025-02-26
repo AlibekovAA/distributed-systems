@@ -13,10 +13,10 @@ from services.auth_service import (authenticate_user,
                                    create_user,
                                    create_access_token,
                                    create_refresh_token)
-from database import get_db
+from app.core.database import get_db
 from app.auth import get_current_user
-from config import SECRET_KEY, ALGORITHM
-from logger import log_time, logging
+from app.core.config import SECRET_KEY, ALGORITHM
+from app.core.logger import log_time, logging
 
 router = APIRouter()
 

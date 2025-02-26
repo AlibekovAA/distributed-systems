@@ -5,8 +5,8 @@ from jose import jwt
 from sqlalchemy.orm import Session
 
 from models.user_model import User
-from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from logger import log_time, logging
+from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.logger import log_time, logging
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -2,8 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from config import DATABASE_URL
-from logger import log_time, logging
+from app.core.config import DATABASE_URL
+from app.core.logger import log_time, logging
 
 Base = declarative_base()
 
