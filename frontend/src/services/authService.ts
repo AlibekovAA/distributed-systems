@@ -1,6 +1,7 @@
 interface AuthResponse {
     access_token: string;
     token_type: string;
+    refresh_token?: string;
 }
 
 interface UserData {
@@ -19,6 +20,7 @@ export class AuthService {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(userData),
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -34,6 +36,7 @@ export class AuthService {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ email, password }),
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -54,6 +57,22 @@ export class AuthService {
 
         if (!response.ok) {
             throw new Error('Failed to fetch profile');
+        }
+
+        return await response.json();
+    }
+
+    static async refreshToken(refresh_token: string): Promise<AuthResponse> {
+        const response = await fetch(`${this.BASE_URL}/token/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refresh_token }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to refresh token');
         }
 
         return await response.json();

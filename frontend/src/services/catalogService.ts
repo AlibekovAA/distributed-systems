@@ -11,7 +11,7 @@ export class CatalogService {
         return [];
     }
 
-    static async getProduct(id: number): Promise<Product | null> {
+    static async getProduct(_id: number): Promise<Product | null> {
         return null;
     }
 }
