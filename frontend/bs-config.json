@@ -16,7 +16,7 @@
       {
         "route": "/auth",
         "handle": {
-          "target": "http://auth-service:8000",
+          "target": "http://localhost:8000",
           "changeOrigin": true,
           "secure": false,
           "ws": true,
@@ -26,6 +26,7 @@
           }
         }
       }
-    ]
+    ],
+    "historyApiFallback": true
   }
 }

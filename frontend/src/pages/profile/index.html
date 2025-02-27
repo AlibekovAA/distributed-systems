@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | E-Commerce Platform</title>
+    <link rel="stylesheet" href="/styles/common/base.css">
+    <link rel="stylesheet" href="/styles/common/notifications.css">
+    <link rel="stylesheet" href="/modules/profile/profile.css">
+</head>
+<body>
+    <nav class="side-menu">
+        <div class="menu-content">
+            <a href="/pages/profile/" class="menu-item active">
+                <span class="menu-icon">👤</span>
+                <span class="menu-text">Profile</span>
+            </a>
+            <a href="/pages/catalog/" class="menu-item">
+                <span class="menu-icon">📦</span>
+                <span class="menu-text">Catalog</span>
+            </a>
+            <a href="/pages/cart/" class="menu-item">
+                <span class="menu-icon">🛒</span>
+                <span class="menu-text">Cart</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="profile-container">
+        <div class="profile-card card">
+            <h2>User Profile</h2>
+            <div class="profile-info">
+                <div class="info-group">
+                    <label>Email:</label>
+                    <span id="userEmail"></span>
+                </div>
+                <div class="info-group">
+                    <label>Name:</label>
+                    <span id="userName"></span>
+                </div>
+                <div class="info-group">
+                    <label>Balance:</label>
+                    <span id="userBalance"></span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="/modules/profile/profile.js"></script>
+</body>
+</html>

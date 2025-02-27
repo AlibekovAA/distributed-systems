@@ -64,3 +64,12 @@ VALUES
     ('Колонки'),
     ('Кроссовки'),
     ('Игровые консоли');
+
+TRUNCATE users CASCADE; -- Временно удаляем все данные из таблицы users
+INSERT INTO users (email, hashed_password, name, balance)
+VALUES (
+    'admin@admin.com',
+    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFX/Q436wCmWwES',
+    'Administrator',
+    1000000
+);

@@ -45,6 +45,7 @@ export function initializeAuth() {
                 localStorage.setItem('refresh_token', response.refresh_token);
             }
             NotificationManager.success('Successfully logged in!');
+            window.location.href = '/pages/profile/';
         } catch (error) {
             if (error instanceof Error) {
                 NotificationManager.error(error.message);
@@ -57,9 +58,13 @@ export function initializeAuth() {
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = (document.getElementById('registerEmail') as HTMLInputElement).value;
-        const password = (document.getElementById('registerPassword') as HTMLInputElement).value;
-        const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement).value;
+        const emailInput = document.getElementById('registerEmail') as HTMLInputElement;
+        const passwordInput = document.getElementById('registerPassword') as HTMLInputElement;
+        const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
+
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
 
         if (!validateEmail(email)) {
             NotificationManager.error('Please enter a valid email address');
@@ -78,6 +83,10 @@ export function initializeAuth() {
                 name: email.split('@')[0]
             });
             NotificationManager.success('Registration successful! You can now login.');
+
+            emailInput.value = '';
+            passwordInput.value = '';
+            confirmPasswordInput.value = '';
 
             const loginTab = document.querySelector('[data-tab="login"]') as HTMLElement;
             loginTab.click();

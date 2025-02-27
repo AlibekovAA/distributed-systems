@@ -6,11 +6,11 @@
 
 body {
     font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    margin: 0;
+    padding: 0;
+    background: #f3f4f6;
+    display: block;
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .container {
@@ -31,6 +31,7 @@ body {
     transition: background-color 0.3s ease, transform 0.2s ease;
     color: white;
     background: #4f46e5;
+    width: 100%;
 }
 
 .btn:hover {
@@ -63,4 +64,11 @@ h2 {
     color: #333;
     margin-bottom: 20px;
     text-align: center;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }

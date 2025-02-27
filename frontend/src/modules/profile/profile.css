@@ -1,0 +1,87 @@
+.side-menu {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 60px;
+    background: #4f46e5;
+    transition: width 0.3s ease;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.side-menu:hover {
+    width: 200px;
+}
+
+.menu-content {
+    padding-top: 20px;
+    width: 200px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.menu-item:hover {
+    background-color: #4338ca;
+}
+
+.menu-item.active {
+    background-color: #3730a3;
+}
+
+.menu-icon {
+    font-size: 20px;
+    width: 20px;
+    margin-right: 15px;
+}
+
+.menu-text {
+    white-space: nowrap;
+}
+
+.profile-container {
+    margin-left: 80px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.profile-card {
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.profile-info {
+    margin-top: 20px;
+}
+
+.info-group {
+    margin: 15px 0;
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-group label {
+    font-weight: 500;
+    color: #6b7280;
+    margin-right: 10px;
+}
+
+.info-group span {
+    color: #111827;
+}
+
+.logout-btn {
+    margin-top: 20px;
+    background-color: #ef4444;
+}
+
+.logout-btn:hover {
+    background-color: #dc2626;
+}
