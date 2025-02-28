@@ -7,8 +7,36 @@ function validateEmail(email: string): boolean {
 }
 
 export function initializeAuth() {
-    const loginForm = document.getElementById('loginForm') as HTMLFormElement;
-    const registerForm = document.getElementById('registerForm') as HTMLFormElement;
+    const forms = {
+        login: document.getElementById('loginForm') as HTMLFormElement,
+        register: document.getElementById('registerForm') as HTMLFormElement
+    };
+
+    const debounceTimeout: { [key: string]: NodeJS.Timeout } = {};
+
+    const debounce = (fn: Function, delay: number = 300) => {
+        return (...args: any[]) => {
+            if (debounceTimeout[fn.name]) {
+                clearTimeout(debounceTimeout[fn.name]);
+            }
+            debounceTimeout[fn.name] = setTimeout(() => fn(...args), delay);
+        };
+    };
+
+    const validateFormInput = debounce((input: HTMLInputElement) => {
+        if (input.type === 'email' && !validateEmail(input.value)) {
+            input.classList.add('invalid');
+        } else {
+            input.classList.remove('invalid');
+        }
+    });
+
+    Object.values(forms).forEach(form => {
+        form.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => validateFormInput(input));
+        });
+    });
+
     const tabButtons = document.querySelectorAll('.tab-btn');
 
     tabButtons.forEach(button => {
@@ -18,20 +46,20 @@ export function initializeAuth() {
             button.classList.add('active');
 
             if (tabName === 'login') {
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
+                forms.login.classList.remove('hidden');
+                forms.register.classList.add('hidden');
             } else {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
+                forms.login.classList.add('hidden');
+                forms.register.classList.remove('hidden');
             }
         });
     });
 
-    loginForm.addEventListener('submit', async (e) => {
+    forms.login.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = (document.getElementById('loginEmail') as HTMLInputElement).value;
-        const password = (document.getElementById('loginPassword') as HTMLInputElement).value;
+        const email = (forms.login.elements.namedItem('loginEmail') as HTMLInputElement).value;
+        const password = (forms.login.elements.namedItem('loginPassword') as HTMLInputElement).value;
 
         if (!validateEmail(email)) {
             NotificationManager.error('Please enter a valid email address');
@@ -45,7 +73,7 @@ export function initializeAuth() {
                 localStorage.setItem('refresh_token', response.refresh_token);
             }
             NotificationManager.success('Successfully logged in!');
-            window.location.href = '/pages/profile/';
+            window.location.href = '/pages/profile/index.html';
         } catch (error) {
             if (error instanceof Error) {
                 NotificationManager.error(error.message);
@@ -55,12 +83,12 @@ export function initializeAuth() {
         }
     });
 
-    registerForm.addEventListener('submit', async (e) => {
+    forms.register.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const emailInput = document.getElementById('registerEmail') as HTMLInputElement;
-        const passwordInput = document.getElementById('registerPassword') as HTMLInputElement;
-        const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
+        const emailInput = forms.register.elements.namedItem('registerEmail') as HTMLInputElement;
+        const passwordInput = forms.register.elements.namedItem('registerPassword') as HTMLInputElement;
+        const confirmPasswordInput = forms.register.elements.namedItem('confirmPassword') as HTMLInputElement;
 
         const email = emailInput.value;
         const password = passwordInput.value;

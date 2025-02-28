@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Authentication | E-Commerce Platform</title>
-    <link rel="stylesheet" href="styles/common/base.css">
-    <link rel="stylesheet" href="styles/common/notifications.css">
-    <link rel="stylesheet" href="modules/auth/auth.css">
+    <link rel="preload" href="styles/common/base.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="styles/common/notifications.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="modules/auth/auth.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="styles/common/base.css">
+        <link rel="stylesheet" href="styles/common/notifications.css">
+        <link rel="stylesheet" href="modules/auth/auth.css">
+    </noscript>
 </head>
 <body>
     <div class="container">
@@ -18,23 +23,23 @@
 
             <form id="loginForm" class="auth-form">
                 <div class="form-group">
-                    <input type="email" id="loginEmail" class="input" placeholder="Email" required>
+                    <input type="email" id="loginEmail" class="input" placeholder="Email" required autocomplete="email">
                 </div>
                 <div class="form-group">
-                    <input type="password" id="loginPassword" class="input" placeholder="Password" required>
+                    <input type="password" id="loginPassword" class="input" placeholder="Password" required autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn submit-btn">Sign In</button>
             </form>
 
             <form id="registerForm" class="auth-form hidden">
                 <div class="form-group">
-                    <input type="email" id="registerEmail" class="input" placeholder="Email" required>
+                    <input type="email" id="registerEmail" class="input" placeholder="Email" required autocomplete="email">
                 </div>
                 <div class="form-group">
-                    <input type="password" id="registerPassword" class="input" placeholder="Password" required>
+                    <input type="password" id="registerPassword" class="input" placeholder="Password" required autocomplete="new-password">
                 </div>
                 <div class="form-group">
-                    <input type="password" id="confirmPassword" class="input" placeholder="Confirm Password" required>
+                    <input type="password" id="confirmPassword" class="input" placeholder="Confirm Password" required autocomplete="new-password">
                 </div>
                 <button type="submit" class="btn submit-btn">Create Account</button>
             </form>

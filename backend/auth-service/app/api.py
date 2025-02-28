@@ -1,10 +1,10 @@
-from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from fastapi import (APIRouter,
-                     Depends,
                      HTTPException,
-                     status)
+                     status,
+                     Request)
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from models.user_schemas import (UserCreate,
                                  UserLogin,
@@ -16,48 +16,52 @@ from services.auth_service import (authenticate_user,
                                    create_access_token,
                                    create_refresh_token)
 from app.core.database import get_db
-from app.auth import get_current_user
+from app.auth import get_current_user, token_dependency, db_dependency
 from app.core.config import SECRET_KEY, ALGORITHM
 from app.core.logger import log_time, logging
 
 router = APIRouter()
 
-db_dependency = Depends(get_db)
-current_user_dependency = Depends(get_current_user)
-
 
 @router.post("/register", response_model=User)
-def register(user: UserCreate, db: Session = db_dependency):
-    db_user = db.query(UserModel).filter(UserModel.email == user.email).first()
-    if db_user:
-        logging.info(f"{log_time()} - Registration failed: Email already registered - {user.email}")
-        raise HTTPException(status_code=400, detail="Email already registered")
+def register(user: UserCreate, request: Request):
+    with get_db() as db:
+        db_user = db.query(UserModel).filter(UserModel.email == user.email).first()
+        if db_user:
+            logging.info(f"{log_time()} - Registration failed: Email already registered - {user.email}")
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    new_user = create_user(
-        db=db,
-        email=user.email,
-        password=user.password,
-        name=user.name
-    )
-    logging.info(f"{log_time()} - User registered: {new_user.email}")
-    return new_user
+        new_user = create_user(
+            db=db,
+            email=user.email,
+            password=user.password,
+            name=user.name
+        )
+        logging.info(f"{log_time()} - User registered: {new_user.email}")
+        return new_user
 
 
 @router.post("/login", response_model=Token)
-def login(user: UserLogin, db: Session = db_dependency):
-    db_user = authenticate_user(db=db, email=user.email, password=user.password)
-    if not db_user:
-        logging.warning(f"{log_time()} - Login failed: Invalid credentials for {user.email}")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+def login(user: UserLogin, request: Request):
+    with get_db() as db:
+        db_user = authenticate_user(db=db, email=user.email, password=user.password)
+        if not db_user:
+            logging.warning(f"{log_time()} - Login failed: Invalid credentials for {user.email}")
+            raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_access_token(data={"sub": db_user.email})
-    refresh_token = create_refresh_token(data={"sub": db_user.email})
-    logging.info(f"{log_time()} - User logged in: {db_user.email}")
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+        access_token = create_access_token(data={"sub": db_user.email})
+        refresh_token = create_refresh_token(data={"sub": db_user.email})
+        logging.info(f"{log_time()} - User logged in: {db_user.email}")
+        return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
 @router.get("/profile", response_model=User)
-def get_profile(db: Session = db_dependency, current_user: User = current_user_dependency):
+def get_profile(
+    request: Request,
+    token: str = token_dependency,
+    db: Session = db_dependency
+):
+    current_user = get_current_user(token, db)
     logging.info(f"{log_time()} - User profile accessed: {current_user.email}")
     return current_user
 

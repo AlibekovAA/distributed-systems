@@ -3,14 +3,21 @@
   "files": ["./src/**/*.{html,htm,css,js}"],
   "notify": false,
   "ui": false,
+  "single": false,
   "ghostMode": false,
   "open": false,
-  "reloadDebounce": 1000,
-  "reloadThrottle": 1000,
+  "reloadDebounce": 100,
+  "reloadThrottle": 100,
   "server": {
     "baseDir": "./dist",
     "routes": {
-      "/node_modules": "node_modules"
+      "/node_modules": "node_modules",
+      "/": "./dist",
+      "/pages": "./dist/pages",
+      "/modules": "./dist/modules",
+      "/styles": "./dist/styles",
+      "/utils": "./dist/utils",
+      "/services": "./dist/services"
     },
     "middleware": [
       {
@@ -19,14 +26,16 @@
           "target": "http://localhost:8000",
           "changeOrigin": true,
           "secure": false,
-          "ws": true,
-          "logLevel": "debug",
+          "ws": false,
+          "logLevel": "error",
           "pathRewrite": {
             "^/auth": "/auth"
           }
         }
       }
-    ],
-    "historyApiFallback": true
+    ]
+  },
+  "watchOptions": {
+    "ignored": ["node_modules", ".git"]
   }
 }
