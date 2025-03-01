@@ -42,14 +42,14 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 func (app *Application) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
-		http.Error(w, "failed get id", http.StatusInternalServerError)
+		http.Error(w, "Failed get id", http.StatusInternalServerError)
 	}
 
 	err = database.DeleteProduct(app.DB, id)
 	if err != nil {
-		http.Error(w, "Ошибка удаления товара", http.StatusInternalServerError)
+		http.Error(w, "Failed delete the product", http.StatusInternalServerError)
 		return
 	}
 
-	w.Write([]byte("Товар удален"))
+	w.Write([]byte("Product was deleted"))
 }

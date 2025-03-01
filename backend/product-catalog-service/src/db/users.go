@@ -15,7 +15,7 @@ func UpdateUser(db DB, user models.User) error {
 	return err
 }
 
-func GetUser(db DB, userID int) (models.User, error) {
+func GetUser(db DB, userID int64) (models.User, error) {
 	query := `SELECT id, email, hashed_password, name, balance, created_at, updated_at FROM users WHERE id = $1`
 
 	var user models.User

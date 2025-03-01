@@ -4,32 +4,22 @@ import (
 	"encoding/json"
 	database "main/src/db"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
-func (app *Application) topUpBalance(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		UserID int `json:"user_id"`
-		Amount int `json:"amount"`
+func (app *Application) getBalance(w http.ResponseWriter, r *http.Request) {
+	userID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		http.Error(w, "Failed get id", http.StatusInternalServerError)
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Неверный JSON", http.StatusBadRequest)
-		return
-	}
-
-	user, err := database.GetUser(app.DB, data.UserID)
+	user, err := database.GetUser(app.DB, int64(userID))
 	if err != nil {
 		http.Error(w, "Failed get user from db", http.StatusInternalServerError)
 		return
 	}
 
-	user.Balance += data.Amount
-
-	err = database.UpdateUser(app.DB, user)
-	if err != nil {
-		http.Error(w, "Failed update user's balance", http.StatusInternalServerError)
-		return
-	}
-
-	w.Write([]byte("Баланс пополнен"))
+	json.NewEncoder(w).Encode(user.Balance)
 }

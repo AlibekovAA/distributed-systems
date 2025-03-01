@@ -27,7 +27,7 @@ CREATE TABLE "history" (
   id SERIAL PRIMARY KEY, 
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
   product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
-  order_id INTEGER REFERENCES "order"(id) ON DELETE CASCADE
+  order_number INTEGER
 );
 
 CREATE TABLE categories (
