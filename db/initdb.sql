@@ -16,12 +16,19 @@ CREATE TABLE product (
   quantity INTEGER NOT NULL
 );
 
-CREATE TABLE "history" (
+
+CREATE TABLE "order" (
   id SERIAL PRIMARY KEY, 
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
   product_id INTEGER REFERENCES product(id) ON DELETE CASCADE
 );
 
+CREATE TABLE "history" (
+  id SERIAL PRIMARY KEY, 
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
+  product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
+  order_id INTEGER REFERENCES "order"(id) ON DELETE CASCADE
+);
 
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY, 
