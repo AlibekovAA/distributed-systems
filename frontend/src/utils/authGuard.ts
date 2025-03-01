@@ -1,19 +1,20 @@
 import { AuthService } from '../services/authService.js';
 
 export async function authGuard() {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-        window.location.href = '/';
-        return false;
-    }
+    const token = localStorage.getItem('access_token')?.trim();
+    if (!token) return redirectToLogin();
 
     try {
         await AuthService.getProfile();
         return true;
-    } catch (error) {
+    } catch {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/';
-        return false;
+        return redirectToLogin();
     }
+}
+
+function redirectToLogin() {
+    window.location.assign('/');
+    return false;
 }

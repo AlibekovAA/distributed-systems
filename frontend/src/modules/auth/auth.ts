@@ -1,165 +1,119 @@
 import { AuthService } from '../../services/authService.js';
 import NotificationManager from '../../utils/notifications.js';
 
-function validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
+const handleError = (error: unknown) => {
+    NotificationManager.error(error instanceof Error ? error.message : 'An unknown error occurred');
+};
+
+const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const debounceMap = new Map<Function, NodeJS.Timeout>();
+const debounce = (fn: Function, delay: number = 300) => {
+    return (...args: any[]) => {
+        if (debounceMap.has(fn)) clearTimeout(debounceMap.get(fn));
+        debounceMap.set(fn, setTimeout(() => fn(...args), delay));
+    };
+};
+
+const validateFormInput = debounce((input: HTMLInputElement) => {
+    input.classList.toggle('invalid', input.type === 'email' && !validateEmail(input.value));
+});
+
+const validateAuthFields = (form: HTMLFormElement, fields: string[]): Record<string, string> | null => {
+    const values: Record<string, string> = {};
+    for (const name of fields) {
+        const input = form.elements.namedItem(name) as HTMLInputElement;
+        if (!input.value.trim()) {
+            NotificationManager.error('This field is required.');
+            input.focus();
+            return null;
+        }
+        values[name] = input.value;
+    }
+    return values;
+};
+
+const handleLogin = async (form: HTMLFormElement) => {
+    const values = validateAuthFields(form, ['loginEmail', 'loginPassword']);
+    if (!values) return;
+
+    if (!validateEmail(values.loginEmail)) {
+        NotificationManager.error('Please enter a valid email address');
+        return;
+    }
+
+    try {
+        const response = await AuthService.login(values.loginEmail, values.loginPassword);
+        localStorage.setItem('access_token', response.access_token);
+        if (response.refresh_token) localStorage.setItem('refresh_token', response.refresh_token);
+        NotificationManager.success('Successfully logged in!');
+        window.location.href = '/pages/profile/index.html';
+    } catch (error) {
+        handleError(error);
+    }
+};
+
+const handleRegister = async (form: HTMLFormElement) => {
+    const values = validateAuthFields(form, ['registerEmail', 'registerPassword', 'confirmPassword']);
+    if (!values) return;
+
+    if (!validateEmail(values.registerEmail)) {
+        NotificationManager.error('Please enter a valid email address');
+        return;
+    }
+
+    if (values.registerPassword !== values.confirmPassword) {
+        NotificationManager.error('Passwords do not match');
+        return;
+    }
+
+    try {
+        await AuthService.register({
+            email: values.registerEmail,
+            password: values.registerPassword,
+            name: values.registerEmail.split('@')[0],
+        });
+
+        NotificationManager.success('Registration successful! You can now login.');
+        form.reset();
+
+        document.querySelector<HTMLElement>('[data-tab="login"]')?.click();
+    } catch (error) {
+        handleError(error);
+    }
+};
 
 export function initializeAuth() {
     const forms = {
         login: document.getElementById('loginForm') as HTMLFormElement,
-        register: document.getElementById('registerForm') as HTMLFormElement
+        register: document.getElementById('registerForm') as HTMLFormElement,
     };
-
-    forms.login.setAttribute('novalidate', 'true');
-    forms.register.setAttribute('novalidate', 'true');
-
-    const debounceTimeout: { [key: string]: NodeJS.Timeout } = {};
-
-    const debounce = (fn: Function, delay: number = 300) => {
-        return (...args: any[]) => {
-            if (debounceTimeout[fn.name]) {
-                clearTimeout(debounceTimeout[fn.name]);
-            }
-            debounceTimeout[fn.name] = setTimeout(() => fn(...args), delay);
-        };
-    };
-
-    const validateFormInput = debounce((input: HTMLInputElement) => {
-        if (input.type === 'email' && !validateEmail(input.value)) {
-            input.classList.add('invalid');
-        } else {
-            input.classList.remove('invalid');
-        }
-    });
 
     Object.values(forms).forEach(form => {
+        form.setAttribute('novalidate', 'true');
         form.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', () => validateFormInput(input));
         });
     });
 
-    const tabButtons = document.querySelectorAll('.tab-btn');
-
-    tabButtons.forEach(button => {
+    document.querySelectorAll('.tab-btn').forEach(button => {
         button.addEventListener('click', () => {
-            const tabName = button.getAttribute('data-tab');
-            tabButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
 
-            if (tabName === 'login') {
-                forms.login.classList.remove('hidden');
-                forms.register.classList.add('hidden');
-            } else {
-                forms.login.classList.add('hidden');
-                forms.register.classList.remove('hidden');
-            }
+            const tabName = button.getAttribute('data-tab');
+            forms.login.classList.toggle('hidden', tabName !== 'login');
+            forms.register.classList.toggle('hidden', tabName !== 'register');
         });
     });
 
-    forms.login.addEventListener('submit', async (e) => {
+    forms.login.addEventListener('submit', (e) => {
         e.preventDefault();
-
-        const emailInput = forms.login.elements.namedItem('loginEmail') as HTMLInputElement;
-        const passwordInput = forms.login.elements.namedItem('loginPassword') as HTMLInputElement;
-
-        const email = emailInput.value;
-        const password = passwordInput.value;
-
-        if (!email) {
-            NotificationManager.error('This field is required.');
-            emailInput.focus();
-            return;
-        }
-
-        if (!password) {
-            NotificationManager.error('This field is required.');
-            passwordInput.focus();
-            return;
-        }
-
-        if (!validateEmail(email)) {
-            NotificationManager.error('Please enter a valid email address');
-            return;
-        }
-
-        try {
-            const response = await AuthService.login(email, password);
-            localStorage.setItem('access_token', response.access_token);
-            if (response.refresh_token) {
-                localStorage.setItem('refresh_token', response.refresh_token);
-            }
-            NotificationManager.success('Successfully logged in!');
-            window.location.href = '/pages/profile/index.html';
-        } catch (error) {
-            if (error instanceof Error) {
-                NotificationManager.error(error.message);
-            } else {
-                NotificationManager.error('An unknown error occurred');
-            }
-        }
+        handleLogin(forms.login);
     });
 
-    forms.register.addEventListener('submit', async (e) => {
+    forms.register.addEventListener('submit', (e) => {
         e.preventDefault();
-
-        const emailInput = forms.register.elements.namedItem('registerEmail') as HTMLInputElement;
-        const passwordInput = forms.register.elements.namedItem('registerPassword') as HTMLInputElement;
-        const confirmPasswordInput = forms.register.elements.namedItem('confirmPassword') as HTMLInputElement;
-
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-
-        if (!email) {
-            NotificationManager.error('This field is required.');
-            emailInput.focus();
-            return;
-        }
-
-        if (!password) {
-            NotificationManager.error('This field is required.');
-            passwordInput.focus();
-            return;
-        }
-
-        if (!confirmPassword) {
-            NotificationManager.error('This field is required.');
-            confirmPasswordInput.focus();
-            return;
-        }
-
-        if (!validateEmail(email)) {
-            NotificationManager.error('Please enter a valid email address');
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            NotificationManager.error('Passwords do not match');
-            return;
-        }
-
-        try {
-            await AuthService.register({
-                email,
-                password,
-                name: email.split('@')[0]
-            });
-            NotificationManager.success('Registration successful! You can now login.');
-
-            emailInput.value = '';
-            passwordInput.value = '';
-            confirmPasswordInput.value = '';
-
-            const loginTab = document.querySelector('[data-tab="login"]') as HTMLElement;
-            loginTab.click();
-        } catch (error) {
-            if (error instanceof Error) {
-                NotificationManager.error(error.message);
-            } else {
-                NotificationManager.error('An unknown error occurred');
-            }
-        }
+        handleRegister(forms.register);
     });
 }

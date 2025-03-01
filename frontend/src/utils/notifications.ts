@@ -6,6 +6,13 @@ interface NotificationOptions {
     duration?: number;
 }
 
+const ICONS: Record<NotificationType, string> = {
+    success: '✓',
+    error: '✕',
+    warning: '⚠',
+    info: 'ℹ'
+};
+
 class NotificationManager {
     private static container: HTMLDivElement | null = null;
 
@@ -13,8 +20,7 @@ class NotificationManager {
         const container = document.createElement('div');
         container.className = 'notification-container';
         document.body.appendChild(container);
-        this.container = container;
-        return container;
+        return (this.container = container);
     }
 
     private static getContainer(): HTMLDivElement {
@@ -22,37 +28,26 @@ class NotificationManager {
     }
 
     static show({ message, type, duration = 3000 }: NotificationOptions): void {
+        const container = this.getContainer();
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
+        notification.setAttribute('role', 'alert');
+        notification.setAttribute('aria-live', 'assertive');
 
         notification.innerHTML = `
             <div class="notification-content">
-                <span class="notification-icon">${this.getIconForType(type)}</span>
+                <span class="notification-icon">${ICONS[type]}</span>
                 <span class="notification-message">${message}</span>
             </div>
         `;
 
-        const container = this.getContainer();
         container.appendChild(notification);
-
         requestAnimationFrame(() => notification.classList.add('show'));
 
-        setTimeout(() => this.hideNotification(notification), duration);
-    }
-
-    private static hideNotification(notification: HTMLDivElement): void {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }
-
-    private static getIconForType(type: NotificationType): string {
-        const icons: Record<NotificationType, string> = {
-            success: '✓',
-            error: '✕',
-            warning: '⚠',
-            info: 'ℹ'
-        };
-        return icons[type];
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
     }
 
     static success(message: string, duration?: number) {
