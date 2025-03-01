@@ -17,18 +17,26 @@
 <body>
     <nav class="side-menu">
         <div class="menu-content">
-            <a href="#" class="menu-item active">
-                <span class="menu-icon">👤</span>
-                <span class="menu-text">Profile</span>
-            </a>
-            <a href="/pages/catalog/" class="menu-item">
-                <span class="menu-icon">📦</span>
-                <span class="menu-text">Catalog</span>
-            </a>
-            <a href="/pages/cart/" class="menu-item">
-                <span class="menu-icon">🛒</span>
-                <span class="menu-text">Cart</span>
-            </a>
+            <div class="menu-items-top">
+                <a href="#" class="menu-item active">
+                    <span class="menu-icon">👤</span>
+                    <span class="menu-text">Profile</span>
+                </a>
+                <a href="/pages/catalog/" class="menu-item">
+                    <span class="menu-icon">📦</span>
+                    <span class="menu-text">Catalog</span>
+                </a>
+                <a href="/pages/cart/" class="menu-item">
+                    <span class="menu-icon">🛒</span>
+                    <span class="menu-text">Cart</span>
+                </a>
+            </div>
+            <div class="menu-items-bottom">
+                <a href="#" id="logoutBtn" class="menu-item logout-item">
+                    <span class="menu-icon">🚪</span>
+                    <span class="menu-text">Logout</span>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -52,7 +60,7 @@
 
             <div class="balance-section">
                 <h3>Balance Management</h3>
-                <button id="addBalanceBtn" class="btn add-balance-btn">Add 10,000 ₽ to Balance</button>
+                <button id="addBalanceBtn" class="btn add-balance-btn">Add 100,000 ₽ to Balance</button>
             </div>
 
             <div class="change-password-section">
@@ -70,8 +78,6 @@
                     <button type="submit" class="btn change-password-btn">Change Password</button>
                 </form>
             </div>
-
-            <button id="logoutBtn" class="btn logout-btn">Logout</button>
         </div>
     </main>
 

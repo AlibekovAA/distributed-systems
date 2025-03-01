@@ -8,6 +8,8 @@
     transition: width 0.3s ease;
     overflow: hidden;
     z-index: 1000;
+    display: flex;
+    flex-direction: column;
 }
 
 .side-menu:hover {
@@ -17,6 +19,17 @@
 .menu-content {
     padding-top: 20px;
     width: 200px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.menu-items-top {
+    flex-grow: 1;
+}
+
+.menu-items-bottom {
+    margin-bottom: 20px;
 }
 
 .menu-item {
@@ -25,7 +38,7 @@
     padding: 15px 0;
     color: white;
     text-decoration: none;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
     white-space: nowrap;
 }
 
@@ -81,16 +94,6 @@
 
 .info-group span {
     color: #111827;
-}
-
-.logout-btn {
-    margin-top: 20px;
-    background-color: #ef4444;
-    width: 100%;
-}
-
-.logout-btn:hover {
-    background-color: #dc2626;
 }
 
 .change-password-section {

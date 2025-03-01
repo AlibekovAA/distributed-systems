@@ -11,25 +11,41 @@
 <body>
     <nav class="side-menu">
         <div class="menu-content">
-            <a href="/pages/profile/" class="menu-item">
-                <span class="menu-icon">👤</span>
-                <span class="menu-text">Profile</span>
-            </a>
-            <a href="/pages/catalog/" class="menu-item active">
-                <span class="menu-icon">📦</span>
-                <span class="menu-text">Catalog</span>
-            </a>
-            <a href="/pages/cart/" class="menu-item">
-                <span class="menu-icon">🛒</span>
-                <span class="menu-text">Cart</span>
-            </a>
+            <div class="menu-items-top">
+                <a href="/pages/profile/" class="menu-item">
+                    <span class="menu-icon">👤</span>
+                    <span class="menu-text">Profile</span>
+                </a>
+                <a href="/pages/catalog/" class="menu-item active">
+                    <span class="menu-icon">📦</span>
+                    <span class="menu-text">Catalog</span>
+                </a>
+                <a href="/pages/cart/" class="menu-item">
+                    <span class="menu-icon">🛒</span>
+                    <span class="menu-text">Cart</span>
+                </a>
+            </div>
+            <div class="menu-items-bottom">
+                <a href="#" id="logoutBtn" class="menu-item logout-item">
+                    <span class="menu-icon">🚪</span>
+                    <span class="menu-text">Logout</span>
+                </a>
+            </div>
         </div>
     </nav>
 
     <main class="catalog-container">
-        <!-- Контент каталога будет добавлен через JavaScript -->
+        <div class="catalog-content">
+            <h1>Catalog</h1>
+        </div>
     </main>
 
     <script type="module" src="../../modules/catalog/catalog.js"></script>
+    <script type="module">
+        import { initializeLogout } from '../../utils/logout.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeLogout();
+        });
+    </script>
 </body>
 </html>

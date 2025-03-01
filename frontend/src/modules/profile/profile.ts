@@ -1,6 +1,7 @@
 import { AuthService } from '../../services/authService.js';
 import NotificationManager from '../../utils/notifications.js';
 import { authGuard } from '../../utils/authGuard.js';
+import { initializeLogout as initLogout } from '../../utils/logout.js';
 
 const performLogout = () => {
     localStorage.removeItem('access_token');
@@ -26,13 +27,6 @@ export async function initializeProfile() {
     } catch (error) {
         NotificationManager.error(error instanceof Error ? error.message : 'Error loading profile');
         performLogout();
-    }
-}
-
-export function initializeLogout() {
-    const logoutButton = document.getElementById('logoutBtn');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', performLogout);
     }
 }
 
@@ -101,7 +95,7 @@ function initializeAddBalance() {
 
     addBalanceBtn.addEventListener('click', async () => {
         try {
-            const result = await AuthService.addBalance(10000);
+            const result = await AuthService.addBalance(100000);
             if (result.success) {
                 const balanceElement = document.getElementById('userBalance');
                 if (balanceElement) {
@@ -132,7 +126,7 @@ function initializeNavigation() {
 
 const init = () => {
     initializeProfile();
-    initializeLogout();
+    initLogout();
     initializeChangePassword();
     initializeAddBalance();
     initializeNavigation();
