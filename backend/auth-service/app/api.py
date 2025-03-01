@@ -9,12 +9,17 @@ from sqlalchemy.orm import Session
 from models.user_schemas import (UserCreate,
                                  UserLogin,
                                  Token,
-                                 User)
+                                 User,
+                                 PasswordChange,
+                                 BalanceUpdate,
+                                 BalanceResponse)
 from models.user_model import User as UserModel
 from services.auth_service import (authenticate_user,
                                    create_user,
                                    create_access_token,
-                                   create_refresh_token)
+                                   create_refresh_token,
+                                   verify_password,
+                                   get_password_hash)
 from app.core.database import get_db
 from app.auth import get_current_user, token_dependency, db_dependency
 from app.core.config import SECRET_KEY, ALGORITHM
@@ -61,9 +66,10 @@ def get_profile(
     token: str = token_dependency,
     db: Session = db_dependency
 ):
-    current_user = get_current_user(token, db)
-    logging.info(f"{log_time()} - User profile accessed: {current_user.email}")
-    return current_user
+    with get_db() as db:
+        current_user = get_current_user(token, db)
+        logging.info(f"{log_time()} - User profile accessed: {current_user.email}")
+        return current_user
 
 
 @router.post("/token/refresh", response_model=Token)
@@ -93,3 +99,46 @@ def refresh_token(refresh_token: str):
 @router.get("/health")
 async def health_check():
     return {"status": "Auth service started"}
+
+
+@router.post("/change-password")
+def change_password(
+    password_data: PasswordChange,
+    token: str = token_dependency,
+    db: Session = db_dependency
+):
+    with get_db() as db:
+        current_user = get_current_user(token, db)
+
+        if not verify_password(password_data.old_password, current_user.hashed_password):
+            logging.warning(f"{log_time()} - Password change failed: Invalid old password for {current_user.email}")
+            raise HTTPException(status_code=400, detail="Invalid old password")
+
+        if len(password_data.new_password) < 8:
+            raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+
+        current_user.hashed_password = get_password_hash(password_data.new_password)
+        db.commit()
+
+        logging.info(f"{log_time()} - Password changed successfully for {current_user.email}")
+        return {"message": "Password changed successfully"}
+
+
+@router.post("/add-balance", response_model=BalanceResponse)
+def add_balance(
+    balance_data: BalanceUpdate,
+    token: str = token_dependency,
+    db: Session = db_dependency
+):
+    with get_db() as db:
+        current_user = get_current_user(token, db)
+
+        if balance_data.amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be positive")
+
+        current_user.balance += balance_data.amount
+        db.commit()
+        db.refresh(current_user)
+
+        logging.info(f"{log_time()} - Balance updated for {current_user.email}: +{balance_data.amount}, new balance: {current_user.balance}")
+        return {"success": True, "new_balance": current_user.balance}

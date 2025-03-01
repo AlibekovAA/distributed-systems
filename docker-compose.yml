@@ -28,7 +28,7 @@ services:
         while ! nc -z db 5432; do
           sleep 1
         done &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level $${LOG_LEVEL}
       "
     env_file: ".env"
     depends_on:
@@ -51,6 +51,7 @@ services:
     build: ./frontend
     container_name: frontend
     restart: always
+    env_file: ".env"
     ports:
       - "3000:3000"
     volumes:

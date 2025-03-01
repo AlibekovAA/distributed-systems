@@ -17,7 +17,7 @@
 <body>
     <nav class="side-menu">
         <div class="menu-content">
-            <a href="/pages/profile/" class="menu-item active">
+            <a href="#" class="menu-item active">
                 <span class="menu-icon">👤</span>
                 <span class="menu-text">Profile</span>
             </a>
@@ -49,6 +49,29 @@
                     <span id="userBalance"></span>
                 </div>
             </div>
+
+            <div class="balance-section">
+                <h3>Balance Management</h3>
+                <button id="addBalanceBtn" class="btn add-balance-btn">Add 10,000 ₽ to Balance</button>
+            </div>
+
+            <div class="change-password-section">
+                <h3>Change Password</h3>
+                <form id="changePasswordForm" class="password-form" novalidate>
+                    <div class="form-group">
+                        <input type="password" id="oldPassword" class="input" placeholder="Current Password" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="newPassword" class="input" placeholder="New Password" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="confirmNewPassword" class="input" placeholder="Confirm New Password" required>
+                    </div>
+                    <button type="submit" class="btn change-password-btn">Change Password</button>
+                </form>
+            </div>
+
+            <button id="logoutBtn" class="btn logout-btn">Logout</button>
         </div>
     </main>
 

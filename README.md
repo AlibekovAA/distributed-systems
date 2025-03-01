@@ -17,6 +17,10 @@
 ### Frontend
 - Откройте [http://localhost:3000](http://localhost:3000)
 - Доступны функции регистрации и входа
+- Навигация по разделам:
+  - Профиль пользователя
+  - Каталог товаров
+  - Корзина покупок
 
 ### Auth Service API
 - Swagger документация: [http://localhost:8000/docs](http://localhost:8000/docs)
@@ -24,6 +28,9 @@
   - POST `/auth/register` - регистрация
   - POST `/auth/login` - вход
   - GET `/auth/profile` - профиль пользователя
+  - POST `/auth/change-password` - смена пароля
+  - POST `/auth/add-balance` - пополнение баланса
+  - POST `/auth/token/refresh` - обновление токена
 
 ### База данных (через pgAdmin)
 1. Откройте [http://localhost:5050](http://localhost:5050)
@@ -43,13 +50,16 @@
 - Исходный код фронтенда находится в `frontend/src/`
 - Модули разделены по папкам в `src/modules/`
 - Общие стили в `src/styles/common/`
-- Для добавления нового модуля:
-  1. Создайте папку в `src/modules/`
-  2. Добавьте необходимые компоненты и стили
-  3. Импортируйте и инициализируйте в `src/main.ts`
+- Сервисы для работы с API в `src/services/`
+- Утилиты и вспомогательные функции в `src/utils/`
 
 ### Backend
 - Сервис аутентификации в `backend/auth-service/`
+- Модульная структура:
+  - `app/` - основной код приложения
+  - `models/` - модели данных
+  - `services/` - бизнес-логика
+  - `tests/` - тесты
 
 ## Очистка Docker окружения
 

@@ -10,6 +10,11 @@ interface UserData {
     name: string;
 }
 
+interface BalanceResponse {
+    success: boolean;
+    new_balance: number;
+}
+
 export class AuthService {
     private static FULL_URL = 'http://localhost:8000/auth';
     private static TOKEN_KEY = 'access_token';
@@ -107,5 +112,41 @@ export class AuthService {
             body: JSON.stringify({ refresh_token })
         });
         return this.handleResponse<AuthResponse>(response);
+    }
+
+    static async changePassword(oldPassword: string, newPassword: string): Promise<void> {
+        const token = localStorage.getItem(this.TOKEN_KEY);
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const response = await this.fetchWithAuth('/change-password', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+        });
+
+        return this.handleResponse(response);
+    }
+
+    static async addBalance(amount: number): Promise<BalanceResponse> {
+        const token = localStorage.getItem(this.TOKEN_KEY);
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const response = await this.fetchWithAuth('/add-balance', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ amount })
+        });
+
+        return this.handleResponse<BalanceResponse>(response);
     }
 }

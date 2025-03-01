@@ -26,3 +26,17 @@ class User(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
+
+class BalanceUpdate(BaseModel):
+    amount: int
+
+
+class BalanceResponse(BaseModel):
+    success: bool
+    new_balance: int

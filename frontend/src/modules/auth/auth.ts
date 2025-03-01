@@ -12,6 +12,9 @@ export function initializeAuth() {
         register: document.getElementById('registerForm') as HTMLFormElement
     };
 
+    forms.login.setAttribute('novalidate', 'true');
+    forms.register.setAttribute('novalidate', 'true');
+
     const debounceTimeout: { [key: string]: NodeJS.Timeout } = {};
 
     const debounce = (fn: Function, delay: number = 300) => {
@@ -58,8 +61,23 @@ export function initializeAuth() {
     forms.login.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = (forms.login.elements.namedItem('loginEmail') as HTMLInputElement).value;
-        const password = (forms.login.elements.namedItem('loginPassword') as HTMLInputElement).value;
+        const emailInput = forms.login.elements.namedItem('loginEmail') as HTMLInputElement;
+        const passwordInput = forms.login.elements.namedItem('loginPassword') as HTMLInputElement;
+
+        const email = emailInput.value;
+        const password = passwordInput.value;
+
+        if (!email) {
+            NotificationManager.error('This field is required.');
+            emailInput.focus();
+            return;
+        }
+
+        if (!password) {
+            NotificationManager.error('This field is required.');
+            passwordInput.focus();
+            return;
+        }
 
         if (!validateEmail(email)) {
             NotificationManager.error('Please enter a valid email address');
@@ -93,6 +111,24 @@ export function initializeAuth() {
         const email = emailInput.value;
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
+
+        if (!email) {
+            NotificationManager.error('This field is required.');
+            emailInput.focus();
+            return;
+        }
+
+        if (!password) {
+            NotificationManager.error('This field is required.');
+            passwordInput.focus();
+            return;
+        }
+
+        if (!confirmPassword) {
+            NotificationManager.error('This field is required.');
+            confirmPasswordInput.focus();
+            return;
+        }
 
         if (!validateEmail(email)) {
             NotificationManager.error('Please enter a valid email address');
