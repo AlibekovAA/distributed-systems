@@ -11,6 +11,7 @@
    - **Frontend**: [http://localhost:3000](http://localhost:3000)
    - **Auth Service API**: [http://localhost:8000/auth](http://localhost:8000/auth)
    - **PgAdmin**: [http://localhost:5050](http://localhost:5050)
+   - **Recommendation Service**: [http://localhost:5000](http://localhost:5000)
 
 ## Доступ к сервисам
 
@@ -60,6 +61,10 @@
   - `models/` - модели данных
   - `services/` - бизнес-логика
   - `tests/` - тесты
+- Сервис рекомендаций в `backend/recommendation-service/`
+- Модульная структура:
+ - `app/` - основной код приложения
+ - `models/` - модели данных
 
 ## Очистка Docker окружения
 

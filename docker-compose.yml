@@ -63,6 +63,21 @@ services:
     depends_on:
       - auth-service
 
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    env_file: ".env"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      retries: 3
+    networks:
+      - app-network
+
   # product-catalog-service:
   #   build: ./backend/product-catalog-service
   #   command: >
@@ -74,16 +89,32 @@ services:
   #   ports:
   #     - "8001:8001"
 
-  # recommendation-service:
-  #   build: ./backend/recommendation-service
-  #   command: >
-  #     sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8002"
-  #   environment:
-  #     DATABASE_URL: postgresql://user:password@db:5432/mydatabase
-  #   depends_on:
-  #     - db
-  #   ports:
-  #     - "8002:8002"
+  recommendation-service:
+    build: ./backend/recommendation-service
+    container_name: recommendation_service
+    restart: always
+    command: >
+      sh -c "
+        while ! nc -z db 5432; do
+          sleep 1
+        done &&
+        while ! nc -z rabbitmq 5672; do
+          sleep 1
+        done &&
+        python3 main.py
+      "
+    env_file: ".env"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/recommendation-service:/app
+    networks:
+      - app-network
 
   pgadmin:
     image: dpage/pgadmin4

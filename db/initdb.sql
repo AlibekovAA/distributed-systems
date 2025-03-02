@@ -15,6 +15,16 @@ CREATE TABLE product (
   quantity INTEGER NOT NULL
 );
 
+
+CREATE TABLE user_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    preference_name VARCHAR(255) NOT NULL,
+    preference_value VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
 CREATE TABLE "history" (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
