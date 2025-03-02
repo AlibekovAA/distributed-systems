@@ -1,17 +1,22 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Frontend for e-commerce website",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "lite-server --config bs-config.json",
+    "build": "tsc && npm run copy-files",
+    "copy-files": "bash -c 'cp src/favicon.ico src/index.html dist/ && cp -r src/{styles,modules,pages,services,utils} dist/'"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "lite-server": "^2.6.1",
+    "http-proxy-middleware": "^3.0.3",
+    "connect-history-api-fallback": "^2.0.0"
+  },
+  "devDependencies": {
     "typescript": "^5.7.3"
   }
 }

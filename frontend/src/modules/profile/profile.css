@@ -1,0 +1,147 @@
+.side-menu {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 40px;
+    background: #4f46e5;
+    transition: width 0.3s ease;
+    overflow: hidden;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-menu:hover {
+    width: 200px;
+}
+
+.menu-content {
+    padding-top: 20px;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.menu-items-top {
+    flex-grow: 1;
+}
+
+.menu-items-bottom {
+    margin-bottom: 20px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.menu-item:hover {
+    background-color: #4338ca;
+}
+
+.menu-item.active {
+    background-color: #3730a3;
+}
+
+.menu-icon {
+    font-size: 20px;
+    width: 40px;
+    text-align: center;
+    margin-right: 15px;
+}
+
+.menu-text {
+    white-space: nowrap;
+}
+
+.profile-container {
+    margin-left: 60px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.profile-card {
+    max-width: 600px;
+    margin: 20px auto;
+    width: 100%;
+}
+
+.profile-info {
+    margin-top: 20px;
+}
+
+.info-group {
+    margin: 15px 0;
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-group label {
+    font-weight: 500;
+    color: #6b7280;
+    margin-right: 10px;
+}
+
+.info-group span {
+    color: #111827;
+}
+
+.change-password-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.change-password-section h3 {
+    margin-bottom: 1rem;
+    color: #374151;
+}
+
+.password-form {
+    width: 100%;
+}
+
+.password-form .form-group {
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.change-password-btn {
+    background-color: #4f46e5;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.change-password-btn:hover {
+    background-color: #4338ca;
+}
+
+.balance-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.balance-section h3 {
+    margin-bottom: 1rem;
+    color: #374151;
+}
+
+.add-balance-btn {
+    background-color: #10B981;
+    width: 100%;
+}
+
+.add-balance-btn:hover {
+    background-color: #059669;
+}

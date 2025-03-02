@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr, Field
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
-    full_name: str = ""
+    name: str
 
 
 class UserLogin(BaseModel):
@@ -15,9 +15,28 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    refresh_token: str = None
 
 
 class User(BaseModel):
     id: int
     email: EmailStr
-    full_name: str = ""
+    name: str
+    balance: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
+
+class BalanceUpdate(BaseModel):
+    amount: int
+
+
+class BalanceResponse(BaseModel):
+    success: bool
+    new_balance: int
