@@ -1,10 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import signal
+import sys
 
 from app.api import router
 from app.core.database import engine
 from models import user_model
 
+
+def handle_sigterm(*args):
+    sys.exit(0)
+
+
+signal.signal(signal.SIGTERM, handle_sigterm)
 
 user_model.Base.metadata.create_all(bind=engine)
 

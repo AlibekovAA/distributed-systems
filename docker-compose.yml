@@ -62,6 +62,8 @@ services:
       - app-network
     depends_on:
       - auth-service
+      - product-catalog-service
+      - recommendation-service
 
   rabbitmq:
     image: "rabbitmq:management"
@@ -73,25 +75,16 @@ services:
     env_file: ".env"
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
-      interval: 30s
+      interval: 5s
+      timeout: 5s
       retries: 3
+      start_period: 10s
     networks:
       - app-network
 
-  # product-catalog-service:
-  #   build: ./backend/product-catalog-service
-  #   command: >
-  #     sh -c "go run main.go"
-  #   environment:
-  #     DATABASE_URL: postgresql://user:password@db:5432/mydatabase
-  #   depends_on:
-  #     - db
-  #   ports:
-  #     - "8001:8001"
-
-  recommendation-service:
-    build: ./backend/recommendation-service
-    container_name: recommendation_service
+  product-catalog-service:
+    build: ./backend/product-catalog-service
+    container_name: product_catalog_service
     restart: always
     command: >
       sh -c "
@@ -101,7 +94,40 @@ services:
         while ! nc -z rabbitmq 5672; do
           sleep 1
         done &&
-        python3 main.py
+        /app/main
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    env_file: ".env"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8080/products"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - app-network
+
+  recommendation-service:
+    build:
+      context: ./backend/recommendation-service
+      dockerfile: Dockerfile
+    container_name: recommendation_service
+    restart: always
+    command: >
+      sh -c "
+        while ! nc -z db 5432; do
+          sleep 1
+        done &&
+        while ! timeout 2 bash -c '</dev/tcp/rabbitmq/5672'; do
+          sleep 2;
+        done &&
+        python main.py
       "
     env_file: ".env"
     depends_on:
@@ -109,8 +135,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    ports:
-      - "5000:5000"
     volumes:
       - ./backend/recommendation-service:/app
     networks:

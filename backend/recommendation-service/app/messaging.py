@@ -1,24 +1,34 @@
-import pika
 import json
+import pika
+from urllib.parse import urlparse
+
 from app.logger import log_time, logging
 from app.config import RABBITMQ_URL
 
 
 class RabbitMQConnection:
-    def __init__(self, host: str = RABBITMQ_URL, queue_name: str = "default_queue"):
-        self.host = host
+    def __init__(self, url: str = RABBITMQ_URL, queue_name: str = "default_queue"):
+        self.url = urlparse(url)
         self.queue_name = queue_name
         self.connection = None
         self.channel = None
 
     def connect(self):
         try:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.host))
+            credentials = pika.PlainCredentials(self.url.username, self.url.password)
+            parameters = pika.ConnectionParameters(
+                host=self.url.hostname,
+                port=self.url.port,
+                credentials=credentials,
+                virtual_host=self.url.path[1:] or '/'
+            )
+            self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
             self.channel.queue_declare(queue=self.queue_name, durable=True)
-            logging.info(f"{log_time()} - Connected to RabbitMQ server at {self.host} and queue {self.queue_name}")
+            logging.info(f"{log_time()} - Connected to RabbitMQ server at {self.url.hostname}")
         except Exception as e:
             logging.error(f"{log_time()} - Error connecting to RabbitMQ: {e}")
+            raise
 
     def close(self):
         if self.connection:

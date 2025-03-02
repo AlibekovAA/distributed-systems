@@ -11,7 +11,7 @@
    - **Frontend**: [http://localhost:3000](http://localhost:3000)
    - **Auth Service API**: [http://localhost:8000/auth](http://localhost:8000/auth)
    - **PgAdmin**: [http://localhost:5050](http://localhost:5050)
-   - **Recommendation Service**: [http://localhost:5000](http://localhost:5000)
+   - **Product Catalog Service**: [http://localhost:8080](http://localhost:8080)
 
 ## Доступ к сервисам
 
@@ -32,6 +32,18 @@
   - POST `/auth/change-password` - смена пароля
   - POST `/auth/add-balance` - пополнение баланса
   - POST `/auth/token/refresh` - обновление токена
+
+### Product Catalog Service API
+- Доступен по адресу: [http://localhost:8080](http://localhost:8080)
+- Основные эндпоинты:
+  - GET `/products` - получение списка всех товаров
+  - POST `/products` - создание нового товара
+  - GET `/order/{user_id}` - получение корзины пользователя
+  - POST `/order/add` - добавление товара в корзину
+  - DELETE `/order/{user_id}/{product_id}` - удаление товара из корзины
+  - POST `/order/{user_id}/pay` - оплата заказа
+  - GET `/orders/{user_id}/history` - история заказов пользователя
+  - GET `/users/{id}/balance` - получение баланса пользователя
 
 ### База данных (через pgAdmin)
 1. Откройте [http://localhost:5050](http://localhost:5050)
@@ -65,6 +77,12 @@
 - Модульная структура:
  - `app/` - основной код приложения
  - `models/` - модели данных
+- Сервис каталога товаров в `backend/product-catalog-service/`
+- Модульная структура:
+  - `src/application/` - обработчики HTTP запросов
+  - `src/config/` - конфигурация приложения
+  - `src/db/` - работа с базой данных
+  - `src/models/` - модели данных
 
 ## Очистка Docker окружения
 

@@ -1,0 +1,50 @@
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, JSON, BigInteger, Text, String
+from sqlalchemy.orm import relationship
+
+from app.database import Base
+
+
+class History(Base):
+    __tablename__ = "history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    product_id = Column(Integer, ForeignKey("product.id"))
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    product = relationship("Product")
+
+
+class UserPreferences(Base):
+    __tablename__ = "user_preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    preferences = Column(JSON)
+
+    user = relationship("User")
+
+
+class Recommendation(Base):
+    __tablename__ = "recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    product_id = Column(Integer, ForeignKey("product.id"))
+    score = Column(Integer, nullable=False)
+
+    user = relationship("User")
+    product = relationship("Product")
+
+
+class Product(Base):
+    __tablename__ = "product"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    price = Column(BigInteger, nullable=False)
+    quantity = Column(Integer, nullable=False)

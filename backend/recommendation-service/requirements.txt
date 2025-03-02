@@ -3,3 +3,6 @@ psycopg2-binary
 pytz
 python-dotenv
 pika
+numpy
+pandas
+scikit-learn
