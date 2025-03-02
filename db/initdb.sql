@@ -16,6 +16,13 @@ CREATE TABLE product (
 );
 
 
+CREATE TABLE "order" (
+  id SERIAL PRIMARY KEY, 
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
+   product_id INTEGER REFERENCES product(id) ON DELETE CASCADE
+);
+
+
 CREATE TABLE user_preferences (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -26,11 +33,11 @@ CREATE TABLE user_preferences (
 
 
 CREATE TABLE "history" (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  product_id INTEGER REFERENCES product(id) ON DELETE CASCADE
+  id SERIAL PRIMARY KEY, 
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
+  product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
+  order_number INTEGER
 );
-
 
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
