@@ -1,0 +1,122 @@
+info:
+  contact: {}
+paths:
+  /order/{user_id}:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Получить текущий заказ пользователя
+      tags:
+      - Orders
+  /order/{user_id}/{product_id}:
+    delete:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: ID товара
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Удалить товар из корзины
+      tags:
+      - Orders
+  /order/{user_id}/pay:
+    post:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Оплатить заказ
+      tags:
+      - Orders
+  /order/add:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Добавить товар в корзину
+      tags:
+      - Orders
+  /orders/{user_id}/history:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: История заказов пользователя
+      tags:
+      - Orders
+  /products:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      summary: Получить список товаров
+      tags:
+      - Products
+    post:
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      summary: Создать новый товар
+      tags:
+      - Products
+  /users/{id}/balance:
+    get:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Получить баланс пользователя
+      tags:
+      - Users
+swagger: "2.0"

@@ -13,6 +13,7 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Application struct {
@@ -69,6 +70,11 @@ func (app *Application) Run(ctx context.Context) {
 	log.Println("The product-catalog-service is terminated correctly")
 }
 
+// @title Online Store API
+// @version 1.0
+// @description API для управления товарами и заказами
+// @host localhost:8080
+// @BasePath /
 func (app *Application) RegisterHandlers() {
 	// товары
 	app.Router.HandleFunc("/products", app.getProducts).Methods("GET")
@@ -86,4 +92,6 @@ func (app *Application) RegisterHandlers() {
 
 	// История заказов
 	app.Router.HandleFunc("/orders/{user_id}/history", app.getHistoryOrders).Methods("GET")
+
+	app.Router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 }

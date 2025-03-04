@@ -9,6 +9,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// @Summary История заказов пользователя
+// @Tags Orders
+// @Produce json
+// @Param user_id path int true "ID пользователя"
+// @Success 200
+// @Router /orders/{user_id}/history [get]
 func (app *Application) getHistoryOrders(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
 	if err != nil {

@@ -10,6 +10,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// @Summary Создать новый товар
+// @Tags Products
+// @Produce json
+// @Success 201
+// @Router /products [post]
 func (app *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 	var product models.Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
@@ -27,6 +32,11 @@ func (app *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(product)
 }
 
+// @Summary Получить список товаров
+// @Tags Products
+// @Produce json
+// @Success 200 {array} string
+// @Router /products [get]
 func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	var products []models.Product
 	products, err := database.GetProducts(app.DB)

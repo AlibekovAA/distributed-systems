@@ -11,6 +11,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// @Summary Добавить товар в корзину
+// @Tags Orders
+// @Produce json
+// @Success 200
+// @Router /order/add [post]
 func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 	var order models.Order
 
@@ -48,6 +53,12 @@ func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Product added to cart"})
 }
 
+// @Summary Получить текущий заказ пользователя
+// @Tags Orders
+// @Produce json
+// @Param user_id path int true "ID пользователя"
+// @Success 200
+// @Router /order/{user_id} [get]
 func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
 	if err != nil {
@@ -63,6 +74,13 @@ func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(orders)
 }
 
+// @Summary Удалить товар из корзины
+// @Tags Orders
+// @Produce json
+// @Param user_id path int true "ID пользователя"
+// @Param product_id path int true "ID товара"
+// @Success 200
+// @Router /order/{user_id}/{product_id} [delete]
 func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
 	if err != nil {
@@ -88,6 +106,12 @@ func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte("Product was deleted from order"))
 }
 
+// @Summary Оплатить заказ
+// @Tags Orders
+// @Produce json
+// @Param user_id path int true "ID пользователя"
+// @Success 200
+// @Router /order/{user_id}/pay [post]
 func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
 	if err != nil {

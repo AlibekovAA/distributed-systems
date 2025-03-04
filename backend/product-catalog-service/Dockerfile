@@ -1,16 +1,26 @@
-FROM golang:1.22-alpine
+FROM golang:1.22 AS builder
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod download
 
-COPY . .
+COPY vendor ./vendor
 
-RUN apk add --no-cache bash
+COPY src ./src
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./src/main.go
+WORKDIR /app/src
+
+RUN go build -mod=vendor -o /app/main .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/main .
+
+FROM alpine:latest  
+
+WORKDIR /app
+
+COPY --from=builder /app/main .
 
 EXPOSE 8080
 
 CMD ["/app/main"]
+
