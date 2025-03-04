@@ -12,6 +12,7 @@
    - **Auth Service API**: [http://localhost:8000/auth](http://localhost:8000/auth)
    - **PgAdmin**: [http://localhost:5050](http://localhost:5050)
    - **Product Catalog Service**: [http://localhost:8080](http://localhost:8080)
+   - **Allure Reports**: [http://localhost:5051](http://localhost:5051)
 
 ## Доступ к сервисам
 
@@ -83,6 +84,19 @@
   - `src/config/` - конфигурация приложения
   - `src/db/` - работа с базой данных
   - `src/models/` - модели данных
+  - `src/docs/` - Swagger документация
+
+## Тестирование
+
+1. Запуск тестов:
+   ```bash
+   cd tests
+   python run_tests.py
+   ```
+
+2. Просмотр отчетов:
+   - Allure отчеты доступны по адресу: [http://localhost:5051/allure-docker-service/projects/default/reports/latest/index.html](http://localhost:5051/allure-docker-service/projects/default/reports/latest/index.html)
+   - Покрытие кода в `test-results/`
 
 ## Очистка Docker окружения
 

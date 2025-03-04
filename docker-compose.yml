@@ -52,6 +52,13 @@ services:
     container_name: frontend
     restart: always
     env_file: ".env"
+    depends_on:
+      auth-service:
+        condition: service_started
+      product-catalog-service:
+        condition: service_started
+      recommendation-service:
+        condition: service_started
     ports:
       - "3000:3000"
     volumes:
@@ -60,10 +67,6 @@ services:
       - /app/dist
     networks:
       - app-network
-    depends_on:
-      - auth-service
-      - product-catalog-service
-      - recommendation-service
 
   rabbitmq:
     image: "rabbitmq:management"
@@ -148,7 +151,8 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - db
+      db:
+        condition: service_started
     networks:
       - app-network
 

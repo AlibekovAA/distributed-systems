@@ -1,0 +1,24 @@
+FROM python:3.9-slim as builder
+
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY auth-service/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pytest pytest-cov pytest-xdist allure-pytest requests pytest-asyncio
+
+FROM builder as final
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+COPY auth-service/ .
+
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+CMD ["pytest", "-v", "--alluredir=/app/allure-results", "--cov=app", "--cov-report=term-missing", "--cov-report=xml"]
