@@ -12,8 +12,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    tmpfs:
-      - /var/lib/postgresql/data
 
   auth-service:
     build:
@@ -49,20 +47,10 @@ services:
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1
     volumes:
-      - ./test-results:/app/test-results
       - ./allure-results:/app/allure-results
+      - ./tests-report:/app/allure-report
     depends_on:
       auth-service:
         condition: service_healthy
       postgres-test:
         condition: service_healthy
-
-  allure:
-    image: frankescobar/allure-docker-service
-    environment:
-      CHECK_RESULTS_EVERY_SECONDS: 1
-      KEEP_HISTORY: 1
-    ports:
-      - "5051:5051"
-    volumes:
-      - ./allure-results:/app/allure-results

@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 import os
-import platform
 import subprocess
 import logging
+import shutil
 from typing import NoReturn
 
 
 def setup_logger() -> logging.Logger:
     logger = logging.getLogger("test_runner")
     logger.setLevel(logging.INFO)
-
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                                  datefmt="%Y-%m-%d %H:%M:%S")
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
@@ -22,21 +19,19 @@ def setup_logger() -> logging.Logger:
     return logger
 
 
+def clean_directory(path: str) -> NoReturn:
+    if os.path.exists(path):
+        shutil.rmtree(path, ignore_errors=True)
+        logging.info(f"Removed old {path} directory")
+
+
 def run_tests() -> NoReturn:
     logger = setup_logger()
-    os_type: str = platform.system().lower()
-
     script_dir: str = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
 
-    for directory in ['test-results', 'allure-results']:
-        if os.path.exists(directory):
-            command = ['rm', '-rf', directory] if os_type != 'windows' else ['rmdir', '/s', '/q', directory]
-            try:
-                subprocess.run(command, shell=True, check=True)
-                logger.info(f"Removed old {directory} directory")
-            except subprocess.CalledProcessError as e:
-                logger.error(f"Failed to remove {directory}: {e}")
+    for directory in ['tests-report', 'allure-results']:
+        clean_directory(directory)
 
     try:
         logger.info("Starting test environment...")
@@ -44,25 +39,29 @@ def run_tests() -> NoReturn:
         subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'build'], check=True)
         subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'up', '--exit-code-from', 'tests'], check=True)
 
-        containers = subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'name=tests-tests']).decode().strip()
-        if not containers:
+        container_id = subprocess.check_output(
+            ['docker', 'ps', '-aq', '--filter', 'name=tests-tests']
+        ).decode().strip()
+
+        if not container_id:
             raise Exception("Tests container not found")
 
-        container_id = containers.split('\n')[0]
-        exit_code = subprocess.check_output(['docker', 'inspect', container_id, '-f', '{{.State.ExitCode}}']).decode().strip()
+        exit_code = subprocess.run(['docker', 'wait', container_id], capture_output=True, text=True).stdout.strip()
 
         try:
-            subprocess.run(['docker', 'run', '-d',
-                          '-p', '5051:5051',
-                          '-e', 'CHECK_RESULTS_EVERY_SECONDS=3',
-                          '-e', 'KEEP_HISTORY=1',
-                          '-v', f'{script_dir}/allure-results:/app/allure-results',
-                          'frankescobar/allure-docker-service'], check=True)
-            logger.info(
-                "Allure report is available at: http://localhost:5051/allure-docker-service/projects/default"
-            )
+            subprocess.run([
+                'docker', 'exec', container_id, 'allure', 'generate',
+                '/app/allure-results', '-o', '/app/allure-report', '--clean', '--single-file'
+            ], check=True)
+
+            clean_directory(os.path.join(script_dir, 'allure-report'))
+
+            logger.info("Allure report generated successfully.")
+
         except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to start Allure server: {e}")
+            logger.error(f"Failed to generate Allure report: {e}")
+
+        subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'down'], check=True)
 
         if exit_code != '0':
             logger.error(f"Tests failed with exit code {exit_code}")
@@ -72,6 +71,7 @@ def run_tests() -> NoReturn:
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Command failed: {e}")
+        subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'down'], check=False)
         exit(1)
 
 

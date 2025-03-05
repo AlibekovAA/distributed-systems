@@ -25,3 +25,5 @@ db/migrations.sql
 
 backend/product-catalog-service/vendor
 tests/.env
+tests/allure-results
+tests/tests-report
