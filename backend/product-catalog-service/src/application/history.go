@@ -9,10 +9,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// @Summary История заказов пользователя
+// @Summary User's order history
 // @Tags Orders
 // @Produce json
-// @Param user_id path int true "ID пользователя"
+// @Param user_id path int true "User ID"
 // @Success 200
 // @Router /orders/{user_id}/history [get]
 func (app *Application) getHistoryOrders(w http.ResponseWriter, r *http.Request) {

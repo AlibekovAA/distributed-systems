@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// @Summary Создать новый товар
+// @Summary Create a new product
 // @Tags Products
 // @Produce json
 // @Success 201
@@ -32,7 +32,7 @@ func (app *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(product)
 }
 
-// @Summary Получить список товаров
+// @Summary Get a list of products
 // @Tags Products
 // @Produce json
 // @Success 200 {array} string
@@ -48,7 +48,11 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(products)
 }
 
-// TODO:Для админской панели
+// @Summary Delete a product
+// @Tags Products
+// @Produce json
+// @Success 200 {array} string
+// @Router /products [delete]
 func (app *Application) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {

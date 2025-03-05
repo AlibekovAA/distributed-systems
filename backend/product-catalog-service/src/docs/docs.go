@@ -23,7 +23,7 @@ const docTemplate = `{
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Добавить товар в корзину",
+                "summary": "Add an item to the cart",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -39,11 +39,11 @@ const docTemplate = `{
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Получить текущий заказ пользователя",
+                "summary": "Get the user's current order",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID пользователя",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
@@ -64,11 +64,11 @@ const docTemplate = `{
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Оплатить заказ",
+                "summary": "Pay for the order",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID пользователя",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
@@ -89,18 +89,18 @@ const docTemplate = `{
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Удалить товар из корзины",
+                "summary": "Delete an item from the shopping cart",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID пользователя",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
-                        "description": "ID товара",
+                        "description": "ID of product",
                         "name": "product_id",
                         "in": "path",
                         "required": true
@@ -121,11 +121,11 @@ const docTemplate = `{
                 "tags": [
                     "Orders"
                 ],
-                "summary": "История заказов пользователя",
+                "summary": "User's order history",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID пользователя",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
@@ -146,7 +146,7 @@ const docTemplate = `{
                 "tags": [
                     "Products"
                 ],
-                "summary": "Получить список товаров",
+                "summary": "Get a list of products",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -166,35 +166,30 @@ const docTemplate = `{
                 "tags": [
                     "Products"
                 ],
-                "summary": "Создать новый товар",
+                "summary": "Create a new product",
                 "responses": {
                     "201": {
                         "description": "Created"
                     }
                 }
-            }
-        },
-        "/users/{id}/balance": {
-            "get": {
+            },
+            "delete": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "Products"
                 ],
-                "summary": "Получить баланс пользователя",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID пользователя",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Delete a product",
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }

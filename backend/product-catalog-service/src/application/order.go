@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// @Summary Добавить товар в корзину
+// @Summary Add an item to the cart
 // @Tags Orders
 // @Produce json
 // @Success 200
@@ -53,10 +53,10 @@ func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Product added to cart"})
 }
 
-// @Summary Получить текущий заказ пользователя
+// @Summary Get the user's current order
 // @Tags Orders
 // @Produce json
-// @Param user_id path int true "ID пользователя"
+// @Param user_id path int true "User ID"
 // @Success 200
 // @Router /order/{user_id} [get]
 func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
@@ -74,11 +74,11 @@ func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(orders)
 }
 
-// @Summary Удалить товар из корзины
+// @Summary Delete an item from the shopping cart
 // @Tags Orders
 // @Produce json
-// @Param user_id path int true "ID пользователя"
-// @Param product_id path int true "ID товара"
+// @Param user_id path int true "User ID"
+// @Param product_id path int true "ID of product"
 // @Success 200
 // @Router /order/{user_id}/{product_id} [delete]
 func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) {
@@ -106,10 +106,10 @@ func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte("Product was deleted from order"))
 }
 
-// @Summary Оплатить заказ
+// @Summary Pay for the order
 // @Tags Orders
 // @Produce json
-// @Param user_id path int true "ID пользователя"
+// @Param user_id path int true "User ID"
 // @Success 200
 // @Router /order/{user_id}/pay [post]
 func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {

@@ -4,7 +4,7 @@ paths:
   /order/{user_id}:
     get:
       parameters:
-      - description: ID пользователя
+      - description: User ID
         in: path
         name: user_id
         required: true
@@ -14,18 +14,18 @@ paths:
       responses:
         "200":
           description: OK
-      summary: Получить текущий заказ пользователя
+      summary: Get the user's current order
       tags:
       - Orders
   /order/{user_id}/{product_id}:
     delete:
       parameters:
-      - description: ID пользователя
+      - description: User ID
         in: path
         name: user_id
         required: true
         type: integer
-      - description: ID товара
+      - description: ID of product
         in: path
         name: product_id
         required: true
@@ -35,13 +35,13 @@ paths:
       responses:
         "200":
           description: OK
-      summary: Удалить товар из корзины
+      summary: Delete an item from the shopping cart
       tags:
       - Orders
   /order/{user_id}/pay:
     post:
       parameters:
-      - description: ID пользователя
+      - description: User ID
         in: path
         name: user_id
         required: true
@@ -51,7 +51,7 @@ paths:
       responses:
         "200":
           description: OK
-      summary: Оплатить заказ
+      summary: Pay for the order
       tags:
       - Orders
   /order/add:
@@ -61,13 +61,13 @@ paths:
       responses:
         "200":
           description: OK
-      summary: Добавить товар в корзину
+      summary: Add an item to the cart
       tags:
       - Orders
   /orders/{user_id}/history:
     get:
       parameters:
-      - description: ID пользователя
+      - description: User ID
         in: path
         name: user_id
         required: true
@@ -77,10 +77,23 @@ paths:
       responses:
         "200":
           description: OK
-      summary: История заказов пользователя
+      summary: User's order history
       tags:
       - Orders
   /products:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      summary: Delete a product
+      tags:
+      - Products
     get:
       produces:
       - application/json
@@ -91,7 +104,7 @@ paths:
             items:
               type: string
             type: array
-      summary: Получить список товаров
+      summary: Get a list of products
       tags:
       - Products
     post:
@@ -100,23 +113,7 @@ paths:
       responses:
         "201":
           description: Created
-      summary: Создать новый товар
+      summary: Create a new product
       tags:
       - Products
-  /users/{id}/balance:
-    get:
-      parameters:
-      - description: ID пользователя
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      summary: Получить баланс пользователя
-      tags:
-      - Users
 swagger: "2.0"

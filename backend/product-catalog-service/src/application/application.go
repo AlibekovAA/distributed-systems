@@ -72,7 +72,7 @@ func (app *Application) Run(ctx context.Context) {
 
 // @title Online Store API
 // @version 1.0
-// @description API для управления товарами и заказами
+// @description API for managing goods and orders
 // @host localhost:8080
 // @BasePath /
 func (app *Application) RegisterHandlers() {
@@ -80,15 +80,13 @@ func (app *Application) RegisterHandlers() {
 	app.Router.HandleFunc("/products", app.getProducts).Methods("GET")
 	//app.Router.HandleFunc("/products/{id}", updateProduct).Methods("PUT")
 	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
-	//app.Router.HandleFunc("/products/{id}", app.deleteProduct).Methods("DELETE")
+	app.Router.HandleFunc("/products/{id}", app.deleteProduct).Methods("DELETE")
 
 	// Заказ (корзина)
 	app.Router.HandleFunc("/order/add", app.addToOrder).Methods("POST")
 	app.Router.HandleFunc("/order/{user_id}", app.getOrder).Methods("GET")
 	app.Router.HandleFunc("/order/{user_id}/pay", app.payForOrder).Methods("POST")
 	app.Router.HandleFunc("/order/{user_id}/{product_id}", app.removeFromOrder).Methods("DELETE")
-
-	app.Router.HandleFunc("/users/{id}/balance", app.getBalance).Methods("GET")
 
 	// История заказов
 	app.Router.HandleFunc("/orders/{user_id}/history", app.getHistoryOrders).Methods("GET")
