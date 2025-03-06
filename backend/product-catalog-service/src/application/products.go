@@ -6,6 +6,7 @@ import (
 	"main/src/models"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -44,6 +45,8 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed get products", http.StatusInternalServerError)
 		return
 	}
+
+	time.Sleep(20 * time.Second)
 
 	json.NewEncoder(w).Encode(products)
 }

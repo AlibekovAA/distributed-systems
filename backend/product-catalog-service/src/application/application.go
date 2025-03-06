@@ -50,7 +50,7 @@ func (app *Application) Run(ctx context.Context) {
 
 	go func() {
 		log.Printf("Product-catalog-service running on  %s", app.Addr)
-		serverErr <- http.ListenAndServe(app.Addr, app.Router)
+		serverErr <- http.ListenAndServe(app.Addr, corsMiddleware(app.Router))
 	}()
 
 	select {
@@ -92,4 +92,20 @@ func (app *Application) RegisterHandlers() {
 	app.Router.HandleFunc("/orders/{user_id}/history", app.getHistoryOrders).Methods("GET")
 
 	app.Router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
