@@ -12,12 +12,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - test-network
 
   auth-service:
     build:
       context: ../backend/auth-service
       dockerfile: Dockerfile
     image: auth-service:latest
+    restart: always
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: ${SECRET_KEY}
@@ -25,32 +28,73 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/auth/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     depends_on:
       postgres-test:
         condition: service_healthy
+    networks:
+      - test-network
+    ports:
+      - "8000:8000"
+
+  product-catalog-service:
+    build:
+      context: ../backend/product-catalog-service
+      dockerfile: Dockerfile
+    image: product-catalog-service:latest
+    restart: always
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8080/products"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks:
+      - test-network
+    ports:
+      - "8080:8080"
 
   tests:
     build:
-      context: ../backend
-      dockerfile: auth-service/Dockerfile.test
-    image: auth-service-tests:latest
+      context: .
+      dockerfile: Dockerfile.test.base
+    volumes:
+      - ../backend/auth-service:/app/auth-service
+      - ../backend/product-catalog-service:/app/product-catalog-service
+      - ./allure-results:/app/allure-results
+      - ./tests-report:/app/allure-report
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
-      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      AUTH_SERVICE_URL: "http://auth-service:8000"
+      PRODUCT_SERVICE_URL: "http://product-catalog-service:8080"
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1
-    volumes:
-      - ./allure-results:/app/allure-results
-      - ./tests-report:/app/allure-report
     depends_on:
       auth-service:
         condition: service_healthy
-      postgres-test:
+      product-catalog-service:
         condition: service_healthy
+    command: >
+      bash -c "
+        mkdir -p allure-results/auth allure-results/product-catalog &&
+        (cd auth-service && pytest tests -v --alluredir=../allure-results/auth --cov=app) &
+        (cd product-catalog-service && pytest tests -v --alluredir=../allure-results/product-catalog --cov=src) &
+        wait
+      "
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
