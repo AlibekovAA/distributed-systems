@@ -1,12 +1,15 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker, scoped_session
 from contextlib import contextmanager
 
 from app.core.config import DATABASE_URL
 from app.core.logger import log_time, logging
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
+
 
 try:
     engine = create_engine(

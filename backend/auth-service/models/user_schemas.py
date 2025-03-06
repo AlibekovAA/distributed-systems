@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
+from pydantic import ConfigDict
 
 
 class UserCreate(BaseModel):
@@ -24,8 +25,7 @@ class User(BaseModel):
     name: str
     balance: int = 0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PasswordChange(BaseModel):

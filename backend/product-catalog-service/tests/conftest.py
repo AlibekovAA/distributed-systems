@@ -1,7 +1,7 @@
 import pytest
 import requests
 
-BASE_URL = "http://localhost:7070"
+BASE_URL = "http://localhost:8080"
 
 
 @pytest.fixture

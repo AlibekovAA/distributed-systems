@@ -25,28 +25,12 @@ def clean_directory(path: str) -> NoReturn:
         logging.info(f"Removed old {path} directory")
 
 
-def merge_allure_results() -> NoReturn:
-    auth_results = "allure-results/auth"
-    product_results = "allure-results/product-catalog"
-    merged_results = "allure-results/merged"
-
-    os.makedirs(merged_results, exist_ok=True)
-
-    for directory in [auth_results, product_results]:
-        if os.path.exists(directory):
-            for result_file in os.listdir(directory):
-                shutil.copy2(
-                    os.path.join(directory, result_file),
-                    os.path.join(merged_results, result_file)
-                )
-
-
 def run_tests() -> NoReturn:
     logger = setup_logger()
     script_dir: str = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
 
-    for directory in ['tests-report', 'allure-results']:
+    for directory in ['allure-report', 'allure-results']:
         clean_directory(directory)
 
     try:
@@ -55,13 +39,22 @@ def run_tests() -> NoReturn:
         subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'build'], check=True)
         subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'up', '--exit-code-from', 'tests'], check=True)
 
-        merge_allure_results()
+        container_id = subprocess.check_output(
+            ['docker', 'ps', '-aq', '--filter', 'name=tests-tests']
+        ).decode().strip()
+
+        if not container_id:
+            raise Exception("Tests container not found")
+
+        exit_code = subprocess.run(['docker', 'wait', container_id], capture_output=True, text=True).stdout.strip()
 
         try:
             subprocess.run([
-                'allure', 'generate',
-                'allure-results/merged', '-o', 'tests-report', '--clean'
+                'docker', 'exec', container_id, 'allure', 'generate',
+                '/app/allure-results', '-o', '/app/allure-report', '--clean', '--single-file'
             ], check=True)
+
+            clean_directory(os.path.join(script_dir, 'allure-report'))
 
             logger.info("Allure report generated successfully.")
 
@@ -69,6 +62,12 @@ def run_tests() -> NoReturn:
             logger.error(f"Failed to generate Allure report: {e}")
 
         subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'down'], check=True)
+
+        if exit_code != '0':
+            logger.error(f"Tests failed with exit code {exit_code}")
+            exit(int(exit_code))
+        else:
+            logger.info("Tests completed successfully")
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Command failed: {e}")
