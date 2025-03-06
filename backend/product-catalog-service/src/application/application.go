@@ -40,7 +40,7 @@ func (app *Application) Configure(ctx context.Context, cfg *config.Config) error
 	app.DB = db
 	app.Addr = cfg.Addr
 
-	conn, err := amqp.Dial(RabbitMQURL)
+	conn, err := amqp.Dial(cfg.RabbitMQURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ %+v", err)
 	}

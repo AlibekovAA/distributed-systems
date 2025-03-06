@@ -5,8 +5,9 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig `envPrefix:"DATABASE_"`
-	Addr     string         `env:"ADDR"`
+	Database    DatabaseConfig `envPrefix:"DATABASE_"`
+	Addr        string         `env:"ADDR"`
+	RabbitMQURL string         `env:"RABBITMQ_URL"`
 }
 
 type DatabaseConfig struct {
