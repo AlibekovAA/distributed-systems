@@ -13,13 +13,16 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/streadway/amqp"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Application struct {
-	DB     database.DB
-	Router *mux.Router
-	Addr   string
+	DB            database.DB
+	Router        *mux.Router
+	Addr          string
+	RabbitConn    *amqp.Connection
+	RabbitChannel *amqp.Channel
 }
 
 func NewApplication() *Application {
@@ -36,6 +39,20 @@ func (app *Application) Configure(ctx context.Context, cfg *config.Config) error
 
 	app.DB = db
 	app.Addr = cfg.Addr
+
+	conn, err := amqp.Dial(RabbitMQURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to RabbitMQ %+v", err)
+	}
+
+	app.RabbitConn = conn
+
+	ch, err := conn.Channel()
+	if err != nil {
+		log.Fatalf("Failed to open a channel %+v", err)
+	}
+
+	app.RabbitChannel = ch
 
 	return nil
 }
@@ -62,6 +79,15 @@ func (app *Application) Run(ctx context.Context) {
 		log.Println("Shutting down the product-catalog-service...")
 	}
 
+	if app.RabbitChannel != nil {
+		log.Println("Closing RabbitMQ channel...")
+		app.RabbitChannel.Close()
+	}
+	if app.RabbitConn != nil {
+		log.Println("Closing RabbitMQ connection...")
+		app.RabbitConn.Close()
+	}
+
 	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -77,7 +103,7 @@ func (app *Application) Run(ctx context.Context) {
 // @BasePath /
 func (app *Application) RegisterHandlers() {
 	// товары
-	app.Router.HandleFunc("/products", app.getProducts).Methods("GET")
+	app.Router.HandleFunc("/products/{user_id}", app.getProducts).Methods("GET")
 	//app.Router.HandleFunc("/products/{id}", updateProduct).Methods("PUT")
 	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
 	app.Router.HandleFunc("/products/{id}", app.deleteProduct).Methods("DELETE")
