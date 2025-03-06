@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	RabbitMQURL   = "amqp://guest:guest@localhost:5672/"
 	requestQueue  = "recommendations"
 	responseQueue = "recommendations_response"
 )
