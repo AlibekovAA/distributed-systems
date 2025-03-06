@@ -30,7 +30,9 @@
   - POST `/auth/change-password` - смена пароля
   - POST `/auth/add-balance` - пополнение баланса
   - POST `/auth/token/refresh` - обновление токена
-  - GET `/auth/health` - проверка соостояния сервиса
+  - GET `/auth/health` - проверка состояния сервиса
+  - GET `/preferences/check` - проверка наличия заполненной анкеты предпочтений у пользователя
+  - POST `/preferences/save` - сохранение заполненной анкеты предпочтений пользователя
 
 ### Product Catalog Service API
 - Основные эндпоинты:
