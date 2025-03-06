@@ -16,8 +16,7 @@
 ## Доступ к сервисам
 
 ### Frontend
-- Откройте [http://localhost:3000](http://localhost:3000)
-- Доступны функции регистрации и входа
+- Доступны функции регистрации, входа и страница профиля пользователя.
 - Навигация по разделам:
   - Профиль пользователя
   - Каталог товаров
@@ -34,16 +33,15 @@
   - GET `/auth/health` - проверка соостояния сервиса
 
 ### Product Catalog Service API
-- Доступен по адресу: [http://localhost:8080](http://localhost:8080)
 - Основные эндпоинты:
-  - GET /products - получение списка всех товаров
-  - POST /products - создание нового товара
-  - DELETE /products - удаление товара
-  - GET /order/{user_id} - получение корзины пользователя
-  - POST /order/add - добавление товара в корзину
-  - DELETE /order/{user_id}/{product_id} - удаление товара из корзины
-  - POST /order/{user_id}/pay - оплата заказа
-  - GET /orders/{user_id}/history - история заказов пользователя
+  - GET `/products` - получение списка всех товаров
+  - POST `/products` - создание нового товара
+  - DELETE `/products` - удаление товара
+  - GET `/order/{user_id}` - получение корзины пользователя
+  - POST `/order/add` - добавление товара в корзину
+  - DELETE `/order/{user_id}/{product_id}` - удаление товара из корзины
+  - POST `/order/{user_id}/pay` - оплата заказа
+  - GET `/orders/{user_id}/history` - история заказов пользователя
 
 ### Swagger документация
 В проекте используется объединенная Swagger-документация для сервисов, написанных на FastAPI и Golang.
@@ -58,7 +56,6 @@
 
 Для остановки сервера нажмите Enter в консоли.
 ### База данных (через pgAdmin)
-1. Откройте [http://localhost:5050](http://localhost:5050)
 2. Войдите в pgAdmin:
    - Email: `admin@admin.com`
    - Password: `admin`
