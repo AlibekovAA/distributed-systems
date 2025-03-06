@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from pydantic import ConfigDict
+from datetime import datetime
 
 
 class UserCreate(BaseModel):
@@ -21,9 +22,10 @@ class Token(BaseModel):
 
 class User(BaseModel):
     id: int
-    email: EmailStr
+    email: str
     name: str
-    balance: int = 0
+    balance: int
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,3 +42,13 @@ class BalanceUpdate(BaseModel):
 class BalanceResponse(BaseModel):
     success: bool
     new_balance: int
+
+
+class UserPreferenceCreate(BaseModel):
+    category_id: int
+    score: int = Field(..., ge=1, le=10)
+
+
+class Category(BaseModel):
+    id: int
+    name: str

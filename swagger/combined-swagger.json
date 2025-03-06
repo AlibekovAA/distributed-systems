@@ -264,6 +264,78 @@
                 ]
             }
         },
+        "/auth/preferences/check": {
+            "get": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Check Preferences",
+                "operationId": "check_preferences_auth_preferences_check_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/auth/preferences/save": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Save Preferences",
+                "operationId": "save_preferences_auth_preferences_save_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "items": {
+                                    "$ref": "#/components/schemas/UserPreferenceCreate"
+                                },
+                                "type": "array",
+                                "title": "Preferences"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
         "/order/add": {
             "post": {
                 "produces": [
@@ -540,7 +612,6 @@
                     },
                     "email": {
                         "type": "string",
-                        "format": "email",
                         "title": "Email"
                     },
                     "name": {
@@ -549,15 +620,21 @@
                     },
                     "balance": {
                         "type": "integer",
-                        "title": "Balance",
-                        "default": 0
+                        "title": "Balance"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
                     }
                 },
                 "type": "object",
                 "required": [
                     "id",
                     "email",
-                    "name"
+                    "name",
+                    "balance",
+                    "created_at"
                 ],
                 "title": "User"
             },
@@ -603,6 +680,26 @@
                     "password"
                 ],
                 "title": "UserLogin"
+            },
+            "UserPreferenceCreate": {
+                "properties": {
+                    "category_id": {
+                        "type": "integer",
+                        "title": "Category Id"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "maximum": 10,
+                        "minimum": 1,
+                        "title": "Score"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "category_id",
+                    "score"
+                ],
+                "title": "UserPreferenceCreate"
             },
             "ValidationError": {
                 "properties": {

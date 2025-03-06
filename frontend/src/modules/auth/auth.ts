@@ -1,5 +1,6 @@
 import { AuthService } from '../../services/authService.js';
 import NotificationManager from '../../utils/notifications.js';
+import { showPreferencesForm } from '../preferences/preferences.js';
 
 const handleError = (error: unknown) => {
     NotificationManager.error(error instanceof Error ? error.message : 'An unknown error occurred');
@@ -46,8 +47,15 @@ const handleLogin = async (form: HTMLFormElement) => {
         const response = await AuthService.login(values.loginEmail, values.loginPassword);
         localStorage.setItem('access_token', response.access_token);
         if (response.refresh_token) localStorage.setItem('refresh_token', response.refresh_token);
-        NotificationManager.success('Successfully logged in!');
-        window.location.href = '/pages/profile/index.html';
+
+        const preferencesCheck = await AuthService.checkPreferences();
+        if (!preferencesCheck.has_preferences && preferencesCheck.categories) {
+            NotificationManager.success('Successful entry! Please fill out the preference form.');
+            await showPreferencesForm(preferencesCheck.categories);
+        } else {
+            NotificationManager.success('Successful entry!');
+            window.location.href = '/pages/profile/index.html';
+        }
     } catch (error) {
         handleError(error);
     }

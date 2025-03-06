@@ -15,6 +15,21 @@ interface BalanceResponse {
     new_balance: number;
 }
 
+interface Category {
+    id: number;
+    name: string;
+}
+
+interface PreferenceCheck {
+    has_preferences: boolean;
+    categories?: Category[];
+}
+
+interface Preference {
+    category_id: number;
+    score: number;
+}
+
 export class AuthService {
     private static readonly BASE_URL = 'http://localhost:8000/auth';
     private static readonly TOKEN_KEY = 'access_token';
@@ -106,5 +121,18 @@ export class AuthService {
         });
 
         return this.handleResponse<BalanceResponse>(response);
+    }
+
+    static async checkPreferences(): Promise<PreferenceCheck> {
+        const response = await this.fetchWithAuth('/preferences/check');
+        return this.handleResponse<PreferenceCheck>(response);
+    }
+
+    static async savePreferences(preferences: Preference[]): Promise<void> {
+        const response = await this.fetchWithAuth('/preferences/save', {
+            method: 'POST',
+            body: JSON.stringify(preferences),
+        });
+        await this.handleResponse(response);
     }
 }

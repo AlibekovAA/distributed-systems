@@ -5,6 +5,7 @@ from fastapi import (APIRouter,
                      Request)
 from datetime import datetime
 from sqlalchemy.orm import Session
+from typing import List
 
 from models.user_schemas import (UserCreate,
                                  UserLogin,
@@ -12,8 +13,11 @@ from models.user_schemas import (UserCreate,
                                  User,
                                  PasswordChange,
                                  BalanceUpdate,
-                                 BalanceResponse)
+                                 BalanceResponse,
+                                 UserPreferenceCreate)
 from models.user_model import User as UserModel
+from models.preference_model import UserPreference
+from models.category_model import Category
 from services.auth_service import (authenticate_user,
                                    create_user,
                                    create_access_token,
@@ -26,6 +30,8 @@ from app.core.config import SECRET_KEY, ALGORITHM
 from app.core.logger import log_time, logging
 
 router = APIRouter()
+
+logging.info(f"{log_time()} - API router initialized")
 
 
 @router.post("/register", response_model=User)
@@ -142,3 +148,51 @@ def add_balance(
 
         logging.info(f"{log_time()} - Balance updated for {current_user.email}: +{balance_data.amount}, new balance: {current_user.balance}")
         return {"success": True, "new_balance": current_user.balance}
+
+
+@router.get("/preferences/check")
+def check_preferences(
+    token: str = token_dependency,
+    db: Session = db_dependency
+):
+    try:
+        with get_db() as db:
+            current_user = get_current_user(token, db)
+            has_preferences = db.query(UserPreference).filter(
+                UserPreference.user_id == current_user.id
+            ).first() is not None
+
+            if has_preferences:
+                logging.info(f"{log_time()} - User {current_user.email} preferences checked: has preferences")
+                return {"has_preferences": True}
+
+            categories = db.query(Category).all()
+            logging.info(f"{log_time()} - User {current_user.email} preferences checked: needs to fill preferences")
+            return {
+                "has_preferences": False,
+                "categories": [{"id": c.id, "name": c.name} for c in categories]
+            }
+    except Exception as e:
+        logging.error(f"{log_time()} - Error checking preferences: {str(e)}")
+        raise
+
+
+@router.post("/preferences/save")
+def save_preferences(
+    preferences: List[UserPreferenceCreate],
+    token: str = token_dependency,
+    db: Session = db_dependency
+):
+    with get_db() as db:
+        current_user = get_current_user(token, db)
+
+        for pref in preferences:
+            db_preference = UserPreference(
+                user_id=current_user.id,
+                preference_name=f"category_{pref.category_id}",
+                preference_value=str(pref.score)
+            )
+            db.add(db_preference)
+
+        db.commit()
+        return {"success": True}
