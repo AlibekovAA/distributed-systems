@@ -1,5 +1,11 @@
 import json
 import webbrowser
+import threading
+import os
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
 
 with open('fastapi-swagger.json', 'r') as f:
     fastapi_swagger = json.load(f)
@@ -13,13 +19,41 @@ combined_swagger = {
         'title': 'Combined Swagger',
         'version': '1.0.0'
     },
-    'paths': {}
+    'paths': {},
+    'components': {
+        'schemas': {}
+    }
 }
 
-combined_swagger['paths'].update(fastapi_swagger['paths'])
-combined_swagger['paths'].update(golang_swagger['paths'])
+combined_swagger['paths'].update(fastapi_swagger.get('paths', {}))
+combined_swagger['paths'].update(golang_swagger.get('paths', {}))
+combined_swagger['components']['schemas'].update(fastapi_swagger.get('components', {}).get('schemas', {}))
+combined_swagger['components']['schemas'].update(golang_swagger.get('components', {}).get('schemas', {}))
 
-with open('combined-swagger.json', 'w') as f:
+swagger_filename = 'combined-swagger.json'
+swagger_path = os.path.join(BASE_DIR, swagger_filename)
+
+with open(swagger_path, 'w') as f:
     json.dump(combined_swagger, f, indent=4)
 
-webbrowser.open('http://localhost:4040/swagger-ui/?url=/combined-swagger.json')
+PORT = 4040
+
+
+class CustomHandler(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        super().end_headers()
+
+
+def run_server():
+    server = HTTPServer(('localhost', PORT), CustomHandler)
+    print(f"Serving {swagger_filename} at http://localhost:{PORT}/")
+    server.serve_forever()
+
+
+thread = threading.Thread(target=run_server, daemon=True)
+thread.start()
+
+webbrowser.open(f'https://petstore.swagger.io/?url=http://localhost:{PORT}/{swagger_filename}')
+
+input("Press Enter to stop server...\n")

@@ -24,7 +24,6 @@
   - Корзина покупок
 
 ### Auth Service API
-- Swagger документация: [http://localhost:8000/docs](http://localhost:8000/docs)
 - Основные эндпоинты:
   - POST `/auth/register` - регистрация
   - POST `/auth/login` - вход
@@ -32,19 +31,32 @@
   - POST `/auth/change-password` - смена пароля
   - POST `/auth/add-balance` - пополнение баланса
   - POST `/auth/token/refresh` - обновление токена
+  - GET `/auth/health` - проверка соостояния сервиса
 
 ### Product Catalog Service API
 - Доступен по адресу: [http://localhost:8080](http://localhost:8080)
 - Основные эндпоинты:
-  - GET `/products` - получение списка всех товаров
-  - POST `/products` - создание нового товара
-  - GET `/order/{user_id}` - получение корзины пользователя
-  - POST `/order/add` - добавление товара в корзину
-  - DELETE `/order/{user_id}/{product_id}` - удаление товара из корзины
-  - POST `/order/{user_id}/pay` - оплата заказа
-  - GET `/orders/{user_id}/history` - история заказов пользователя
-  - GET `/users/{id}/balance` - получение баланса пользователя
+  - GET /products - получение списка всех товаров
+  - POST /products - создание нового товара
+  - DELETE /products - удаление товара
+  - GET /order/{user_id} - получение корзины пользователя
+  - POST /order/add - добавление товара в корзину
+  - DELETE /order/{user_id}/{product_id} - удаление товара из корзины
+  - POST /order/{user_id}/pay - оплата заказа
+  - GET /orders/{user_id}/history - история заказов пользователя
 
+### Swagger документация
+В проекте используется объединенная Swagger-документация для сервисов, написанных на FastAPI и Golang.
+1. Запуск swagger UI:
+   ```bash
+   cd swagger
+   python swagger.py
+   ```
+2. Просмотр отчетов:
+   - Swagger UI: `https://petstore.swagger.io/?url=http://localhost:4040/combined-swagger.json`
+3.Для остановки сервера нажмите Enter в консоли.
+
+Для остановки сервера нажмите Enter в консоли.
 ### База данных (через pgAdmin)
 1. Откройте [http://localhost:5050](http://localhost:5050)
 2. Войдите в pgAdmin:
@@ -92,7 +104,6 @@
    cd tests
    python run_tests.py
    ```
-
 2. Просмотр отчетов:
    - Allure отчет: `tests-report/index.html`
 
@@ -100,10 +111,7 @@
 
 ```bash
 docker stop $(docker ps -a -q)
-
 docker rm $(docker ps -a -q)
-
 docker rmi $(docker images -q)
-
 docker system prune -a --volumes -f
 ```

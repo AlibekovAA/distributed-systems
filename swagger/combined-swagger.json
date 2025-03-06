@@ -272,7 +272,7 @@
                 "tags": [
                     "Orders"
                 ],
-                "summary": "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0442\u043e\u0432\u0430\u0440 \u0432 \u043a\u043e\u0440\u0437\u0438\u043d\u0443",
+                "summary": "Add an item to the cart",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -288,11 +288,11 @@
                 "tags": [
                     "Orders"
                 ],
-                "summary": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0442\u0435\u043a\u0443\u0449\u0438\u0439 \u0437\u0430\u043a\u0430\u0437 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                "summary": "Get the user's current order",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
@@ -313,11 +313,11 @@
                 "tags": [
                     "Orders"
                 ],
-                "summary": "\u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c \u0437\u0430\u043a\u0430\u0437",
+                "summary": "Pay for the order",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
@@ -338,18 +338,18 @@
                 "tags": [
                     "Orders"
                 ],
-                "summary": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0442\u043e\u0432\u0430\u0440 \u0438\u0437 \u043a\u043e\u0440\u0437\u0438\u043d\u044b",
+                "summary": "Delete an item from the shopping cart",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
-                        "description": "ID \u0442\u043e\u0432\u0430\u0440\u0430",
+                        "description": "ID of product",
                         "name": "product_id",
                         "in": "path",
                         "required": true
@@ -370,11 +370,11 @@
                 "tags": [
                     "Orders"
                 ],
-                "summary": "\u0418\u0441\u0442\u043e\u0440\u0438\u044f \u0437\u0430\u043a\u0430\u0437\u043e\u0432 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                "summary": "User's order history",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "path",
                         "required": true
@@ -395,7 +395,7 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0441\u043f\u0438\u0441\u043e\u043a \u0442\u043e\u0432\u0430\u0440\u043e\u0432",
+                "summary": "Get a list of products",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -415,37 +415,225 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u043d\u043e\u0432\u044b\u0439 \u0442\u043e\u0432\u0430\u0440",
+                "summary": "Create a new product",
                 "responses": {
                     "201": {
                         "description": "Created"
                     }
                 }
-            }
-        },
-        "/users/{id}/balance": {
-            "get": {
+            },
+            "delete": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "Products"
                 ],
-                "summary": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0431\u0430\u043b\u0430\u043d\u0441 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Delete a product",
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BalanceResponse": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "title": "Success"
+                    },
+                    "new_balance": {
+                        "type": "integer",
+                        "title": "New Balance"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "success",
+                    "new_balance"
+                ],
+                "title": "BalanceResponse"
+            },
+            "BalanceUpdate": {
+                "properties": {
+                    "amount": {
+                        "type": "integer",
+                        "title": "Amount"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "amount"
+                ],
+                "title": "BalanceUpdate"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "PasswordChange": {
+                "properties": {
+                    "old_password": {
+                        "type": "string",
+                        "title": "Old Password"
+                    },
+                    "new_password": {
+                        "type": "string",
+                        "title": "New Password"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "old_password",
+                    "new_password"
+                ],
+                "title": "PasswordChange"
+            },
+            "Token": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "title": "Token Type"
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "title": "Refresh Token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "access_token",
+                    "token_type"
+                ],
+                "title": "Token"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "balance": {
+                        "type": "integer",
+                        "title": "Balance",
+                        "default": 0
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "email",
+                    "name"
+                ],
+                "title": "User"
+            },
+            "UserCreate": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 8,
+                        "title": "Password"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email",
+                    "password",
+                    "name"
+                ],
+                "title": "UserCreate"
+            },
+            "UserLogin": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "title": "Email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "title": "Password"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "title": "UserLogin"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
             }
         }
     }
