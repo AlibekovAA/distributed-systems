@@ -52,9 +52,9 @@
    cd swagger
    python swagger.py
    ```
-2. Просмотр отчетов:
+2. Просмотр Swagger:
    - Swagger UI: `https://petstore.swagger.io/?url=http://localhost:4040/combined-swagger.json`
-3.Для остановки сервера нажмите Enter в консоли.
+3. Для остановки сервера нажмите Enter в консоли.
 
 Для остановки сервера нажмите Enter в консоли.
 ### База данных (через pgAdmin)
