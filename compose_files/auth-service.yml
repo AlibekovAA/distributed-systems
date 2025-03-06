@@ -1,0 +1,28 @@
+services:
+  auth-service:
+    build: ../backend/auth-service
+    container_name: auth_service
+    restart: always
+    command: >
+      sh -c "
+        while ! nc -z db 5432; do
+          sleep 1
+        done &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level $${LOG_LEVEL}
+      "
+    env_file: "../.env"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend/auth-service:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/auth/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network

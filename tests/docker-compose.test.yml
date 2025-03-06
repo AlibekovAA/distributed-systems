@@ -76,8 +76,8 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
-      AUTH_SERVICE_URL: "http://auth-service:8000"
-      PRODUCT_SERVICE_URL: "http://product-catalog-service:8080"
+      AUTH_SERVICE_URL:  ${AUTH_SERVICE_URL}
+      PRODUCT_SERVICE_URL:  ${PRODUCT_SERVICE_URL}
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1
     depends_on:
