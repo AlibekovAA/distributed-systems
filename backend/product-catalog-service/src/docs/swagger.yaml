@@ -94,6 +94,16 @@ paths:
       summary: Delete a product
       tags:
       - Products
+    post:
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      summary: Create a new product
+      tags:
+      - Products
+  /products/{user_id}:
     get:
       produces:
       - application/json
@@ -105,15 +115,6 @@ paths:
               type: string
             type: array
       summary: Get a list of products
-      tags:
-      - Products
-    post:
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-      summary: Create a new product
       tags:
       - Products
 swagger: "2.0"

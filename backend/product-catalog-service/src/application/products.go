@@ -39,7 +39,7 @@ func (app *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 // @Tags Products
 // @Produce json
 // @Success 200 {array} string
-// @Router /products [get]
+// @Router /products/{user_id} [get]
 func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
 	if err != nil {

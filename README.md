@@ -34,7 +34,7 @@
 
 ### Product Catalog Service API
 - Основные эндпоинты:
-  - GET `/products` - получение списка всех товаров
+  - GET `/products/{user_id}` - получение списка всех товаров
   - POST `/products` - создание нового товара
   - DELETE `/products` - удаление товара
   - GET `/order/{user_id}` - получение корзины пользователя
