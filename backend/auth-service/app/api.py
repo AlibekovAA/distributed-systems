@@ -187,9 +187,13 @@ def save_preferences(
         current_user = get_current_user(token, db)
 
         for pref in preferences:
+            category = db.query(Category).filter(Category.id == pref.category_id).first()
+            if not category:
+                continue
+
             db_preference = UserPreference(
                 user_id=current_user.id,
-                preference_name=f"category_{pref.category_id}",
+                preference_name=category.name,
                 preference_value=str(pref.score)
             )
             db.add(db_preference)

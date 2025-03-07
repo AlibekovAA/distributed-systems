@@ -41,7 +41,11 @@ class RabbitMQConnection:
         if not self.channel:
             raise Exception("Connection to RabbitMQ is not established")
         try:
-            self.channel.queue_declare(queue=self.response_queue, durable=False)
+            self.channel.queue_declare(
+                queue=self.response_queue,
+                durable=False,
+                auto_delete=True
+            )
             self.channel.basic_publish(
                 exchange='',
                 routing_key=self.response_queue,

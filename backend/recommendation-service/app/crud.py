@@ -1,16 +1,17 @@
 from sqlalchemy.orm import Session
 
-from app.models import History, UserPreferences, Product
-
-
-def get_order_history_by_user_id(db: Session, user_id: int):
-    return db.query(History).filter(History.user_id == user_id).all()
-
-
-def get_user_preferences_by_user_id(db: Session, user_id: int):
-    return db.query(UserPreferences).filter(UserPreferences.user_id == user_id).all()
+from app.recommendation_engine import RecommendationEngine
 
 
 def get_recommendations_for_user(db: Session, user_id: int):
-    products = db.query(Product).order_by(Product.name.asc()).all()
-    return [product.to_dict() for product in products]
+    engine = RecommendationEngine(db, user_id)
+
+    recommendations = engine.get_recommendations()
+
+    result = []
+    for product, score in recommendations:
+        product_dict = product.to_dict()
+        product_dict['similarity_score'] = score
+        result.append(product_dict)
+
+    return result

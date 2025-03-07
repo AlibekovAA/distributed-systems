@@ -51,45 +51,36 @@ CREATE TABLE product_categories (
 );
 
 
-
-CREATE TABLE recommendations (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
-    score INTEGER NOT NULL
-);
-
-
 INSERT INTO product (name, price, quantity, description)
 VALUES
-  ('Apple iPhone 14', 79900, 50, 'Последняя модель iPhone с дисплеем 6,1 дюйма, чипом A15 Bionic и системой с двумя камерами.'),
-  ('Samsung Galaxy S23', 74900, 30, 'Флагманский смартфон от Samsung с 6,2-дюймовым экраном Dynamic AMOLED и процессором Snapdragon 8 Gen 2.'),
-  ('Sony WH-1000XM5', 34900, 20, 'Наушники с лучшей в своем классе системой шумоподавления и временем работы до 30 часов.'),
-  ('Dell XPS 13', 99900, 100, 'Компактный 13-дюймовый ноутбук с процессором Intel Core i7 и высококачественным 4K экраном с сенсорным управлением.'),
-  ('Fitbit Charge 5', 17900, 50, 'Продвинутый фитнес-трекер с мониторингом сердечного ритма, GPS и цветным сенсорным экраном.'),
-  ('Bose SoundLink Revolve+', 29900, 40, 'Портативная Bluetooth-колонка с объемным звуком на 360° и временем работы до 16 часов.'),
-  ('Nike Air Max 270', 15000, 200, 'Модные кроссовки с большим амортизирующим элементом Max Air в пятке для комфортной ходьбы.'),
-  ('Sony PlayStation 5', 49900, 15, 'Консоль нового поколения для игр в 4K с ультрабыстродействующим SSD и контроллером DualSense.'),
-  ('MacBook Pro 16', 250000, 20, 'Профессиональный ноутбук Apple с процессором M2 Max и Mini-LED дисплеем.'),
-  ('Xiaomi Redmi Note 12', 29900, 80, 'Доступный смартфон с AMOLED-дисплеем 120 Гц и камерой 50 МП.'),
-  ('JBL Charge 5', 18900, 60, 'Водонепроницаемая портативная колонка с мощным басом и автономностью 20 часов.'),
-  ('Garmin Fenix 7', 75000, 25, 'Премиальные смарт-часы для спорта с GPS, датчиком пульса и автономностью 18 дней.'),
-  ('Asus ROG Zephyrus G14', 140000, 30, 'Игровой ноутбук с процессором Ryzen 9 и видеокартой RTX 4060.'),
-  ('Microsoft Xbox Series X', 59900, 25, 'Игровая консоль с 12 терафлопс GPU и поддержкой 4K 120FPS.'),
-  ('Adidas Ultraboost 22', 17000, 150, 'Беговые кроссовки с амортизацией Boost и дышащим верхом Primeknit.');
+  ('Apple iPhone 14', 79900, 50, 'Latest iPhone model with 6.1-inch display, A15 Bionic chip, and dual-camera system.'),
+  ('Samsung Galaxy S23', 74900, 30, 'Flagship Samsung smartphone with 6.2-inch Dynamic AMOLED display and Snapdragon 8 Gen 2 processor.'),
+  ('Sony WH-1000XM5', 34900, 20, 'Headphones with best-in-class noise cancellation and up to 30 hours of battery life.'),
+  ('Dell XPS 13', 99900, 100, 'Compact 13-inch laptop with Intel Core i7 processor and high-quality 4K touchscreen display.'),
+  ('Fitbit Charge 5', 17900, 50, 'Advanced fitness tracker with heart rate monitoring, GPS, and color touchscreen.'),
+  ('Bose SoundLink Revolve+', 29900, 40, 'Portable Bluetooth speaker with 360° sound and up to 16 hours of battery life.'),
+  ('Nike Air Max 270', 15000, 200, 'Stylish sneakers with large Max Air cushioning unit in the heel for comfortable walking.'),
+  ('Sony PlayStation 5', 49900, 15, 'Next-gen gaming console for 4K gaming with ultra-fast SSD and DualSense controller.'),
+  ('MacBook Pro 16', 250000, 20, 'Professional Apple laptop with M2 Max processor and Mini-LED display.'),
+  ('Xiaomi Redmi Note 12', 29900, 80, 'Affordable smartphone with 120Hz AMOLED display and 50MP camera.'),
+  ('JBL Charge 5', 18900, 60, 'Waterproof portable speaker with powerful bass and 20-hour battery life.'),
+  ('Garmin Fenix 7', 75000, 25, 'Premium sports smartwatch with GPS, heart rate sensor, and 18-day battery life.'),
+  ('Asus ROG Zephyrus G14', 140000, 30, 'Gaming laptop with Ryzen 9 processor and RTX 4060 graphics card.'),
+  ('Microsoft Xbox Series X', 59900, 25, 'Gaming console with 12 teraflops GPU and 4K 120FPS support.'),
+  ('Adidas Ultraboost 22', 17000, 150, 'Running shoes with Boost cushioning and breathable Primeknit upper.');
 
 
 INSERT INTO categories (name)
 VALUES
-    ('Смартфоны'),
-    ('Наушники'),
-    ('Ноутбуки'),
-    ('Фитнес'),
-    ('Колонки'),
-    ('Кроссовки'),
-    ('Игровые консоли'),
-    ('Смарт-часы'),
-    ('Аксессуары');
+    ('Smartphones'),
+    ('Headphones'),
+    ('Laptops'),
+    ('Fitness'),
+    ('Loudspeakers'),
+    ('Sneakers'),
+    ('Gaming Consoles'),
+    ('Smartwatches'),
+    ('Accessories');
 
 
 INSERT INTO product_categories (product_id, category_id)

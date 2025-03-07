@@ -10,6 +10,7 @@ import (
 const (
 	requestQueue  = "recommendations"
 	responseQueue = "recommendations_response"
+	timeout       = 20 * time.Second
 )
 
 func sendRequest(ch *amqp.Channel, userID string) error {
@@ -41,7 +42,7 @@ func receiveResponse(ch *amqp.Channel) string {
 	q, err := ch.QueueDeclare(
 		responseQueue,
 		false,
-		false,
+		true,
 		false,
 		false,
 		nil,
@@ -55,7 +56,7 @@ func receiveResponse(ch *amqp.Channel) string {
 		q.Name,
 		"",
 		true,
-		false,
+		true,
 		false,
 		false,
 		nil,
@@ -68,7 +69,7 @@ func receiveResponse(ch *amqp.Channel) string {
 	select {
 	case msg := <-msgs:
 		return string(msg.Body)
-	case <-time.After(5 * time.Second):
+	case <-time.After(timeout):
 		log.Printf("Timeout waiting for response from recommendation service")
 		return ""
 	}
