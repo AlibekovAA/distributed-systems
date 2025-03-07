@@ -73,7 +73,18 @@ func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(orders)
+	var products []models.Product
+
+	for _, order := range orders {
+		product, err := database.GetProduct(app.DB, order.ProductID)
+		if err != nil {
+			log.Printf("Failed get product from db %+v", err)
+		}
+
+		products = append(products, product)
+	}
+
+	json.NewEncoder(w).Encode(products)
 }
 
 // @Summary Delete an item from the shopping cart
@@ -85,12 +96,6 @@ func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 // @Router /order/{email}/{product_id} [delete]
 func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) {
 	email := mux.Vars(r)["email"]
-
-	// user, err := database.GetUserByEmail(app.DB, email)
-	// if err != nil {
-	// 	log.Printf("Failed get user %+v", err)
-	// 	http.Error(w, "Failed get user", http.StatusInternalServerError)
-	// }
 
 	productID, err := strconv.Atoi(mux.Vars(r)["product_id"])
 	if err != nil {
@@ -112,7 +117,13 @@ func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.Write([]byte("Product was deleted from order"))
+	updatedOrder, err := database.GetOrder(app.DB, email)
+	if err != nil {
+		http.Error(w, "Failed to fetch updated cart", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedOrder)
 }
 
 // @Summary Pay for the order

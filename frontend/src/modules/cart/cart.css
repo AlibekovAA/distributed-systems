@@ -1,3 +1,9 @@
+.cart-container {
+    margin-left: 250px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
 .empty-cart {
     text-align: center;
     padding: 40px;
@@ -90,3 +96,4 @@
 .checkout-btn {
     width: 100%;
 }
+
