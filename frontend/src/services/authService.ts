@@ -38,19 +38,17 @@ export class AuthService {
         const token = localStorage.getItem(this.TOKEN_KEY);
         return {
             'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+            ...(token && { Authorization: `Bearer ${token}` }),
         };
     }
 
-    private static async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
-        return fetch(`${this.BASE_URL}${url}`, {
+    private static async request<T>(url: string, options: RequestInit = {}): Promise<T> {
+        const response = await fetch(`${this.BASE_URL}${url}`, {
             ...options,
             headers: { ...this.getAuthHeaders(), ...(options.headers || {}) },
             credentials: 'include',
         });
-    }
 
-    private static async handleResponse<T>(response: Response): Promise<T> {
         if (!response.ok) {
             const error = await response.json();
             console.error('Request error:', error);
@@ -59,80 +57,56 @@ export class AuthService {
         return response.json();
     }
 
-    static validateUserData({ email, password, name }: UserData): void {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            throw new Error('Invalid email format');
-        }
-        if (password.length < 8) {
-            throw new Error('Password must be at least 8 characters long');
-        }
-        if (!name.trim()) {
-            throw new Error('Name is required');
-        }
+    private static validateUserData({ email, password, name }: UserData): void {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Invalid email format');
+        if (password.length < 8) throw new Error('Password must be at least 8 characters long');
+        if (!name.trim()) throw new Error('Name is required');
     }
 
     static async register(userData: UserData): Promise<void> {
         this.validateUserData(userData);
-        const response = await this.fetchWithAuth('/register', {
-            method: 'POST',
-            body: JSON.stringify(userData),
-        });
-        await this.handleResponse(response);
+        await this.request('/register', { method: 'POST', body: JSON.stringify(userData) });
     }
 
     static async login(email: string, password: string): Promise<AuthResponse> {
-        const response = await this.fetchWithAuth('/login', {
+        const data = await this.request<AuthResponse>('/login', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
         });
-
-        const data = await this.handleResponse<AuthResponse>(response);
         localStorage.setItem(this.TOKEN_KEY, data.access_token);
         return data;
     }
 
     static async getProfile(): Promise<any> {
-        const response = await this.fetchWithAuth('/profile');
-        return this.handleResponse(response);
+        return this.request('/profile');
     }
 
     static async refreshToken(refresh_token: string): Promise<AuthResponse> {
-        const response = await this.fetchWithAuth('/token/refresh', {
+        return this.request<AuthResponse>('/token/refresh', {
             method: 'POST',
             body: JSON.stringify({ refresh_token }),
         });
-
-        return this.handleResponse<AuthResponse>(response);
     }
 
     static async changePassword(oldPassword: string, newPassword: string): Promise<void> {
-        const response = await this.fetchWithAuth('/change-password', {
+        await this.request('/change-password', {
             method: 'POST',
             body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
         });
-
-        await this.handleResponse(response);
     }
 
     static async addBalance(amount: number): Promise<BalanceResponse> {
-        const response = await this.fetchWithAuth('/add-balance', {
+        return this.request<BalanceResponse>('/add-balance', {
             method: 'POST',
             body: JSON.stringify({ amount }),
         });
-
-        return this.handleResponse<BalanceResponse>(response);
     }
 
     static async checkPreferences(): Promise<PreferenceCheck> {
-        const response = await this.fetchWithAuth('/preferences/check');
-        return this.handleResponse<PreferenceCheck>(response);
+        return this.request<PreferenceCheck>('/preferences/check');
     }
 
     static async savePreferences(preferences: Preference[]): Promise<void> {
-        const response = await this.fetchWithAuth('/preferences/save', {
-            method: 'POST',
-            body: JSON.stringify(preferences),
-        });
-        await this.handleResponse(response);
+        await this.request('/preferences/save', { method: 'POST', body: JSON.stringify(preferences) });
     }
 }

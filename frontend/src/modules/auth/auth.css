@@ -51,8 +51,22 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    width: 100%;
 }
 
 .auth-form.hidden {
     display: none;
+}
+
+.form-group {
+    width: 100%;
+}
+
+.auth-form .btn {
+    width: 100% !important;
+    margin-top: 0.5rem;
+}
+
+.auth-form .input {
+    width: 100%;
 }

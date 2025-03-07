@@ -31,7 +31,6 @@ body {
     transition: background-color 0.3s ease, transform 0.2s ease;
     color: white;
     background: #4f46e5;
-    width: 100%;
 }
 
 .btn:hover {
@@ -73,4 +72,29 @@ h2 {
     padding: 30px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
 }
