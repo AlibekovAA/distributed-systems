@@ -56,3 +56,12 @@ class Product(Base):
     description = Column(Text)
     price = Column(BigInteger, nullable=False)
     quantity = Column(Integer, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "price": self.price,
+            "quantity": self.quantity
+        }

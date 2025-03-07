@@ -5,14 +5,14 @@ import pytz
 moscow_tz = pytz.timezone('Europe/Moscow')
 
 logging.basicConfig(
-    level=logging.ERROR,
+    level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler()]
 )
 
 pika_logger = logging.getLogger("pika")
-pika_logger.setLevel(logging.ERROR)
+pika_logger.setLevel(logging.DEBUG)
 
 
 def log_time() -> str:

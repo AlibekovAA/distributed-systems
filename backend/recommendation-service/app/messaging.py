@@ -10,6 +10,7 @@ class RabbitMQConnection:
     def __init__(self, url: str = RABBITMQ_URL, queue_name: str = "default_queue"):
         self.url = urlparse(url)
         self.queue_name = queue_name
+        self.response_queue = "recommendations_response"
         self.connection = None
         self.channel = None
 
@@ -20,11 +21,18 @@ class RabbitMQConnection:
                 host=self.url.hostname,
                 port=self.url.port,
                 credentials=credentials,
-                virtual_host=self.url.path[1:] or '/'
+                virtual_host=self.url.path[1:] or '/',
+                heartbeat=600,
+                blocked_connection_timeout=300
             )
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
-            self.channel.queue_declare(queue=self.queue_name, durable=True)
+
+            self.channel.queue_declare(
+                queue=self.queue_name,
+                durable=True
+            )
+
             logging.info(f"{log_time()} - Connected to RabbitMQ server at {self.url.hostname}")
         except Exception as e:
             logging.error(f"{log_time()} - Error connecting to RabbitMQ: {e}")
@@ -41,6 +49,7 @@ class RabbitMQConnection:
 
         try:
             message_json = json.dumps(message)
+            logging.info(f"{log_time()} - Preparing to send message: {message_json}")
             self.channel.basic_publish(
                 exchange='',
                 routing_key=self.queue_name,
@@ -49,7 +58,7 @@ class RabbitMQConnection:
                     delivery_mode=2,
                 )
             )
-            logging.info(f"{log_time()} - Sent message: {message_json}")
+            logging.info(f"{log_time()} - Sent message successfully")
         except Exception as e:
             logging.error(f"{log_time()} - Error sending message: {e}")
 
