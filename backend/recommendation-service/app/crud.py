@@ -12,5 +12,5 @@ def get_user_preferences_by_user_id(db: Session, user_id: int):
 
 
 def get_recommendations_for_user(db: Session, user_id: int):
-    products = db.query(Product).order_by(Product.name).all()
+    products = db.query(Product).order_by(Product.name.asc()).all()
     return [product.to_dict() for product in products]

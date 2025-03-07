@@ -25,7 +25,7 @@ export class CatalogService {
             if (!response.ok) {
                 const error = await response.json();
                 console.error('Response error:', error);
-                throw new Error(error.detail || 'Error fetching products');
+                throw new Error(error.detail || 'Request failed');
             }
 
             return response.json();
@@ -53,11 +53,39 @@ export class CatalogService {
         if (!token) throw new Error('Not authenticated');
 
         const email = this.getEmailFromToken(token);
-        if (!email) {
-            throw new Error('User email not found');
-        }
-
         return this.request<Product[]>(`/products/${encodeURIComponent(email)}`);
+    }
+
+    static async getCart(): Promise<Product[]> {
+        const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('Not authenticated');
+
+        const email = this.getEmailFromToken(token);
+        return this.request<Product[]>(`/order/${encodeURIComponent(email)}`);
+    }
+
+    static async addToCart(productId: number): Promise<void> {
+        const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('Not authenticated');
+
+        const email = this.getEmailFromToken(token);
+        await this.request('/order/add', {
+            method: 'POST',
+            body: JSON.stringify({
+                product_id: productId,
+                user_id: email
+            })
+        });
+    }
+
+    static async removeFromCart(productId: number): Promise<void> {
+        const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('Not authenticated');
+
+        const email = this.getEmailFromToken(token);
+        await this.request(`/order/${encodeURIComponent(email)}/${productId}`, {
+            method: 'DELETE'
+        });
     }
 
     static async getProduct(id: number): Promise<Product | null> {

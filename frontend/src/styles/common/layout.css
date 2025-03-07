@@ -60,3 +60,11 @@
 .menu-text {
     white-space: nowrap;
 }
+
+.cart-content h1,
+.catalog-content h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #1a1a1a;
+    font-size: 2rem;
+}

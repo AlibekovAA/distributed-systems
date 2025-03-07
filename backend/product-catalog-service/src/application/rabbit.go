@@ -39,10 +39,10 @@ func sendRequest(ch *amqp.Channel, userID string) error {
 
 func receiveResponse(ch *amqp.Channel) string {
 	q, err := ch.QueueDeclare(
-		"",
+		responseQueue,
 		false,
-		true,
-		true,
+		false,
+		false,
 		false,
 		nil,
 	)
@@ -67,7 +67,6 @@ func receiveResponse(ch *amqp.Channel) string {
 
 	select {
 	case msg := <-msgs:
-		log.Printf("Received message from queue: %s", string(msg.Body))
 		return string(msg.Body)
 	case <-time.After(5 * time.Second):
 		log.Printf("Timeout waiting for response from recommendation service")

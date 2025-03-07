@@ -41,8 +41,6 @@ func (app *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 // @Router /products/{email} [get]
 func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	email := mux.Vars(r)["email"]
-	log.Printf("Received request for email: %s", email)
-
 	if email == "" {
 		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
@@ -50,11 +48,9 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 
 	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
-		log.Printf("Error getting user by email: %v", err)
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-	log.Printf("Found user with ID: %d", user.ID)
 
 	_, err = app.RabbitChannel.QueueDeclare(
 		responseQueue, false, false, false, false, nil,
@@ -65,7 +61,6 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userIDStr := strconv.Itoa(int(user.ID))
-	log.Printf("Sending request to recommendation service with user ID: %s", userIDStr)
 	err = sendRequest(app.RabbitChannel, userIDStr)
 
 	if err != nil {
@@ -73,7 +68,6 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := receiveResponse(app.RabbitChannel)
-	log.Printf("Received response from recommendation service: %s", response)
 
 	var recommendationResponse struct {
 		UserID int64 `json:"user_id"`
@@ -81,7 +75,6 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.Unmarshal([]byte(response), &recommendationResponse); err != nil {
-		log.Printf("Failed to parse recommendation response: %v", err)
 		products, err := database.GetProducts(app.DB)
 		if err != nil {
 			http.Error(w, "Failed get products", http.StatusInternalServerError)

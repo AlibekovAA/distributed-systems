@@ -1,39 +1,62 @@
 class LoaderManager {
     private static overlay: HTMLElement | null = null;
-    private static showTimeout?: NodeJS.Timeout;
+    private static showTimeout: NodeJS.Timeout | null = null;
 
-    private static createLoader(): HTMLElement {
+    private static createLoader() {
         const overlay = document.createElement('div');
         overlay.className = 'loader-overlay';
-        overlay.innerHTML = `
-            <div class="loader">
-                ${Array(3).fill('<div class="loader-dot"></div>').join('')}
-            </div>
-        `;
+
+        const loader = document.createElement('div');
+        loader.className = 'loader';
+
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'loader-dot';
+            loader.appendChild(dot);
+        }
+
+        overlay.appendChild(loader);
         document.body.appendChild(overlay);
         return overlay;
     }
 
-    private static show(): void {
+    private static getOverlay() {
         if (!this.overlay) {
             this.overlay = this.createLoader();
-            requestAnimationFrame(() => this.overlay?.classList.add('visible'));
+        }
+        return this.overlay;
+    }
+
+    static show(immediate = false) {
+        const overlay = this.getOverlay();
+
+        if (this.showTimeout) {
+            clearTimeout(this.showTimeout);
+            this.showTimeout = null;
+        }
+
+        if (immediate) {
+            overlay.classList.add('visible');
+        } else {
+            this.showTimeout = setTimeout(() => {
+                overlay.classList.add('visible');
+            }, 300);
         }
     }
 
-    private static hide(): void {
-        this.overlay?.classList.remove('visible');
-        setTimeout(() => {
-            this.overlay?.remove();
-            this.overlay = null;
-        }, 300);
+    static hide() {
+        if (this.showTimeout) {
+            clearTimeout(this.showTimeout);
+            this.showTimeout = null;
+        }
 
-        clearTimeout(this.showTimeout);
+        if (this.overlay) {
+            this.overlay.classList.remove('visible');
+        }
     }
 
-    static async wrap<T>(promise: Promise<T>): Promise<T> {
-        this.showTimeout = setTimeout(this.show.bind(this), 1000);
-
+    static async wrap<T>(promise: Promise<T>, immediate = false): Promise<T> {
+        this.show(immediate);
         try {
             return await promise;
         } finally {

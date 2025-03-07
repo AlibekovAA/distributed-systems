@@ -7,7 +7,7 @@ from app.config import RABBITMQ_URL
 
 
 class RabbitMQConnection:
-    def __init__(self, url: str = RABBITMQ_URL, queue_name: str = "default_queue"):
+    def __init__(self, url: str = RABBITMQ_URL, queue_name: str = "recommendations"):
         self.url = urlparse(url)
         self.queue_name = queue_name
         self.response_queue = "recommendations_response"
@@ -27,13 +27,7 @@ class RabbitMQConnection:
             )
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
-
-            self.channel.queue_declare(
-                queue=self.queue_name,
-                durable=True
-            )
-
-            logging.info(f"{log_time()} - Connected to RabbitMQ server at {self.url.hostname}")
+            self.channel.queue_declare(queue=self.queue_name, durable=True)
         except Exception as e:
             logging.error(f"{log_time()} - Error connecting to RabbitMQ: {e}")
             raise
@@ -45,36 +39,27 @@ class RabbitMQConnection:
 
     def send_message(self, message: dict):
         if not self.channel:
-            raise Exception("Connection to RabbitMQ is not established. Call connect() first.")
-
+            raise Exception("Connection to RabbitMQ is not established")
         try:
-            message_json = json.dumps(message)
-            logging.info(f"{log_time()} - Preparing to send message: {message_json}")
+            self.channel.queue_declare(queue=self.response_queue, durable=False)
             self.channel.basic_publish(
                 exchange='',
-                routing_key=self.queue_name,
-                body=message_json,
-                properties=pika.BasicProperties(
-                    delivery_mode=2,
-                )
+                routing_key=self.response_queue,
+                body=json.dumps(message),
+                properties=pika.BasicProperties(delivery_mode=2)
             )
-            logging.info(f"{log_time()} - Sent message successfully")
         except Exception as e:
             logging.error(f"{log_time()} - Error sending message: {e}")
 
     def receive_message(self, callback):
         if not self.channel:
-            raise Exception("Connection to RabbitMQ is not established. Call connect() first.")
+            raise Exception("Connection to RabbitMQ is not established")
 
         def on_message(ch, method, properties, body):
-            message = json.loads(body)
-            logging.info(f"{log_time()} - Received message: {message}")
-            callback(message)
-
+            callback(json.loads(body))
         self.channel.basic_consume(
             queue=self.queue_name,
             on_message_callback=on_message,
             auto_ack=True
         )
-        logging.info(f"{log_time()} - Waiting for messages in queue: {self.queue_name}. To exit press CTRL+C.")
         self.channel.start_consuming()
