@@ -103,10 +103,16 @@ paths:
       summary: Create a new product
       tags:
       - Products
-  /products/{user_id}:
+  /products/{email}:
     get:
       produces:
       - application/json
+      parameters:
+      - description: User Email
+        in: path
+        name: email
+        required: true
+        type: string
       responses:
         "200":
           description: OK

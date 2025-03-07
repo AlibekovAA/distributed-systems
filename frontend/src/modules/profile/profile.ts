@@ -2,6 +2,7 @@ import { AuthService } from '../../services/authService.js';
 import NotificationManager from '../../utils/notifications.js';
 import { authGuard } from '../../utils/authGuard.js';
 import { initializeLogout as initLogout } from '../../utils/logout.js';
+import LoaderManager from '../../utils/loader.js';
 
 const handleError = (error: unknown, logout = false) => {
     NotificationManager.error(error instanceof Error ? error.message : 'An error occurred');
@@ -16,7 +17,7 @@ export async function initializeProfile() {
     if (!authGuard()) return;
 
     try {
-        const { email, name, balance } = await AuthService.getProfile();
+        const { email, name, balance } = await LoaderManager.wrap(AuthService.getProfile());
 
         const elements: Record<string, HTMLElement | null> = {
             email: document.getElementById('userEmail'),
@@ -58,7 +59,7 @@ function validatePasswordFields(form: HTMLFormElement): { oldPassword: string; n
     return { oldPassword, newPassword, confirmNewPassword };
 }
 
-function initializeChangePassword() {
+async function initializeChangePassword() {
     const form = document.getElementById('changePasswordForm') as HTMLFormElement;
     if (!form) return;
 
@@ -70,7 +71,7 @@ function initializeChangePassword() {
         if (!passwords) return;
 
         try {
-            await AuthService.changePassword(passwords.oldPassword, passwords.newPassword);
+            await LoaderManager.wrap(AuthService.changePassword(passwords.oldPassword, passwords.newPassword));
             NotificationManager.success('Password changed successfully');
             form.reset();
         } catch (error) {
@@ -79,10 +80,11 @@ function initializeChangePassword() {
     });
 }
 
-function initializeAddBalance() {
-    document.getElementById('addBalanceBtn')?.addEventListener('click', async () => {
+async function initializeAddBalance() {
+    const button = document.getElementById('addBalanceBtn');
+    button?.addEventListener('click', async () => {
         try {
-            const { success, new_balance } = await AuthService.addBalance(100000);
+            const { success, new_balance } = await LoaderManager.wrap(AuthService.addBalance(100000));
             if (success) {
                 const balanceElement = document.getElementById('userBalance');
                 if (balanceElement) balanceElement.textContent = `${new_balance} ₽`;

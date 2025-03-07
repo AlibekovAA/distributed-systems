@@ -1,6 +1,7 @@
 import { AuthService } from '../../services/authService.js';
 import NotificationManager from '../../utils/notifications.js';
 import { showPreferencesForm } from '../preferences/preferences.js';
+import LoaderManager from '../../utils/loader.js';
 
 const handleError = (error: unknown) =>
     NotificationManager.error(error instanceof Error ? error.message : 'An unknown error occurred');
@@ -40,11 +41,11 @@ const handleLogin = async (form: HTMLFormElement) => {
     }
 
     try {
-        const { access_token, refresh_token } = await AuthService.login(values.loginEmail, values.loginPassword);
+        const { access_token, refresh_token } = await LoaderManager.wrap(AuthService.login(values.loginEmail, values.loginPassword));
         localStorage.setItem('access_token', access_token);
         if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
 
-        const { has_preferences, categories } = await AuthService.checkPreferences();
+        const { has_preferences, categories } = await LoaderManager.wrap(AuthService.checkPreferences());
         if (!has_preferences && categories) {
             NotificationManager.success('Successful entry! Please fill out the preference form.');
             await showPreferencesForm(categories);
@@ -70,11 +71,11 @@ const handleRegister = async (form: HTMLFormElement) => {
     }
 
     try {
-        await AuthService.register({
+        await LoaderManager.wrap(AuthService.register({
             email: values.registerEmail,
             password: values.registerPassword,
             name: values.registerName,
-        });
+        }));
 
         NotificationManager.success('Registration successful! You can now login.');
         form.reset();

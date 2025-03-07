@@ -38,12 +38,20 @@ func (app *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 // @Summary Get a list of products
 // @Tags Products
 // @Produce json
+// @Param email path string true "User Email"
 // @Success 200 {array} string
-// @Router /products/{user_id} [get]
+// @Router /products/{email} [get]
 func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
+	email := mux.Vars(r)["email"]
+	if email == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
+		return
+	}
+
+	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
-		http.Error(w, "Failed get id", http.StatusInternalServerError)
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
 	}
 
 	_, err = app.RabbitChannel.QueueDeclare(
@@ -54,7 +62,7 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to declare a response queue %+v", err)
 	}
 
-	err = sendRequest(app.RabbitChannel, strconv.Itoa(userID))
+	err = sendRequest(app.RabbitChannel, strconv.FormatInt(user.ID, 10))
 
 	if err != nil {
 		log.Printf("Failed to send request %+v", err)
@@ -72,7 +80,7 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	time.Sleep(20 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	json.NewEncoder(w).Encode(products)
 }

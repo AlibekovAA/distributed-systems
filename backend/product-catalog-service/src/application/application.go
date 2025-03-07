@@ -103,7 +103,7 @@ func (app *Application) Run(ctx context.Context) {
 // @BasePath /
 func (app *Application) RegisterHandlers() {
 	// товары
-	app.Router.HandleFunc("/products/{user_id}", app.getProducts).Methods("GET")
+	app.Router.HandleFunc("/products/{email}", app.getProducts).Methods("GET")
 	//app.Router.HandleFunc("/products/{id}", updateProduct).Methods("PUT")
 	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
 	app.Router.HandleFunc("/products/{id}", app.deleteProduct).Methods("DELETE")
@@ -122,10 +122,21 @@ func (app *Application) RegisterHandlers() {
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
+	allowedOrigins := map[string]bool{
+		"http://localhost:3000":  true,
+		"http://127.0.0.1:3000": true,
+		"http://frontend:3000":   true,
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:3000")
+		origin := r.Header.Get("Origin")
+		if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)

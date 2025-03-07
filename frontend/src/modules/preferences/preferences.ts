@@ -1,5 +1,6 @@
 import { AuthService } from '../../services/authService.js';
 import NotificationManager from '../../utils/notifications.js';
+import LoaderManager from '../../utils/loader.js';
 
 interface Category {
     id: number;
@@ -57,7 +58,7 @@ export async function showPreferencesForm(categories: Category[]): Promise<void>
         }
 
         try {
-            await AuthService.savePreferences(preferences);
+            await LoaderManager.wrap(AuthService.savePreferences(preferences));
             NotificationManager.success('Thank you! Your preferences have been saved');
             modal.remove();
             window.location.href = '/pages/profile/index.html';

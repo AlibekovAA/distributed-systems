@@ -1,0 +1,52 @@
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s;
+}
+
+.loader-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loader {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.loader-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4f46e5;
+    animation: loader-bounce 0.8s infinite;
+}
+
+.loader-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loader-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes loader-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-12px);
+    }
+}

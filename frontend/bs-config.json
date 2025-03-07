@@ -32,6 +32,16 @@
             "^/auth": "/auth"
           }
         }
+      },
+      {
+        "route": "/products",
+        "handle": {
+          "target": "http://localhost:8080",
+          "changeOrigin": true,
+          "secure": false,
+          "ws": false,
+          "logLevel": "debug"
+        }
       }
     ]
   },

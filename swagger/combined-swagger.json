@@ -495,7 +495,7 @@
                 }
             }
         },
-        "/products/{user_id}": {
+        "/products/{email}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -504,6 +504,15 @@
                     "Products"
                 ],
                 "summary": "Get a list of products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User Email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

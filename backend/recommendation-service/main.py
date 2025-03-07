@@ -13,10 +13,7 @@ def handle_sigterm(*args):
 
 def process_message(message):
     try:
-        user_id = message.get('user_id')
-        if not user_id:
-            logging.error(f"{log_time()} - Received message without user_id")
-            return
+        user_id = int(message)
 
         with get_db() as db:
             history = get_order_history_by_user_id(db, user_id)
