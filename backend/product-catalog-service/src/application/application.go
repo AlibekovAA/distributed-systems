@@ -106,16 +106,16 @@ func (app *Application) RegisterHandlers() {
 	app.Router.HandleFunc("/products/{email}", app.getProducts).Methods("GET")
 	//app.Router.HandleFunc("/products/{id}", updateProduct).Methods("PUT")
 	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
-	app.Router.HandleFunc("/products/{id}", app.deleteProduct).Methods("DELETE")
+	app.Router.HandleFunc("/products/{email}", app.deleteProduct).Methods("DELETE")
 
 	// Заказ (корзина)
 	app.Router.HandleFunc("/order/add", app.addToOrder).Methods("POST")
-	app.Router.HandleFunc("/order/{user_id}", app.getOrder).Methods("GET")
-	app.Router.HandleFunc("/order/{user_id}/pay", app.payForOrder).Methods("POST")
-	app.Router.HandleFunc("/order/{user_id}/{product_id}", app.removeFromOrder).Methods("DELETE")
+	app.Router.HandleFunc("/order/{email}", app.getOrder).Methods("GET")
+	app.Router.HandleFunc("/order/{email}/pay", app.payForOrder).Methods("POST")
+	app.Router.HandleFunc("/order/{email}/{product_id}", app.removeFromOrder).Methods("DELETE")
 
 	// История заказов
-	app.Router.HandleFunc("/orders/{user_id}/history", app.getHistoryOrders).Methods("GET")
+	app.Router.HandleFunc("/orders/{email}/history", app.getHistoryOrders).Methods("GET")
 
 	app.Router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
@@ -123,9 +123,9 @@ func (app *Application) RegisterHandlers() {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	allowedOrigins := map[string]bool{
-		"http://localhost:3000":  true,
+		"http://localhost:3000": true,
 		"http://127.0.0.1:3000": true,
-		"http://frontend:3000":   true,
+		"http://frontend:3000":  true,
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

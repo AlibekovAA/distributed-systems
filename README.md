@@ -36,14 +36,14 @@
 
 ### Product Catalog Service API
 - Основные эндпоинты:
-  - GET `/products/{user_id}` - получение списка всех товаров
+  - GET `/products/{email}` - получение списка всех товаров
   - POST `/products` - создание нового товара
   - DELETE `/products` - удаление товара
-  - GET `/order/{user_id}` - получение корзины пользователя
+  - GET `/order/{email}` - получение корзины пользователя
   - POST `/order/add` - добавление товара в корзину
-  - DELETE `/order/{user_id}/{product_id}` - удаление товара из корзины
-  - POST `/order/{user_id}/pay` - оплата заказа
-  - GET `/orders/{user_id}/history` - история заказов пользователя
+  - DELETE `/order/{email}/{product_id}` - удаление товара из корзины
+  - POST `/order/{email}/pay` - оплата заказа
+  - GET `/orders/{email}/history` - история заказов пользователя
 
 ### Swagger документация
 В проекте используется объединенная Swagger-документация для сервисов, написанных на FastAPI и Golang.

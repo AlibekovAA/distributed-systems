@@ -1,12 +1,12 @@
 info:
   contact: {}
 paths:
-  /order/{user_id}:
+  /order/{email}:
     get:
       parameters:
-      - description: User ID
+      - description: User email
         in: path
-        name: user_id
+        name: email
         required: true
         type: integer
       produces:
@@ -17,12 +17,12 @@ paths:
       summary: Get the user's current order
       tags:
       - Orders
-  /order/{user_id}/{product_id}:
+  /order/{email}/{product_id}:
     delete:
       parameters:
-      - description: User ID
+      - description: User email
         in: path
-        name: user_id
+        name: email
         required: true
         type: integer
       - description: ID of product
@@ -38,12 +38,12 @@ paths:
       summary: Delete an item from the shopping cart
       tags:
       - Orders
-  /order/{user_id}/pay:
+  /order/{email}/pay:
     post:
       parameters:
-      - description: User ID
+      - description: User email
         in: path
-        name: user_id
+        name: email
         required: true
         type: integer
       produces:
@@ -64,12 +64,12 @@ paths:
       summary: Add an item to the cart
       tags:
       - Orders
-  /orders/{user_id}/history:
+  /orders/{email}/history:
     get:
       parameters:
-      - description: User ID
+      - description: User email
         in: path
-        name: user_id
+        name: email
         required: true
         type: integer
       produces:
@@ -105,14 +105,14 @@ paths:
       - Products
   /products/{email}:
     get:
-      produces:
-      - application/json
       parameters:
-      - description: User Email
+      - description: User email
         in: path
         name: email
         required: true
         type: string
+      produces:
+      - application/json
       responses:
         "200":
           description: OK

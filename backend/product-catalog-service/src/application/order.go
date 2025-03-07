@@ -56,16 +56,18 @@ func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 // @Summary Get the user's current order
 // @Tags Orders
 // @Produce json
-// @Param user_id path int true "User ID"
+// @Param email path int true "User email"
 // @Success 200
-// @Router /order/{user_id} [get]
+// @Router /order/{email} [get]
 func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
+	email := mux.Vars(r)["email"]
+
+	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
-		http.Error(w, "Failed get user_id", http.StatusInternalServerError)
+		http.Error(w, "Failed get id", http.StatusInternalServerError)
 	}
 
-	orders, err := database.GetOrder(app.DB, int64(userID))
+	orders, err := database.GetOrder(app.DB, user.Email)
 	if err != nil {
 		http.Error(w, "Failed get order for user", http.StatusInternalServerError)
 		return
@@ -77,15 +79,18 @@ func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 // @Summary Delete an item from the shopping cart
 // @Tags Orders
 // @Produce json
-// @Param user_id path int true "User ID"
+// @Param email path int true "User email"
 // @Param product_id path int true "ID of product"
 // @Success 200
-// @Router /order/{user_id}/{product_id} [delete]
+// @Router /order/{email}/{product_id} [delete]
 func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
-	if err != nil {
-		http.Error(w, "Failed get user_id", http.StatusInternalServerError)
-	}
+	email := mux.Vars(r)["email"]
+
+	// user, err := database.GetUserByEmail(app.DB, email)
+	// if err != nil {
+	// 	log.Printf("Failed get user %+v", err)
+	// 	http.Error(w, "Failed get user", http.StatusInternalServerError)
+	// }
 
 	productID, err := strconv.Atoi(mux.Vars(r)["product_id"])
 	if err != nil {
@@ -94,11 +99,15 @@ func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) 
 
 	order := models.Order{
 		ProductID: int64(productID),
-		UserID:    int64(userID),
+		Email:     email,
 	}
+
+	log.Printf("order %+v", order)
 
 	err = database.DeleteProductFromOrder(app.DB, order)
 	if err != nil {
+		log.Printf("Failed delete product %+v", err)
+
 		http.Error(w, "Failed delete product from order", http.StatusInternalServerError)
 		return
 	}
@@ -109,11 +118,13 @@ func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) 
 // @Summary Pay for the order
 // @Tags Orders
 // @Produce json
-// @Param user_id path int true "User ID"
+// @Param email path int true "User email"
 // @Success 200
-// @Router /order/{user_id}/pay [post]
+// @Router /order/{email}/pay [post]
 func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.Atoi(mux.Vars(r)["user_id"])
+	email := mux.Vars(r)["email"]
+
+	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
 		http.Error(w, "Failed get id", http.StatusInternalServerError)
 	}
@@ -125,7 +136,7 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order.UserID = int64(userID)
+	order.Email = email
 
 	exists, err := database.OrderExists(app.DB, order)
 	if err != nil {
@@ -138,7 +149,7 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, err := database.GetOrder(app.DB, order.UserID)
+	orders, err := database.GetOrder(app.DB, order.Email)
 	if err != nil {
 		http.Error(w, "Failed to calculate total price", http.StatusInternalServerError)
 		return
@@ -154,12 +165,6 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 		}
 
 		totalPrice += int(product.Price)
-	}
-
-	user, err := database.GetUser(app.DB, order.UserID)
-	if err != nil {
-		http.Error(w, "Failed to get user from db", http.StatusInternalServerError)
-		return
 	}
 
 	if user.Balance < totalPrice {

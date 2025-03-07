@@ -39,7 +39,7 @@ type ProductCategory struct {
 }
 
 type Order struct {
-	ID        int64 `db:"id" json:"id"`
-	UserID    int64 `db:"user_id" json:"user_id"`
-	ProductID int64 `db:"product_id" json:"product_id"`
+	ID        int64  `db:"id" json:"id"`
+	Email     string `db:"email" json:"email"`
+	ProductID int64  `db:"product_id" json:"product_id"`
 }

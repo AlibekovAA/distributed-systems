@@ -31,7 +31,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/order/{user_id}": {
+        "/order/{email}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -43,8 +43,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
+                        "description": "User email",
+                        "name": "email",
                         "in": "path",
                         "required": true
                     }
@@ -56,7 +56,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/order/{user_id}/pay": {
+        "/order/{email}/pay": {
             "post": {
                 "produces": [
                     "application/json"
@@ -68,8 +68,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
+                        "description": "User email",
+                        "name": "email",
                         "in": "path",
                         "required": true
                     }
@@ -81,7 +81,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/order/{user_id}/{product_id}": {
+        "/order/{email}/{product_id}": {
             "delete": {
                 "produces": [
                     "application/json"
@@ -93,8 +93,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
+                        "description": "User email",
+                        "name": "email",
                         "in": "path",
                         "required": true
                     },
@@ -113,7 +113,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/orders/{user_id}/history": {
+        "/orders/{email}/history": {
             "get": {
                 "produces": [
                     "application/json"
@@ -125,8 +125,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
+                        "description": "User email",
+                        "name": "email",
                         "in": "path",
                         "required": true
                     }
@@ -174,7 +174,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/{user_id}": {
+        "/products/{email}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -183,6 +183,15 @@ const docTemplate = `{
                     "Products"
                 ],
                 "summary": "Get a list of products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

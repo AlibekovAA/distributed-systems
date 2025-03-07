@@ -18,8 +18,8 @@ CREATE TABLE product (
 
 CREATE TABLE "order" (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-   product_id INTEGER REFERENCES product(id) ON DELETE CASCADE
+  email VARCHAR(255) REFERENCES users(email) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES product(id) ON DELETE CASCADE
 );
 
 

@@ -73,7 +73,7 @@ export class CatalogService {
             method: 'POST',
             body: JSON.stringify({
                 product_id: productId,
-                user_id: email
+                email: email
             })
         });
     }

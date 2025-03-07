@@ -36,7 +36,7 @@ func (app *Application) createProduct(w http.ResponseWriter, r *http.Request) {
 // @Summary Get a list of products
 // @Tags Products
 // @Produce json
-// @Param email path string true "User Email"
+// @Param email path string true "User email"
 // @Success 200 {array} string
 // @Router /products/{email} [get]
 func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +70,7 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	response := receiveResponse(app.RabbitChannel)
 
 	var recommendationResponse struct {
-		UserID int64 `json:"user_id"`
+		UserID          int64            `json:"user_id"`
 		Recommendations []models.Product `json:"recommendations"`
 	}
 
