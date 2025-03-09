@@ -1,12 +1,23 @@
 .cart-container {
-    margin-left: 250px;
+    margin-left: 60px;
     padding: 20px;
-    min-height: 100vh;
+    min-height: calc(100vh - 40px);
+}
+
+.cart-content {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
 .empty-cart {
     text-align: center;
     padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 40px;
 }
 
 .empty-cart-icon {
@@ -95,8 +106,8 @@
 
 .pay-for-order-btn {
     width: 100%;
-    background-color: #4f46e5; 
-    color: white; 
+    background-color: #4f46e5;
+    color: white;
     font-size: 18px;
     font-weight: 600;
     padding: 12px;
@@ -107,10 +118,33 @@
 }
 
 .pay-for-order-btn:hover {
-    background-color: #4338ca;  
-    transform: scale(1.05); 
+    background-color: #4338ca;
+    transform: scale(1.05);
 }
 
 .pay-for-order-btn:active {
-    background-color: #3730a3;  
+    background-color: #3730a3;
+}
+
+.go-to-profile-btn {
+    margin-top: 15px;
+    width: 100%;
+    background-color: #10B981;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.go-to-profile-btn:hover {
+    background-color: #059669;
+    transform: scale(1.02);
+}
+
+.go-to-profile-btn:active {
+    transform: scale(0.98);
 }

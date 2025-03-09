@@ -33,13 +33,20 @@ interface Preference {
 export class AuthService {
     private static readonly BASE_URL = 'http://localhost:8000/auth';
     private static readonly TOKEN_KEY = 'access_token';
+    private static readonly HEADERS_JSON = { 'Content-Type': 'application/json' };
 
     private static getAuthHeaders(): HeadersInit {
         const token = localStorage.getItem(this.TOKEN_KEY);
-        return {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-        };
+        return token ? { ...this.HEADERS_JSON, Authorization: `Bearer ${token}` } : this.HEADERS_JSON;
+    }
+
+    private static async handleResponse<T>(response: Response): Promise<T> {
+        const data = await response.json();
+        if (!response.ok) {
+            console.error('Request error:', data);
+            throw new Error(data.detail || 'Request failed');
+        }
+        return data;
     }
 
     private static async request<T>(url: string, options: RequestInit = {}): Promise<T> {
@@ -48,13 +55,7 @@ export class AuthService {
             headers: { ...this.getAuthHeaders(), ...(options.headers || {}) },
             credentials: 'include',
         });
-
-        if (!response.ok) {
-            const error = await response.json();
-            console.error('Request error:', error);
-            throw new Error(error.detail || 'Request failed');
-        }
-        return response.json();
+        return this.handleResponse<T>(response);
     }
 
     private static validateUserData({ email, password, name }: UserData): void {
@@ -63,9 +64,9 @@ export class AuthService {
         if (!name.trim()) throw new Error('Name is required');
     }
 
-    static async register(userData: UserData): Promise<void> {
+    static register(userData: UserData): Promise<void> {
         this.validateUserData(userData);
-        await this.request('/register', { method: 'POST', body: JSON.stringify(userData) });
+        return this.request('/register', { method: 'POST', body: JSON.stringify(userData) });
     }
 
     static async login(email: string, password: string): Promise<AuthResponse> {
@@ -77,36 +78,36 @@ export class AuthService {
         return data;
     }
 
-    static async getProfile(): Promise<any> {
+    static getProfile(): Promise<any> {
         return this.request('/profile');
     }
 
-    static async refreshToken(refresh_token: string): Promise<AuthResponse> {
+    static refreshToken(refresh_token: string): Promise<AuthResponse> {
         return this.request<AuthResponse>('/token/refresh', {
             method: 'POST',
             body: JSON.stringify({ refresh_token }),
         });
     }
 
-    static async changePassword(oldPassword: string, newPassword: string): Promise<void> {
-        await this.request('/change-password', {
+    static changePassword(oldPassword: string, newPassword: string): Promise<void> {
+        return this.request('/change-password', {
             method: 'POST',
             body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
         });
     }
 
-    static async addBalance(amount: number): Promise<BalanceResponse> {
+    static addBalance(amount: number): Promise<BalanceResponse> {
         return this.request<BalanceResponse>('/add-balance', {
             method: 'POST',
             body: JSON.stringify({ amount }),
         });
     }
 
-    static async checkPreferences(): Promise<PreferenceCheck> {
+    static checkPreferences(): Promise<PreferenceCheck> {
         return this.request<PreferenceCheck>('/preferences/check');
     }
 
-    static async savePreferences(preferences: Preference[]): Promise<void> {
-        await this.request('/preferences/save', { method: 'POST', body: JSON.stringify(preferences) });
+    static savePreferences(preferences: Preference[]): Promise<void> {
+        return this.request('/preferences/save', { method: 'POST', body: JSON.stringify(preferences) });
     }
 }

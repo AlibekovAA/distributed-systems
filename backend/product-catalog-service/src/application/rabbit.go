@@ -41,8 +41,8 @@ func sendRequest(ch *amqp.Channel, userID string) error {
 func receiveResponse(ch *amqp.Channel) string {
 	q, err := ch.QueueDeclare(
 		responseQueue,
-		false,
 		true,
+		false,
 		false,
 		false,
 		nil,
@@ -56,7 +56,7 @@ func receiveResponse(ch *amqp.Channel) string {
 		q.Name,
 		"",
 		true,
-		true,
+		false,
 		false,
 		false,
 		nil,

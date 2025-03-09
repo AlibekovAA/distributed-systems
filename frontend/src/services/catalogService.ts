@@ -1,4 +1,4 @@
-interface Product {
+export interface Product {
     id: number;
     name: string;
     description: string;
@@ -8,115 +8,91 @@ interface Product {
 
 export class CatalogService {
     private static readonly BASE_URL = 'http://localhost:8080';
+    private static readonly TOKEN_KEY = 'access_token';
+    private static readonly HEADERS_JSON = { 'Content-Type': 'application/json', Accept: 'application/json' };
 
-    private static async request<T>(url: string, options: RequestInit = {}): Promise<T> {
-        try {
-            const response = await fetch(`${this.BASE_URL}${url}`, {
-                ...options,
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    ...options.headers,
-                },
-                mode: 'cors'
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                console.error('Response error:', error);
-                throw new Error(error.detail || 'Request failed');
-            }
-
-            return response.json();
-        } catch (error) {
-            console.error('Request error:', error);
-            throw error;
+    private static async handleResponse<T>(response: Response): Promise<T> {
+        const data = await response.json();
+        if (!response.ok) {
+            console.error('Response error:', data);
+            throw new Error(data.detail || 'Request failed');
         }
+        return data;
     }
 
-    private static getEmailFromToken(token: string): string {
+    private static async request<T>(url: string, options: RequestInit = {}): Promise<T> {
+        const response = await fetch(`${this.BASE_URL}${url}`, {
+            ...options,
+            credentials: 'include',
+            headers: { ...this.HEADERS_JSON, ...(options.headers || {}) },
+            mode: 'cors',
+        });
+        return this.handleResponse<T>(response);
+    }
+
+    private static getAuthEmail(): string {
+        const token = localStorage.getItem(this.TOKEN_KEY);
+        if (!token) throw new Error('Not authenticated');
+
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            if (!payload.sub) {
-                throw new Error('Email not found in token');
-            }
+            if (!payload.sub) throw new Error('Email not found in token');
             return payload.sub;
-        } catch (error) {
-            console.error('Error decoding token:', error);
+        } catch {
             throw new Error('Invalid authentication token');
         }
     }
 
-    static async getProducts(): Promise<Product[]> {
-        const token = localStorage.getItem('access_token');
-        if (!token) throw new Error('Not authenticated');
-
-        const email = this.getEmailFromToken(token);
-        return this.request<Product[]>(`/products/${encodeURIComponent(email)}`);
+    static getProducts(): Promise<Product[]> {
+        return this.request<Product[]>(`/products/${encodeURIComponent(this.getAuthEmail())}`);
     }
 
     static async getCart(): Promise<Product[]> {
-        const token = localStorage.getItem('access_token');
-        if (!token) throw new Error('Not authenticated');
-
-        const email = this.getEmailFromToken(token);
-        return this.request<Product[]>(`/order/${encodeURIComponent(email)}`);
+        try {
+            const response = await this.request<Product[]>(`/order/${encodeURIComponent(this.getAuthEmail())}`);
+            return response || [];
+        } catch (error) {
+            console.error('Error fetching cart:', error);
+            return [];
+        }
     }
 
-    static async addToCart(productId: number): Promise<void> {
-        const token = localStorage.getItem('access_token');
-        if (!token) throw new Error('Not authenticated');
-
-        const email = this.getEmailFromToken(token);
-        await this.request('/order/add', {
+    static addToCart(productId: number): Promise<void> {
+        return this.request('/order/add', {
             method: 'POST',
-            body: JSON.stringify({
-                product_id: productId,
-                email: email
-            })
+            body: JSON.stringify({ product_id: productId, email: this.getAuthEmail() }),
         });
     }
 
-    static async removeFromCart(productId: number): Promise<void> {
-        const token = localStorage.getItem('access_token');
-        if (!token) throw new Error('Not authenticated');
-
-        const email = this.getEmailFromToken(token);
-        await this.request(`/order/${encodeURIComponent(email)}/${productId}`, {
-            method: 'DELETE'
+    static removeFromCart(productId: number): Promise<void> {
+        return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/${productId}`, {
+            method: 'DELETE',
         });
     }
 
-    static async clearCart(email: string): Promise<void> {
-        await this.request(`/order/${encodeURIComponent(email)}/clear`, {
-            method: 'POST', 
-        });
+    static clearCart(email: string): Promise<void> {
+        return this.request(`/order/${encodeURIComponent(email)}/clear`, { method: 'POST' });
     }
 
     static async payForOrder(cartItems: Product[]): Promise<void> {
-        const token = localStorage.getItem('access_token');
-        if (!token) throw new Error('Not authenticated');
-    
-        const email = this.getEmailFromToken(token);
-        const body = {
-            email: email,
-            order: {
-                items: cartItems,
+        const email = this.getAuthEmail();
+        const body = { email, order: { items: cartItems } };
+
+        try {
+            await this.request(`/order/${encodeURIComponent(email)}/pay`, {
+                method: 'POST',
+                body: JSON.stringify(body),
+            });
+            await this.clearCart(email);
+        } catch (error) {
+            if (error instanceof Error && error.message.includes('insufficient funds')) {
+                throw new Error('Insufficient funds. Please top up your balance.');
             }
-        };
-    
-        console.log("Sending payment request with body:", body);
-
-        await this.request(`/order/${encodeURIComponent(email)}/pay`, {
-            method: 'POST',
-            body: JSON.stringify(body),
-        });
-
-        await CatalogService.clearCart(email);
+            throw error;
+        }
     }
 
-    static async getProduct(id: number): Promise<Product | null> {
+    static getProduct(id: number): Promise<Product | null> {
         return this.request<Product>(`/products/${id}`);
     }
 }

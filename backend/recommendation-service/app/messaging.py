@@ -23,11 +23,20 @@ class RabbitMQConnection:
                 credentials=credentials,
                 virtual_host=self.url.path[1:] or '/',
                 heartbeat=600,
-                blocked_connection_timeout=300
+                blocked_connection_timeout=300,
+                connection_attempts=3,
+                retry_delay=5
             )
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
-            self.channel.queue_declare(queue=self.queue_name, durable=True)
+
+            for queue in [self.queue_name, self.response_queue]:
+                self.channel.queue_declare(
+                    queue=queue,
+                    durable=True,
+                    auto_delete=False,
+                    exclusive=False
+                )
         except Exception as e:
             logging.error(f"{log_time()} - Error connecting to RabbitMQ: {e}")
             raise
@@ -43,14 +52,17 @@ class RabbitMQConnection:
         try:
             self.channel.queue_declare(
                 queue=self.response_queue,
-                durable=False,
-                auto_delete=True
+                durable=True,
+                auto_delete=False,
+                exclusive=False
             )
             self.channel.basic_publish(
                 exchange='',
                 routing_key=self.response_queue,
                 body=json.dumps(message),
-                properties=pika.BasicProperties(delivery_mode=2)
+                properties=pika.BasicProperties(
+                    delivery_mode=2
+                )
             )
         except Exception as e:
             logging.error(f"{log_time()} - Error sending message: {e}")
