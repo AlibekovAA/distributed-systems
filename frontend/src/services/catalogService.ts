@@ -88,6 +88,34 @@ export class CatalogService {
         });
     }
 
+    static async clearCart(email: string): Promise<void> {
+        await this.request(`/order/${encodeURIComponent(email)}/clear`, {
+            method: 'POST', 
+        });
+    }
+
+    static async payForOrder(cartItems: Product[]): Promise<void> {
+        const token = localStorage.getItem('access_token');
+        if (!token) throw new Error('Not authenticated');
+    
+        const email = this.getEmailFromToken(token);
+        const body = {
+            email: email,
+            order: {
+                items: cartItems,
+            }
+        };
+    
+        console.log("Sending payment request with body:", body);
+
+        await this.request(`/order/${encodeURIComponent(email)}/pay`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+        });
+
+        await CatalogService.clearCart(email);
+    }
+
     static async getProduct(id: number): Promise<Product | null> {
         return this.request<Product>(`/products/${id}`);
     }

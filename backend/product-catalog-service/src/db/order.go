@@ -47,3 +47,9 @@ func OrderExists(db DB, order models.Order) (bool, error) {
 
 	return exists, err
 }
+
+func ClearUserCart(db DB, email string) error {
+	query := `DELETE FROM "order" WHERE email = $1`
+	_, err := db.Exec(query, email)
+	return err
+}

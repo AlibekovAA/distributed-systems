@@ -93,7 +93,24 @@
     margin-bottom: 20px;
 }
 
-.checkout-btn {
+.pay-for-order-btn {
     width: 100%;
+    background-color: #4f46e5; 
+    color: white; 
+    font-size: 18px;
+    font-weight: 600;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
+.pay-for-order-btn:hover {
+    background-color: #4338ca;  
+    transform: scale(1.05); 
+}
+
+.pay-for-order-btn:active {
+    background-color: #3730a3;  
+}

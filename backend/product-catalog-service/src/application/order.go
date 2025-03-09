@@ -168,12 +168,31 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 
 	totalPrice := 0
 
+	var currentOrderNumber int64
+
+	history, err := database.GetLastHistory(app.DB, user.ID)
+	if err != nil {
+		currentOrderNumber = 1
+	} else {
+		currentOrderNumber = history.OrderNumber + 1
+	}
+
+	historyRecords := []models.History{}
+
 	for _, order := range orders {
 		product, err := database.GetProduct(app.DB, order.ProductID)
 		if err != nil {
 			log.Printf("Failed to get product from order %+v", err)
 			continue
 		}
+
+		historyRecord := models.History{
+			OrderNumber: currentOrderNumber,
+			UserID:      user.ID,
+			ProductID:   order.ProductID,
+		}
+
+		historyRecords = append(historyRecords, historyRecord)
 
 		totalPrice += int(product.Price)
 	}
@@ -191,27 +210,27 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var currentOrderNumber int64
-
-	history, err := database.GetLastHistory(app.DB, user.ID)
-	if err != nil {
-		currentOrderNumber = 1
-	} else {
-		currentOrderNumber = history.OrderNumber + 1
-	}
-
-	historyRecord := models.History{
-		OrderNumber: currentOrderNumber,
-		UserID:      user.ID,
-		ProductID:   order.ProductID,
-	}
-
-	err = database.CreateHistoryRecord(app.DB, historyRecord)
-	if err != nil {
-		http.Error(w, "Failed create history record", http.StatusInternalServerError)
-		return
+	for _, record := range historyRecords {
+		err = database.CreateHistoryRecord(app.DB, record)
+		if err != nil {
+			http.Error(w, "Failed create history record", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Order paid successfully"})
+}
+
+func (app *Application) clearCart(w http.ResponseWriter, r *http.Request) {
+	email := mux.Vars(r)["email"]
+
+	err := database.ClearUserCart(app.DB, email)
+	if err != nil {
+		http.Error(w, "Failed to clear cart", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Cart cleared successfully"})
 }

@@ -48,29 +48,47 @@ async function initializeCart() {
                     <span>Total:</span>
                     <span>${totalPrice} ₽</span>
                 </div>
-                <button class="btn checkout-btn">Checkout</button>
+                <button class="pay-for-order-btn">Pay for Order</button>
             </div>
         `;
 
         cartContent.addEventListener('click', async (e) => {
             const target = e.target as HTMLElement;
+
+            const payButton = target.closest('.pay-for-order-btn');
+            if (payButton) {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    NotificationManager.error('Not authenticated');
+                    return;
+                }
+        
+                try {
+                    await LoaderManager.wrap(CatalogService.payForOrder(cartItems));  
+        
+                    NotificationManager.success('Order paid successfully');
+                    initializeCart();  
+                } catch (error) {
+                    NotificationManager.error('Failed to pay for order');
+                }
+            }
+        
             const removeButton = target.closest('.remove-from-cart-btn');
-            if (!removeButton) return;
-
-            const productId = removeButton.getAttribute('data-product-id');
-            if (!productId) return;
-
-            try {
-                await LoaderManager.wrap(CatalogService.removeFromCart(Number(productId)));
-                NotificationManager.success('Product removed from cart');
-                initializeCart();
-            } catch (error) {
-                NotificationManager.error('Failed to remove product from cart');
+            if (removeButton) {
+                const productId = removeButton.getAttribute('data-product-id');
+                if (!productId) return;
+        
+                try {
+                    await LoaderManager.wrap(CatalogService.removeFromCart(Number(productId)));  
+                    NotificationManager.success('Product removed from cart');
+                    initializeCart();  
+                } catch (error) {
+                    NotificationManager.error('Failed to remove product from cart');
+                }
             }
         });
     } catch (error) {
         NotificationManager.error('Failed to load shopping cart');
-        console.error('Cart loading error:', error);
     }
 }
 

@@ -8,7 +8,7 @@ func CreateHistoryRecord(db DB, history models.History) error {
 		return err
 	}
 
-	query := `INSERT INTO history (user_id, product_id, order_number) VALUES ($1, $2, $3) RETURNING id`
+	query := `INSERT INTO "history" (user_id, product_id, order_number) VALUES ($1, $2, $3) RETURNING id`
 
 	err = tx.QueryRowx(query, history.UserID, history.ProductID, history.OrderNumber).Scan(&history.ID)
 	if err != nil {
@@ -20,7 +20,7 @@ func CreateHistoryRecord(db DB, history models.History) error {
 }
 
 func GetLastHistory(db DB, userID int64) (models.History, error) {
-	query := `SELECT * FROM history WHERE user_id = $1 ORDER BY order_id DESC LIMIT 1`
+	query := `SELECT * FROM "history" WHERE user_id = $1 ORDER BY order_id DESC LIMIT 1`
 
 	var history models.History
 
@@ -34,7 +34,7 @@ func GetLastHistory(db DB, userID int64) (models.History, error) {
 
 func GetHistoryOrders(db DB, userID int64) ([]models.History, error) {
 	var history []models.History
-	query := `SELECT * FROM history WHERE user_id = $1`
+	query := `SELECT * FROM "history" WHERE user_id = $1`
 
 	err := db.Select(&history, query, userID)
 	if err != nil {
