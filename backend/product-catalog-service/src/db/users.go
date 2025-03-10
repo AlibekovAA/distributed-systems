@@ -4,6 +4,23 @@ import (
 	"main/src/models"
 )
 
+func CreateUser(db DB, user models.User) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return err
+	}
+
+	query := `INSERT INTO users (name, email, hashed_password, balance) VALUES ($1, $2, $3, $4) RETURNING id`
+
+	err = tx.QueryRowx(query, user.Name, user.Email, user.HashedPassword, user.Balance).Scan(&user.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func UpdateUser(db DB, user models.User) error {
 	query := `UPDATE users SET email = :email, hashed_password = :hashed_password, name = :name, balance = :balance WHERE id = :id`
 	_, err := db.NamedExec(query, user)

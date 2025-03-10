@@ -29,3 +29,6 @@ tests/allure-*
 
 backend/product-catalog-service/__pycache__
 backend/product-catalog-service/.pytest_cache
+
+backend/product-catalog-service/src/application/.env
+backend/product-catalog-service/src/tests
