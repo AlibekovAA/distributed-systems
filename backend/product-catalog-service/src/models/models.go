@@ -43,3 +43,14 @@ type Order struct {
 	Email     string `db:"email" json:"email"`
 	ProductID int64  `db:"product_id" json:"product_id"`
 }
+
+type HistoryResponse struct {
+	OrderNumber int64     `json:"order_number"`
+	Items      []Product `json:"items"`
+	TotalPrice int       `json:"total_price"`
+}
+
+type RecommendationResponse struct {
+	UserID          int64    `json:"user_id"`
+	Recommendations []Product `json:"recommendations"`
+}

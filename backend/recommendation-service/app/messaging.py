@@ -33,9 +33,9 @@ class RabbitMQConnection:
             for queue in [self.queue_name, self.response_queue]:
                 self.channel.queue_declare(
                     queue=queue,
-                    durable=True,
-                    auto_delete=False,
-                    exclusive=False
+                    durable=False,
+                    auto_delete=True,
+                    exclusive=False,
                 )
         except Exception as e:
             logging.error(f"{log_time()} - Error connecting to RabbitMQ: {e}")
@@ -52,8 +52,8 @@ class RabbitMQConnection:
         try:
             self.channel.queue_declare(
                 queue=self.response_queue,
-                durable=True,
-                auto_delete=False,
+                durable=False,
+                auto_delete=True,
                 exclusive=False
             )
             self.channel.basic_publish(

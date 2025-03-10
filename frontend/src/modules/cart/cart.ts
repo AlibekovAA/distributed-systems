@@ -122,15 +122,23 @@ async function handlePayment(cartItems: Product[]) {
         NotificationManager.success('Order paid successfully');
         setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
-        if (error instanceof Error && error.message.includes('insufficient funds')) {
+        if (error instanceof Error && error.message === 'insufficient_funds') {
             NotificationManager.error('Insufficient funds. Please top up your balance in the profile.');
 
-            const goToProfileBtn = document.createElement('button');
-            goToProfileBtn.className = 'btn go-to-profile-btn';
-            goToProfileBtn.textContent = 'Go to balance top-up';
-            goToProfileBtn.onclick = () => window.location.href = '/pages/profile/index.html';
+            const cartSummary = document.querySelector('.cart-summary');
+            if (cartSummary) {
+                const existingBtn = cartSummary.querySelector('.go-to-profile-btn');
+                if (existingBtn) {
+                    existingBtn.remove();
+                }
 
-            document.querySelector('.cart-summary')?.appendChild(goToProfileBtn);
+                const goToProfileBtn = document.createElement('button');
+                goToProfileBtn.className = 'btn go-to-profile-btn';
+                goToProfileBtn.textContent = 'Go to balance top-up';
+                goToProfileBtn.onclick = () => window.location.href = '/pages/profile/index.html';
+
+                cartSummary.appendChild(goToProfileBtn);
+            }
         } else {
             NotificationManager.error('An error occurred while paying for the order');
         }

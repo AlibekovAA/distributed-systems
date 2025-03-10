@@ -20,7 +20,7 @@ func CreateHistoryRecord(db DB, history models.History) error {
 }
 
 func GetLastHistory(db DB, userID int64) (models.History, error) {
-	query := `SELECT * FROM "history" WHERE user_id = $1 ORDER BY order_id DESC LIMIT 1`
+	query := `SELECT * FROM "history" WHERE user_id = $1 ORDER BY order_number DESC LIMIT 1`
 
 	var history models.History
 

@@ -26,7 +26,7 @@ func sendRequest(ch *amqp.Channel, userID string) error {
 		return err
 	}
 
-	return ch.Publish(
+	err = ch.Publish(
 		"",
 		requestQueue,
 		false,
@@ -36,6 +36,13 @@ func sendRequest(ch *amqp.Channel, userID string) error {
 			Body:         []byte(userID),
 			DeliveryMode: amqp.Persistent,
 		})
+
+	if err != nil {
+		log.Printf("Failed to send message: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func receiveResponse(ch *amqp.Channel) string {

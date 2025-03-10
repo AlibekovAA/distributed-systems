@@ -6,6 +6,16 @@ export interface Product {
     quantity: number;
 }
 
+export interface OrderHistoryItem extends Product {
+    order_number: number;
+}
+
+interface OrderHistoryResponse {
+    order_number: number;
+    items: Product[];
+    total_price: number;
+}
+
 export class CatalogService {
     private static readonly BASE_URL = 'http://localhost:8080';
     private static readonly TOKEN_KEY = 'access_token';
@@ -79,14 +89,26 @@ export class CatalogService {
         const body = { email, order: { items: cartItems } };
 
         try {
-            await this.request(`/order/${encodeURIComponent(email)}/pay`, {
+            const response = await fetch(`${this.BASE_URL}/order/${encodeURIComponent(email)}/pay`, {
                 method: 'POST',
+                headers: this.HEADERS_JSON,
+                credentials: 'include',
                 body: JSON.stringify(body),
             });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 402 && data.error === 'insufficient_funds') {
+                    throw new Error('insufficient_funds');
+                }
+                throw new Error(data.message || 'Failed to process payment');
+            }
+
             await this.clearCart(email);
         } catch (error) {
-            if (error instanceof Error && error.message.includes('insufficient funds')) {
-                throw new Error('Insufficient funds. Please top up your balance.');
+            if (error instanceof Error && error.message === 'insufficient_funds') {
+                throw new Error('insufficient_funds');
             }
             throw error;
         }
@@ -94,5 +116,9 @@ export class CatalogService {
 
     static getProduct(id: number): Promise<Product | null> {
         return this.request<Product>(`/products/${id}`);
+    }
+
+    static getOrderHistory(): Promise<OrderHistoryResponse[]> {
+        return this.request<OrderHistoryResponse[]>(`/orders/${encodeURIComponent(this.getAuthEmail())}/history`);
     }
 }

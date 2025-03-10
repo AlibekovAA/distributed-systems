@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart | E-Commerce Platform</title>
+    <title>Purchase History | E-Commerce Platform</title>
     <link rel="stylesheet" href="../../styles/common/base.css">
     <link rel="stylesheet" href="../../styles/common/notifications.css">
     <link rel="stylesheet" href="../../styles/common/loader.css">
     <link rel="stylesheet" href="../../styles/common/layout.css">
-    <link rel="stylesheet" href="../../modules/cart/cart.css">
+    <link rel="stylesheet" href="../../modules/history/history.css">
 </head>
 <body>
     <nav class="side-menu">
@@ -22,11 +22,11 @@
                     <span class="menu-icon">📦</span>
                     <span class="menu-text">Catalog</span>
                 </a>
-                <a href="#" class="menu-item active">
+                <a href="/pages/cart/index.html" class="menu-item">
                     <span class="menu-icon">🛒</span>
                     <span class="menu-text">Cart</span>
                 </a>
-                <a href="/pages/history/index.html" class="menu-item">
+                <a href="#" class="menu-item active">
                     <span class="menu-icon">📋</span>
                     <span class="menu-text">History</span>
                 </a>
@@ -40,13 +40,13 @@
         </div>
     </nav>
 
-    <main class="cart-container">
-        <div class="cart-content">
-            <h1>Cart</h1>
+    <main class="history-container">
+        <div class="history-content">
+            <h1>Purchase History</h1>
         </div>
     </main>
 
-    <script type="module" src="../../modules/cart/cart.js"></script>
+    <script type="module" src="../../modules/history/history.js"></script>
     <script type="module">
         import { initializeLogout } from '../../utils/logout.js';
         document.addEventListener('DOMContentLoaded', () => {

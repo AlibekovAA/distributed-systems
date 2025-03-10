@@ -200,7 +200,13 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Balance < totalPrice {
-		http.Error(w, "Insufficient balance", http.StatusPaymentRequired)
+		w.WriteHeader(http.StatusPaymentRequired)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error":           "insufficient_funds",
+			"message":         "Insufficient balance to complete the purchase",
+			"required_amount": strconv.Itoa(totalPrice),
+			"current_balance": strconv.Itoa(user.Balance),
+		})
 		return
 	}
 

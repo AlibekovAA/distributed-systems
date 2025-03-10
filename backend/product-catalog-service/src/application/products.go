@@ -53,7 +53,7 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = app.RabbitChannel.QueueDeclare(
-		responseQueue, false, false, false, false, nil,
+		responseQueue, true, false, false, false, nil,
 	)
 
 	if err != nil {
@@ -69,10 +69,7 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 
 	response := receiveResponse(app.RabbitChannel)
 
-	var recommendationResponse struct {
-		UserID          int64            `json:"user_id"`
-		Recommendations []models.Product `json:"recommendations"`
-	}
+	var recommendationResponse models.RecommendationResponse
 
 	if err := json.Unmarshal([]byte(response), &recommendationResponse); err != nil {
 		products, err := database.GetProducts(app.DB)
