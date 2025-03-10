@@ -113,7 +113,7 @@ func (app *Application) RegisterHandlers() {
 	app.Router.HandleFunc("/order/{email}", app.getOrder).Methods("GET")
 	app.Router.HandleFunc("/order/{email}/pay", app.payForOrder).Methods("POST")
 	app.Router.HandleFunc("/order/{email}/{product_id}", app.removeFromOrder).Methods("DELETE")
-	app.Router.HandleFunc("/order/{email}/clear", app.clearCart).Methods("POST") //?
+	app.Router.HandleFunc("/order/{email}/clear", app.clearCart).Methods("POST")
 
 	// История заказов
 	app.Router.HandleFunc("/orders/{email}/history", app.getHistoryOrders).Methods("GET")

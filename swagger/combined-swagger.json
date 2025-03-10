@@ -377,6 +377,31 @@
                 }
             }
         },
+        "/order/{email}/clear": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Clear shopping cart",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User email",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/order/{email}/pay": {
             "post": {
                 "produces": [

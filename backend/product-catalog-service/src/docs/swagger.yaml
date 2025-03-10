@@ -38,6 +38,22 @@ paths:
       summary: Delete an item from the shopping cart
       tags:
       - Orders
+  /order/{email}/clear:
+    post:
+      parameters:
+      - description: User email
+        in: path
+        name: email
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Clear shopping cart
+      tags:
+      - Orders
   /order/{email}/pay:
     post:
       parameters:

@@ -195,6 +195,8 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 		historyRecords = append(historyRecords, historyRecord)
 
 		totalPrice += int(product.Price)
+
+		product.Quantity -= 1
 	}
 
 	if user.Balance < totalPrice {
@@ -218,10 +220,35 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	for _, order := range orders {
+		product, err := database.GetProduct(app.DB, order.ProductID)
+		if err != nil {
+			log.Printf("Failed to get product from order %+v", err)
+			continue
+		}
+
+		if product.Quantity < 3 {
+			product.Quantity += 10
+
+			err = database.UpdateProduct(app.DB, product)
+			if err != nil {
+				http.Error(w, "Failed to update product stock", http.StatusInternalServerError)
+				return
+			}
+		}
+
+	}
+
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Order paid successfully"})
 }
 
+// @Summary Clear shopping cart
+// @Tags Orders
+// @Produce json
+// @Param email path int true "User email"
+// @Success 200
+// @Router /order/{email}/clear [post]
 func (app *Application) clearCart(w http.ResponseWriter, r *http.Request) {
 	email := mux.Vars(r)["email"]
 

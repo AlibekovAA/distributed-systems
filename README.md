@@ -69,6 +69,7 @@
   - DELETE `/order/{email}/{product_id}` - удаление товара из корзины
   - POST `/order/{email}/pay` - оплата заказа
   - GET `/orders/{email}/history` - история заказов пользователя
+  - POST `/order/{email}/clear` - очищение корзины
 
 ### Swagger документация
 В проекте используется объединенная Swagger-документация для сервисов, написанных на FastAPI и Golang.
