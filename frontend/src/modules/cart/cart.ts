@@ -3,6 +3,12 @@ import type { Product } from '../../services/catalogService.js';
 import NotificationManager from '../../utils/notifications.js';
 import { authGuard } from '../../utils/authGuard.js';
 import LoaderManager from '../../utils/loader.js';
+import { showPaymentModal } from '../payment/payment.js';
+
+interface GroupedProduct extends Product {
+    quantity: number;
+    totalPrice: number;
+}
 
 async function initializeCart() {
     if (!await authGuard()) return;
@@ -37,19 +43,34 @@ async function initializeCart() {
         const cartItemsContainer = document.createElement('div');
         cartItemsContainer.className = 'cart-items';
 
+        const groupedItems = cartItems.reduce<Record<string, GroupedProduct>>((acc, item) => {
+            const key = `${item.id}`;
+            if (!acc[key]) {
+                acc[key] = {
+                    ...item,
+                    quantity: 0,
+                    totalPrice: 0
+                };
+            }
+            acc[key].quantity += 1;
+            acc[key].totalPrice = acc[key].price * acc[key].quantity;
+            return acc;
+        }, {});
+
         let totalPrice = 0;
 
-        cartItems.forEach(({ id, name, price }) => {
-            totalPrice += price;
+        Object.values(groupedItems).forEach((item) => {
+            totalPrice += item.totalPrice;
 
             const cartItem = document.createElement('div');
             cartItem.className = 'cart-item';
             cartItem.innerHTML = `
                 <div class="cart-item-info">
-                    <div class="cart-item-name">${name}</div>
-                    <div class="cart-item-price">${price} ₽</div>
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-quantity">Quantity: ${item.quantity}</div>
+                    <div class="cart-item-price">${item.totalPrice} ₽</div>
                 </div>
-                <button class="remove-from-cart-btn" data-product-id="${id}">✕</button>
+                <button class="remove-from-cart-btn" data-product-id="${item.id}">✕</button>
             `;
             cartItemsContainer.appendChild(cartItem);
         });
@@ -116,32 +137,20 @@ async function initializeCart() {
     }
 }
 
-async function handlePayment(cartItems: Product[]) {
+async function handlePayment(cartItems: Product[]): Promise<void> {
     try {
+        const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
+        const shouldProceed = await showPaymentModal(cartItems, totalPrice);
+
+        if (!shouldProceed) {
+            return;
+        }
+
         await LoaderManager.wrap(CatalogService.payForOrder(cartItems));
         NotificationManager.success('Order paid successfully');
         setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
-        if (error instanceof Error && error.message === 'insufficient_funds') {
-            NotificationManager.error('Insufficient funds. Please top up your balance in the profile.');
-
-            const cartSummary = document.querySelector('.cart-summary');
-            if (cartSummary) {
-                const existingBtn = cartSummary.querySelector('.go-to-profile-btn');
-                if (existingBtn) {
-                    existingBtn.remove();
-                }
-
-                const goToProfileBtn = document.createElement('button');
-                goToProfileBtn.className = 'btn go-to-profile-btn';
-                goToProfileBtn.textContent = 'Go to balance top-up';
-                goToProfileBtn.onclick = () => window.location.href = '/pages/profile/index.html';
-
-                cartSummary.appendChild(goToProfileBtn);
-            }
-        } else {
-            NotificationManager.error('An error occurred while paying for the order');
-        }
+        NotificationManager.error('An error occurred while paying for the order');
     }
 }
 

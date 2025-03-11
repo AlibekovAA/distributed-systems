@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from models.user_model import User
 from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.core.logger import log_time, logging
+from app.core.logger import logging
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -36,7 +36,7 @@ def create_refresh_token(data: dict) -> str:
 def authenticate_user(db: Session, email: str, password: str) -> User:
     user = db.query(User).filter(User.email == email).first()
     if user and verify_password(password, user.hashed_password):
-        logging.info(f"{log_time()} - User authenticated successfully: {email}")
+        logging.info(f"User authenticated successfully: {email}")
         return user
     return None
 
@@ -52,8 +52,8 @@ def create_user(db: Session, email: str, password: str, name: str = "") -> User:
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        logging.info(f"{log_time()} - New user created: {email}")
+        logging.info(f"New user created: {email}")
         return db_user
     except Exception as e:
-        logging.error(f"{log_time()} - Failed to create user {email}: {str(e)}")
+        logging.error(f"Failed to create user {email}: {str(e)}")
         raise

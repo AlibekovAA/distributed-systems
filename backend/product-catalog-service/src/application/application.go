@@ -23,6 +23,7 @@ type Application struct {
 	Addr          string
 	RabbitConn    *amqp.Connection
 	RabbitChannel *amqp.Channel
+	RabbitMQ      *RabbitMQ
 }
 
 func NewApplication() *Application {
@@ -53,6 +54,10 @@ func (app *Application) Configure(ctx context.Context, cfg *config.Config) error
 	}
 
 	app.RabbitChannel = ch
+
+	app.RabbitMQ = &RabbitMQ{
+		channel: app.RabbitChannel,
+	}
 
 	return nil
 }

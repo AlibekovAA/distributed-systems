@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from contextlib import contextmanager
 
 from app.config import DATABASE_URL
-from app.logger import log_time, logging
+from app.logger import logging
 
 Base = declarative_base()
 
@@ -18,7 +18,7 @@ try:
     )
     Base.metadata.create_all(bind=engine)
 except Exception as e:
-    logging.error(f"{log_time()} - Database connection failed: {str(e)}")
+    logging.error(f"Database connection failed: {str(e)}")
     raise e
 
 SessionLocal = scoped_session(
@@ -33,7 +33,7 @@ def get_db():
         yield db
     except Exception as e:
         db.rollback()
-        logging.error(f"{log_time()} - Database session error: {str(e)}")
+        logging.error(f"Database session error: {str(e)}")
         raise e
     finally:
         db.close()

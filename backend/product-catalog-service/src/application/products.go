@@ -52,35 +52,46 @@ func (app *Application) getProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = app.RabbitChannel.QueueDeclare(
-		responseQueue, true, false, false, false, nil,
-	)
-
-	if err != nil {
-		log.Printf("Failed to declare a response queue %+v", err)
-	}
-
 	userIDStr := strconv.Itoa(int(user.ID))
-	err = sendRequest(app.RabbitChannel, userIDStr)
+	log.Printf("Requesting recommendations for user: %s", userIDStr)
 
+	correlationID, err := app.RabbitMQ.sendRequest(userIDStr)
 	if err != nil {
-		log.Printf("Failed to send request %+v", err)
-	}
-
-	response := receiveResponse(app.RabbitChannel)
-
-	var recommendationResponse models.RecommendationResponse
-
-	if err := json.Unmarshal([]byte(response), &recommendationResponse); err != nil {
+		log.Printf("Failed to send request: %v", err)
 		products, err := database.GetProducts(app.DB)
 		if err != nil {
-			http.Error(w, "Failed get products", http.StatusInternalServerError)
+			http.Error(w, "Failed to get products", http.StatusInternalServerError)
 			return
 		}
 		json.NewEncoder(w).Encode(products)
 		return
 	}
 
+	response := app.RabbitMQ.receiveResponse(correlationID)
+	if response == "" {
+		log.Printf("Empty response received, falling back to regular product list")
+		products, err := database.GetProducts(app.DB)
+		if err != nil {
+			http.Error(w, "Failed to get products", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(products)
+		return
+	}
+
+	var recommendationResponse models.RecommendationResponse
+	if err := json.Unmarshal([]byte(response), &recommendationResponse); err != nil {
+		log.Printf("Failed to unmarshal response: %v", err)
+		products, err := database.GetProducts(app.DB)
+		if err != nil {
+			http.Error(w, "Failed to get products", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(products)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(recommendationResponse.Recommendations)
 }
 

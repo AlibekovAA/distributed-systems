@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
 from app.core.config import DATABASE_URL
-from app.core.logger import log_time, logging
+from app.core.logger import logging
 
 engine = create_engine(
     DATABASE_URL,
@@ -23,7 +23,7 @@ def get_db():
         yield db
     except Exception as e:
         db.rollback()
-        logging.error(f"{log_time()} - Database session error: {str(e)}")
+        logging.error(f"Database session error: {str(e)}")
         raise
     finally:
         db.close()

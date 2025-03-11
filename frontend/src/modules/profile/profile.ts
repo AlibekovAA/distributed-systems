@@ -17,17 +17,15 @@ export async function initializeProfile() {
     if (!authGuard()) return;
 
     try {
-        const { email, name, balance } = await LoaderManager.wrap(AuthService.getProfile());
+        const { email, name } = await LoaderManager.wrap(AuthService.getProfile());
 
         const elements: Record<string, HTMLElement | null> = {
             email: document.getElementById('userEmail'),
             name: document.getElementById('userName'),
-            balance: document.getElementById('userBalance'),
         };
 
         if (elements.email) elements.email.textContent = email;
         if (elements.name) elements.name.textContent = name;
-        if (elements.balance) elements.balance.textContent = `${balance} ₽`;
     } catch (error) {
         handleError(error, true);
     }
@@ -80,22 +78,6 @@ async function initializeChangePassword() {
     });
 }
 
-async function initializeAddBalance() {
-    const button = document.getElementById('addBalanceBtn');
-    button?.addEventListener('click', async () => {
-        try {
-            const { success, new_balance } = await LoaderManager.wrap(AuthService.addBalance(100000));
-            if (success) {
-                const balanceElement = document.getElementById('userBalance');
-                if (balanceElement) balanceElement.textContent = `${new_balance} ₽`;
-                NotificationManager.success('Balance updated successfully');
-            }
-        } catch (error) {
-            handleError(error);
-        }
-    });
-}
-
 function initializeNavigation() {
     document.querySelector('.menu-item.active')?.addEventListener('click', (e) => {
         if (window.location.pathname.includes('/pages/profile/')) e.preventDefault();
@@ -106,7 +88,6 @@ const init = () => {
     initializeProfile();
     initLogout();
     initializeChangePassword();
-    initializeAddBalance();
     initializeNavigation();
 };
 

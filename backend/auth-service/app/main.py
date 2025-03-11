@@ -5,18 +5,18 @@ import signal
 
 from app.api import router
 from app.core.database import engine
-from app.core.logger import log_time, logging
+from app.core.logger import logging
 from models import user_model
 
 
 def handle_sigterm(signum, frame):
-    logging.info(f"{log_time()} - Received SIGTERM signal")
+    logging.info("Received SIGTERM signal")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
-    logging.info(f"{log_time()} - Application shutdown")
+    logging.info("Application shutdown")
 
 
 signal.signal(signal.SIGTERM, handle_sigterm)

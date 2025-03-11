@@ -56,10 +56,10 @@ async function initializeHistory() {
                     .map(item => `
                         <div class="order-item">
                             <div class="item-info">
-                                <span class="item-name">${item.name}</span>
-                                <span class="item-quantity">×${item.quantity}</span>
+                                <div class="cart-item-name">${item.name}</div>
+                                <div class="cart-item-quantity">Quantity: ${item.quantity}</div>
+                                <div class="cart-item-price">${item.total} ₽</div>
                             </div>
-                            <span class="item-price">${item.total} ₽</span>
                         </div>
                     `).join('');
 

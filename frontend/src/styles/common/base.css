@@ -60,6 +60,12 @@ body {
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
 h2 {
     color: #333;
     margin-bottom: 20px;

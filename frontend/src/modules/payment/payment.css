@@ -1,0 +1,144 @@
+.payment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.payment-form {
+    background: white;
+    padding: 40px;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.payment-form h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #1a1a1a;
+}
+
+.payment-total {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #4f46e5;
+    margin-bottom: 30px;
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.payment-method {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method:hover {
+    border-color: #4f46e5;
+    background: #f5f7ff;
+}
+
+.payment-method.selected {
+    border-color: #4f46e5;
+    background: #f5f7ff;
+}
+
+.payment-method input[type="radio"] {
+    display: none;
+}
+
+.payment-method-icon {
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.payment-method-details {
+    flex-grow: 1;
+}
+
+.payment-method-name {
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.payment-method-info {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.add-balance-section {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.add-balance-btn {
+    background: #10B981;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.add-balance-btn:hover {
+    background: #059669;
+}
+
+.payment-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.payment-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn {
+    background: #f3f4f6;
+    border: none;
+    color: #4b5563;
+}
+
+.cancel-btn:hover {
+    background: #e5e7eb;
+}
+
+.pay-btn {
+    background: #4f46e5;
+    border: none;
+    color: white;
+}
+
+.pay-btn:hover {
+    background: #4338ca;
+}

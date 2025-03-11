@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from app.core.config import SECRET_KEY, ALGORITHM
 from app.core.database import get_db
 from models.user_model import User
-from app.core.logger import log_time, logging
+from app.core.logger import logging
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 token_dependency = Depends(oauth2_scheme)
@@ -23,12 +23,12 @@ def get_current_user(token: str = token_dependency, db: Session = db_dependency)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
     except JWTError:
-        logging.warning(f"{log_time()} - Token validation failed: JWTError")
+        logging.warning("Token validation failed: JWTError")
         raise credentials_exception
 
     user = db.query(User).filter(User.email == email).first()
     if user is None:
-        logging.warning(f"{log_time()} - Token validation failed: User not found - {email}")
+        logging.warning(f"Token validation failed: User not found - {email}")
         raise credentials_exception
-    logging.info(f"{log_time()} - User validated: {user.email}")
+    logging.info(f"User validated: {user.email}")
     return user

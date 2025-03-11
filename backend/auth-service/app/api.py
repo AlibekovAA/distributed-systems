@@ -27,11 +27,11 @@ from services.auth_service import (authenticate_user,
 from app.core.database import get_db
 from app.auth import get_current_user, token_dependency, db_dependency
 from app.core.config import SECRET_KEY, ALGORITHM
-from app.core.logger import log_time, logging
+from app.core.logger import logging
 
 router = APIRouter()
 
-logging.info(f"{log_time()} - API router initialized")
+logging.info("API router initialized")
 
 
 @router.post("/register", response_model=User)
@@ -39,7 +39,7 @@ def register(user: UserCreate, request: Request):
     with get_db() as db:
         db_user = db.query(UserModel).filter(UserModel.email == user.email).first()
         if db_user:
-            logging.info(f"{log_time()} - Registration failed: Email already registered - {user.email}")
+            logging.info(f"Registration failed: Email already registered - {user.email}")
             raise HTTPException(status_code=400, detail="Email already registered")
 
         new_user = create_user(
@@ -48,7 +48,7 @@ def register(user: UserCreate, request: Request):
             password=user.password,
             name=user.name
         )
-        logging.info(f"{log_time()} - User registered: {new_user.email}")
+        logging.info(f"User registered: {new_user.email}")
         return new_user
 
 
@@ -57,12 +57,12 @@ def login(user: UserLogin, request: Request):
     with get_db() as db:
         db_user = authenticate_user(db=db, email=user.email, password=user.password)
         if not db_user:
-            logging.warning(f"{log_time()} - Login failed: Invalid credentials for {user.email}")
+            logging.warning(f"Login failed: Invalid credentials for {user.email}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         access_token = create_access_token(data={"sub": db_user.email})
         refresh_token = create_refresh_token(data={"sub": db_user.email})
-        logging.info(f"{log_time()} - User logged in: {db_user.email}")
+        logging.info(f"User logged in: {db_user.email}")
         return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 
@@ -74,7 +74,7 @@ def get_profile(
 ):
     with get_db() as db:
         current_user = get_current_user(token, db)
-        logging.info(f"{log_time()} - User profile accessed: {current_user.email}")
+        logging.info(f"User profile accessed: {current_user.email}")
         return current_user
 
 
@@ -91,14 +91,14 @@ def refresh_token(refresh_token: str):
             raise HTTPException(status_code=401, detail="Refresh token expired")
         email: str = payload.get("sub")
         if email is None:
-            logging.warning(f"{log_time()} - Token refresh failed: No email found in token")
+            logging.warning(f"Token refresh failed: No email found in token")
             raise credentials_exception
     except JWTError:
-        logging.warning(f"{log_time()} - Token refresh failed: JWTError")
+        logging.warning(f"Token refresh failed: JWTError")
         raise credentials_exception
 
     access_token = create_access_token(data={"sub": email})
-    logging.info(f"{log_time()} - Access token refreshed for: {email}")
+    logging.info(f"Access token refreshed for: {email}")
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -117,7 +117,7 @@ def change_password(
         current_user = get_current_user(token, db)
 
         if not verify_password(password_data.old_password, current_user.hashed_password):
-            logging.warning(f"{log_time()} - Password change failed: Invalid old password for {current_user.email}")
+            logging.warning(f"Password change failed: Invalid old password for {current_user.email}")
             raise HTTPException(status_code=400, detail="Invalid old password")
 
         if len(password_data.new_password) < 8:
@@ -126,7 +126,7 @@ def change_password(
         current_user.hashed_password = get_password_hash(password_data.new_password)
         db.commit()
 
-        logging.info(f"{log_time()} - Password changed successfully for {current_user.email}")
+        logging.info(f"Password changed successfully for {current_user.email}")
         return {"message": "Password changed successfully"}
 
 
@@ -146,7 +146,7 @@ def add_balance(
         db.commit()
         db.refresh(current_user)
 
-        logging.info(f"{log_time()} - Balance updated for {current_user.email}: +{balance_data.amount}, new balance: {current_user.balance}")
+        logging.info(f"Balance updated for {current_user.email}: +{balance_data.amount}, new balance: {current_user.balance}")
         return {"success": True, "new_balance": current_user.balance}
 
 
@@ -163,17 +163,17 @@ def check_preferences(
             ).first() is not None
 
             if has_preferences:
-                logging.info(f"{log_time()} - User {current_user.email} preferences checked: has preferences")
+                logging.info(f"User {current_user.email} preferences checked: has preferences")
                 return {"has_preferences": True}
 
             categories = db.query(Category).all()
-            logging.info(f"{log_time()} - User {current_user.email} preferences checked: needs to fill preferences")
+            logging.info(f"User {current_user.email} preferences checked: needs to fill preferences")
             return {
                 "has_preferences": False,
                 "categories": [{"id": c.id, "name": c.name} for c in categories]
             }
     except Exception as e:
-        logging.error(f"{log_time()} - Error checking preferences: {str(e)}")
+        logging.error(f"Error checking preferences: {str(e)}")
         raise
 
 

@@ -4,6 +4,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/streadway/amqp"
 )
 
@@ -13,54 +15,47 @@ const (
 	timeout       = 20 * time.Second
 )
 
-func sendRequest(ch *amqp.Channel, userID string) error {
-	_, err := ch.QueueDeclare(
-		requestQueue,
+type RabbitMQ struct {
+	channel *amqp.Channel
+	replyQueueName string
+}
+
+func (r *RabbitMQ) sendRequest(userID string) (string, error) {
+	correlationID := uuid.New().String()
+
+	replyQueue, err := r.channel.QueueDeclare(
+		"",
+		false,
 		true,
-		false,
-		false,
+		true,
 		false,
 		nil,
 	)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	err = ch.Publish(
+	err = r.channel.Publish(
 		"",
 		requestQueue,
 		false,
 		false,
 		amqp.Publishing{
-			ContentType:   "text/plain",
+			ContentType:   "application/json",
 			Body:         []byte(userID),
-			DeliveryMode: amqp.Persistent,
+			ReplyTo:      replyQueue.Name,
+			CorrelationId: correlationID,
 		})
 
-	if err != nil {
-		log.Printf("Failed to send message: %v", err)
-		return err
-	}
-
-	return nil
+	r.replyQueueName = replyQueue.Name
+	return correlationID, err
 }
 
-func receiveResponse(ch *amqp.Channel) string {
-	q, err := ch.QueueDeclare(
-		responseQueue,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		log.Printf("Failed to declare a queue: %v", err)
-		return ""
-	}
+func (r *RabbitMQ) receiveResponse(correlationID string) string {
+	log.Printf("Waiting for response with correlationID: %s", correlationID)
 
-	msgs, err := ch.Consume(
-		q.Name,
+	msgs, err := r.channel.Consume(
+		r.replyQueueName,
 		"",
 		true,
 		false,
@@ -75,6 +70,7 @@ func receiveResponse(ch *amqp.Channel) string {
 
 	select {
 	case msg := <-msgs:
+		log.Printf("Received response with content type: %s", msg.ContentType)
 		return string(msg.Body)
 	case <-time.After(timeout):
 		log.Printf("Timeout waiting for response from recommendation service")
