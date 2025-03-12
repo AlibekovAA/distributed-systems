@@ -99,7 +99,7 @@
    - Password: `password`
 
 #### Структура бд
-![БД](db\structure.jpg)
+![БД](db/structure.jpg)
 ## Разработка
 
 ### Frontend

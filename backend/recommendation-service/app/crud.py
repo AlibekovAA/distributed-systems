@@ -5,7 +5,6 @@ from app.recommendation_engine import RecommendationEngine
 
 def get_recommendations_for_user(db: Session, user_id: int):
     engine = RecommendationEngine(db, user_id)
-
     recommendations = engine.get_recommendations()
 
     result = []

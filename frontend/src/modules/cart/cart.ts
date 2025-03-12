@@ -13,13 +13,13 @@ interface GroupedProduct extends Product {
 async function initializeCart() {
     if (!await authGuard()) return;
 
-    const cartContent = document.querySelector('.cart-content');
-    if (!cartContent) return;
+    const cartItemsContainer = document.querySelector('.cart-items-container');
+    if (!cartItemsContainer) return;
 
     try {
         const cartItems = await LoaderManager.wrap(CatalogService.getCart(), true);
 
-        cartContent.innerHTML = '';
+        cartItemsContainer.innerHTML = '';
 
         if (!Array.isArray(cartItems) || cartItems.length === 0) {
             const emptyCart = document.createElement('div');
@@ -30,18 +30,13 @@ async function initializeCart() {
                 <p>Browse our catalog to find products you like</p>
                 <a href="/pages/catalog/index.html" class="btn go-to-catalog-btn">Go to Catalog</a>
             `;
-            cartContent.appendChild(emptyCart);
+            cartItemsContainer.appendChild(emptyCart);
             return;
         }
 
         const fragment = document.createDocumentFragment();
-
-        const title = document.createElement('h1');
-        title.textContent = 'Shopping Cart';
-        fragment.appendChild(title);
-
-        const cartItemsContainer = document.createElement('div');
-        cartItemsContainer.className = 'cart-items';
+        const cartItemsDiv = document.createElement('div');
+        cartItemsDiv.className = 'cart-items';
 
         const groupedItems = cartItems.reduce<Record<string, GroupedProduct>>((acc, item) => {
             const key = `${item.id}`;
@@ -72,10 +67,10 @@ async function initializeCart() {
                 </div>
                 <button class="remove-from-cart-btn" data-product-id="${item.id}">✕</button>
             `;
-            cartItemsContainer.appendChild(cartItem);
+            cartItemsDiv.appendChild(cartItem);
         });
 
-        fragment.appendChild(cartItemsContainer);
+        fragment.appendChild(cartItemsDiv);
 
         const cartSummary = document.createElement('div');
         cartSummary.className = 'cart-summary';
@@ -88,9 +83,9 @@ async function initializeCart() {
         `;
         fragment.appendChild(cartSummary);
 
-        cartContent.appendChild(fragment);
+        cartItemsContainer.appendChild(fragment);
 
-        cartContent.addEventListener('click', async (event) => {
+        cartItemsContainer.addEventListener('click', async (event) => {
             const target = event.target as HTMLElement | null;
             if (!target) return;
 
@@ -126,7 +121,7 @@ async function initializeCart() {
         console.error('Error loading cart:', error);
         NotificationManager.error('Failed to load shopping cart');
 
-        cartContent.innerHTML = `
+        cartItemsContainer.innerHTML = `
             <div class="empty-cart">
                 <div class="empty-cart-icon">🛒</div>
                 <h2>Your Cart is Empty</h2>
@@ -146,11 +141,26 @@ async function handlePayment(cartItems: Product[]): Promise<void> {
             return;
         }
 
-        await LoaderManager.wrap(CatalogService.payForOrder(cartItems));
-        NotificationManager.success('Order paid successfully');
-        setTimeout(() => window.location.reload(), 1500);
+        try {
+            await LoaderManager.wrap(CatalogService.payForOrder());
+            NotificationManager.success('Order paid successfully');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+            if (error instanceof Error) {
+                const errorData = JSON.parse(error.message);
+                if (errorData.error === 'insufficient_funds') {
+                    NotificationManager.error(
+                        `Insufficient funds. Please add more money to your balance.`
+                    );
+                } else {
+                    NotificationManager.error('An error occurred while paying for the order');
+                }
+            } else {
+                NotificationManager.error('An error occurred while paying for the order');
+            }
+        }
     } catch (error) {
-        NotificationManager.error('An error occurred while paying for the order');
+        NotificationManager.error('An error occurred while processing payment');
     }
 }
 

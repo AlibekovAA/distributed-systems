@@ -8,18 +8,26 @@ from app.database import get_db
 from app.crud import get_recommendations_for_user
 
 
-def process_message(message):
+def process_message(ch, method, properties, body):
     try:
-        logging.info(f"Received message: {message}, type: {type(message)}")
+        logging.info(f"Received message: {body}, type: {type(body)}")
+        logging.info(f"Full message properties: {vars(properties)}")
+        logging.info(f"Method info: {vars(method)}")
 
-        if isinstance(message, dict):
-            logging.info(f"Message content: {json.dumps(message, indent=2)}")
-            user_id = message.get('user_id')
-            if user_id is None:
-                raise ValueError("No user_id in message")
+        if isinstance(body, bytes):
+            message = body.decode()
         else:
-            user_id = int(message)
+            message = body
 
+        if isinstance(message, str):
+            try:
+                message_data = json.loads(message)
+            except json.JSONDecodeError:
+                message_data = {"user_id": int(message)}
+        else:
+            message_data = message
+
+        user_id = message_data.get("user_id") or int(message)
         logging.info(f"Processing for user_id: {user_id}")
 
         with get_db() as db:
@@ -28,13 +36,24 @@ def process_message(message):
                 'user_id': user_id,
                 'recommendations': recommendations
             }
-            logging.info(f"Sending response: {json.dumps(response, indent=2)}")
-            return response
+
+            response_json = json.dumps(response)
+
+            ch.basic_publish(
+                exchange='',
+                routing_key='recommendations_response',
+                body=response_json,
+                properties=pika.BasicProperties(
+                    content_type='application/json',
+                    message_id=str(user_id)
+                )
+            )
+
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     except Exception as e:
         logging.error(f"Error processing message: {e}")
         logging.exception("Full traceback:")
-        return {"error": str(e)}
 
 
 class RabbitMQConnection:

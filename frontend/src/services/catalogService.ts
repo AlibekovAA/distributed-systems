@@ -84,34 +84,22 @@ export class CatalogService {
         return this.request(`/order/${encodeURIComponent(email)}/clear`, { method: 'POST' });
     }
 
-    static async payForOrder(cartItems: Product[]): Promise<void> {
-        const email = this.getAuthEmail();
-        const body = { email, order: { items: cartItems } };
+    static async payForOrder(): Promise<void> {
+        const response = await fetch(`${this.BASE_URL}/order/${this.getAuthEmail()}/pay`, {
+            method: 'POST',
+            headers: this.HEADERS_JSON,
+            body: JSON.stringify({}),
+        });
 
-        try {
-            const response = await fetch(`${this.BASE_URL}/order/${encodeURIComponent(email)}/pay`, {
-                method: 'POST',
-                headers: this.HEADERS_JSON,
-                credentials: 'include',
-                body: JSON.stringify(body),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                if (response.status === 402 && data.error === 'insufficient_funds') {
-                    throw new Error('insufficient_funds');
-                }
-                throw new Error(data.message || 'Failed to process payment');
+        if (!response.ok) {
+            const errorData = await response.json();
+            if (response.status === 402) {
+                throw new Error(JSON.stringify(errorData));
             }
-
-            await this.clearCart(email);
-        } catch (error) {
-            if (error instanceof Error && error.message === 'insufficient_funds') {
-                throw new Error('insufficient_funds');
-            }
-            throw error;
+            throw new Error('Failed to pay for order');
         }
+
+        return response.json();
     }
 
     static getProduct(id: number): Promise<Product | null> {

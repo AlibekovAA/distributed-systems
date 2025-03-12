@@ -126,48 +126,41 @@ class RecommendationEngine:
         logging.info(f"Interaction matrix built successfully")
         return self._user_item_matrix
 
-    def get_recommendations(self, limit: int = 10) -> List[Tuple[Product, float]]:
+    def get_recommendations(self) -> List[Tuple[Product, float]]:
         try:
             logging.info(f"Starting recommendation generation for user_id {self.user_id}")
-
-            user_history = self._get_user_history()
-            viewed_products = {h.product_id for h in user_history}
-            logging.info(f"User has viewed {len(viewed_products)} products")
-
-            collaborative_scores = self._get_collaborative_scores()
-            logging.info(f"Retrieved collaborative scores for {len(collaborative_scores)} products")
 
             all_products = (
                 self.db.query(Product)
                 .filter(Product.quantity > 0)
-                .options(joinedload(Product.categories))
                 .all()
             )
-            logging.info(f"Retrieved {len(all_products)} available products")
+
+            if not all_products:
+                logging.warning("No available products")
+                return []
 
             recommendations = []
-            for product in all_products:
-                if product.id in viewed_products:
-                    continue
+            user_preferences = self._get_user_preferences()
+            collaborative_scores = self._get_collaborative_scores()
 
+            for product in all_products:
                 preference_score = self._calculate_preference_score(product)
                 collaborative_score = collaborative_scores.get(product.id, 0.0)
 
                 final_score = (preference_score * 0.7) + (collaborative_score * 0.3)
-
-                if final_score > 0:
-                    recommendations.append((product, final_score))
+                recommendations.append((product, final_score))
 
             recommendations.sort(key=lambda x: x[1], reverse=True)
-            recommendations = recommendations[:limit]
 
-            logging.info(
-                f"Generated {len(recommendations)} recommendations for user_id {self.user_id}. "
-                f"Top scores: {[score for _, score in recommendations]}"
-            )
-
+            logging.info(f"Generated {len(recommendations)} recommendations")
             return recommendations
 
         except Exception as e:
             logging.error(f"Error generating recommendations: {e}")
-            raise RuntimeError("Failed to generate recommendations") from e
+            all_products = (
+                self.db.query(Product)
+                .filter(Product.quantity > 0)
+                .all()
+            )
+            return [(product, 0.0) for product in all_products]

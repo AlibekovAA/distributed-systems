@@ -13,7 +13,6 @@ export async function showPaymentModal(cartItems: Product[], totalAmount: number
             cartItemsHTML += `
                 <div class="cart-item">
                     <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-quantity">Quantity: ${item.quantity}</div>
                     <div class="cart-item-price">${item.price} ₽</div>
                 </div>
             `;
@@ -22,29 +21,42 @@ export async function showPaymentModal(cartItems: Product[], totalAmount: number
         modal.innerHTML = `
             <div class="payment-form">
                 <h2>Payment</h2>
-                <div class="cart-items">
-                    ${cartItemsHTML}
-                </div>
                 <div class="payment-total">Total: ${totalAmount} ₽</div>
 
-                <div class="payment-methods">
-                    <label class="payment-method">
-                        <input type="radio" name="payment-method" value="card1" checked>
-                        <span class="payment-method-icon">💳</span>
-                        <div class="payment-method-details">
-                            <div class="payment-method-name">**** **** **** 1234</div>
-                            <div class="payment-method-info">Expires 12/25</div>
+                <div class="card-form">
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <input type="text"
+                               class="card-input"
+                               placeholder="**** **** **** ****"
+                               maxlength="19"
+                               autocomplete="off">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <input type="text"
+                                   class="card-input"
+                                   placeholder="MM/YY"
+                                   maxlength="5"
+                                   autocomplete="off">
                         </div>
-                    </label>
-
-                    <label class="payment-method">
-                        <input type="radio" name="payment-method" value="card2">
-                        <span class="payment-method-icon">💳</span>
-                        <div class="payment-method-details">
-                            <div class="payment-method-name">**** **** **** 5678</div>
-                            <div class="payment-method-info">Expires 03/24</div>
+                        <div class="form-group">
+                            <label>CVV</label>
+                            <input type="text"
+                                   class="card-input"
+                                   placeholder="***"
+                                   maxlength="3"
+                                   autocomplete="off">
                         </div>
-                    </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Cardholder Name</label>
+                        <input type="text"
+                               class="card-input"
+                               placeholder="JOHN DOE"
+                               autocomplete="off">
+                    </div>
                 </div>
 
                 <div class="add-balance-section">
@@ -89,12 +101,26 @@ export async function showPaymentModal(cartItems: Product[], totalAmount: number
             resolve(true);
         });
 
-        const paymentMethods = modal.querySelectorAll('.payment-method');
-        paymentMethods.forEach(method => {
-            method.addEventListener('click', () => {
-                paymentMethods.forEach(m => m.classList.remove('selected'));
-                method.classList.add('selected');
+        const cardNumberInput = modal.querySelector('input[placeholder="**** **** **** ****"]');
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', (e) => {
+                const input = e.target as HTMLInputElement;
+                let value = input.value.replace(/\D/g, '');
+                value = value.replace(/(\d{4})/g, '$1 ').trim();
+                input.value = value;
             });
-        });
+        }
+
+        const expiryInput = modal.querySelector('input[placeholder="MM/YY"]');
+        if (expiryInput) {
+            expiryInput.addEventListener('input', (e) => {
+                const input = e.target as HTMLInputElement;
+                let value = input.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.slice(0, 2) + '/' + value.slice(2);
+                }
+                input.value = value;
+            });
+        }
     });
 }

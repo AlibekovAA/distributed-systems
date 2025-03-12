@@ -25,6 +25,7 @@
     text-align: center;
     margin-bottom: 30px;
     color: #1a1a1a;
+    font-size: 24px;
 }
 
 .payment-total {
@@ -35,54 +36,42 @@
     margin-bottom: 30px;
 }
 
-.payment-methods {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.card-form {
     margin-bottom: 30px;
 }
 
-.payment-method {
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.form-row {
     display: flex;
-    align-items: center;
-    padding: 15px;
+    gap: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.card-input {
+    width: 100%;
+    padding: 12px;
     border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
     transition: all 0.3s ease;
 }
 
-.payment-method:hover {
+.card-input:focus {
     border-color: #4f46e5;
-    background: #f5f7ff;
-}
-
-.payment-method.selected {
-    border-color: #4f46e5;
-    background: #f5f7ff;
-}
-
-.payment-method input[type="radio"] {
-    display: none;
-}
-
-.payment-method-icon {
-    font-size: 24px;
-    margin-right: 15px;
-}
-
-.payment-method-details {
-    flex-grow: 1;
-}
-
-.payment-method-name {
-    font-weight: 500;
-    color: #1a1a1a;
-}
-
-.payment-method-info {
-    font-size: 14px;
-    color: #6b7280;
+    outline: none;
 }
 
 .add-balance-section {
@@ -141,4 +130,21 @@
 
 .pay-btn:hover {
     background: #4338ca;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 10px;
+}
+
+.cart-item-name {
+    color: #4b5563;
+}
+
+.cart-item-price {
+    font-weight: 600;
+    color: #4f46e5;
 }

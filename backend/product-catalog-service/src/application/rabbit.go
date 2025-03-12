@@ -1,10 +1,10 @@
 package application
 
 import (
+	"encoding/json"
 	"log"
+	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 
 	"github.com/streadway/amqp"
 )
@@ -12,27 +12,36 @@ import (
 const (
 	requestQueue  = "recommendations"
 	responseQueue = "recommendations_response"
-	timeout       = 20 * time.Second
+	timeout       = 10 * time.Second
 )
 
 type RabbitMQ struct {
 	channel *amqp.Channel
-	replyQueueName string
 }
 
-func (r *RabbitMQ) sendRequest(userID string) (string, error) {
-	correlationID := uuid.New().String()
-
-	replyQueue, err := r.channel.QueueDeclare(
-		"",
+func (r *RabbitMQ) sendRequest(userID string) error {
+	_, err := r.channel.QueueDeclare(
+		requestQueue,
+		true,
 		false,
-		true,
-		true,
+		false,
 		false,
 		nil,
 	)
 	if err != nil {
-		return "", err
+		return err
+	}
+
+	_, err = r.channel.QueueDeclare(
+		responseQueue,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
 	}
 
 	err = r.channel.Publish(
@@ -41,21 +50,22 @@ func (r *RabbitMQ) sendRequest(userID string) (string, error) {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType:   "application/json",
-			Body:         []byte(userID),
-			ReplyTo:      replyQueue.Name,
-			CorrelationId: correlationID,
+			ContentType: "application/json",
+			Body:       []byte(userID),
+			MessageId:  userID,
 		})
 
-	r.replyQueueName = replyQueue.Name
-	return correlationID, err
+	if err != nil {
+		log.Printf("Failed to send request: %v", err)
+		return err
+	}
+
+	return nil
 }
 
-func (r *RabbitMQ) receiveResponse(correlationID string) string {
-	log.Printf("Waiting for response with correlationID: %s", correlationID)
-
+func (r *RabbitMQ) receiveResponse(userID string) string {
 	msgs, err := r.channel.Consume(
-		r.replyQueueName,
+		responseQueue,
 		"",
 		true,
 		false,
@@ -63,17 +73,35 @@ func (r *RabbitMQ) receiveResponse(correlationID string) string {
 		false,
 		nil,
 	)
+
 	if err != nil {
-		log.Printf("Failed to register a consumer: %v", err)
+		log.Printf("Error connecting to response queue: %v", err)
 		return ""
 	}
 
+	messageChannel := make(chan string)
+
+	go func() {
+		for msg := range msgs {
+			var response map[string]interface{}
+			if err := json.Unmarshal(msg.Body, &response); err != nil {
+				continue
+			}
+
+			if responseUserID, ok := response["user_id"].(float64); ok {
+				if strconv.FormatFloat(responseUserID, 'f', 0, 64) == userID {
+					messageChannel <- string(msg.Body)
+					return
+				}
+			}
+		}
+	}()
+
 	select {
-	case msg := <-msgs:
-		log.Printf("Received response with content type: %s", msg.ContentType)
-		return string(msg.Body)
-	case <-time.After(timeout):
-		log.Printf("Timeout waiting for response from recommendation service")
+	case response := <-messageChannel:
+		return response
+	case <-time.After(10 * time.Second):
+		log.Printf("Timeout waiting for response for user %s", userID)
 		return ""
 	}
 }
