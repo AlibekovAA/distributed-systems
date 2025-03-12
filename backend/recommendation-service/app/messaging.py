@@ -87,6 +87,10 @@ class RabbitMQConnection:
                     auto_delete=False,
                     exclusive=False,
                 )
+
+            self.channel.basic_qos(prefetch_count=1)
+            logging.info("Successfully connected to RabbitMQ")
+
         except Exception as e:
             logging.error(f"Error connecting to RabbitMQ: {e}")
             raise
@@ -96,21 +100,34 @@ class RabbitMQConnection:
             self.connection.close()
             logging.info("Connection to RabbitMQ closed.")
 
-    def send_message(self, message: dict):
+    def send_message(self, message: dict, routing_key: str = None, correlation_id: str = None):
         if not self.channel:
             raise Exception("Connection to RabbitMQ is not established")
         try:
+            props = {
+                'delivery_mode': 2,
+                'content_type': 'application/json'
+            }
+
+            if correlation_id:
+                props['correlation_id'] = correlation_id
+
+            properties = pika.BasicProperties(**props)
+            routing_key = routing_key or self.response_queue
+
+            logging.info(f"Sending message to queue {routing_key} with correlation_id {correlation_id}")
+            logging.info(f"Message content: {json.dumps(message, indent=2)}")
+
             self.channel.basic_publish(
                 exchange='',
-                routing_key=self.response_queue,
+                routing_key=routing_key,
                 body=json.dumps(message),
-                properties=pika.BasicProperties(
-                    delivery_mode=2,
-                    content_type='application/json'
-                )
+                properties=properties
             )
+            logging.info("Message sent successfully")
         except Exception as e:
             logging.error(f"Error sending message: {e}")
+            raise
 
     def receive_message(self, callback):
         if not self.channel:
@@ -118,26 +135,42 @@ class RabbitMQConnection:
 
         def on_message(ch, method, properties, body):
             try:
-                message = json.loads(body)
-            except json.JSONDecodeError:
-                message = body.decode()
+                logging.info(f"Received message with properties: {vars(properties)}")
+                logging.info(f"Message body: {body}")
 
-            result = callback(message)
+                if isinstance(body, bytes):
+                    message = body.decode()
+                else:
+                    message = body
 
-            if properties.reply_to:
-                self.channel.basic_publish(
-                    exchange='',
-                    routing_key=properties.reply_to,
-                    body=json.dumps(result),
-                    properties=pika.BasicProperties(
-                        correlation_id=properties.correlation_id,
-                        content_type='application/json'
+                if isinstance(message, str):
+                    try:
+                        message = json.loads(message)
+                    except json.JSONDecodeError:
+                        pass
+
+                result = callback(message, properties)
+
+                if result is not None and properties.reply_to:
+                    logging.info(f"Sending response to {properties.reply_to} with correlation_id {properties.correlation_id}")
+                    self.send_message(
+                        message=result,
+                        routing_key=properties.reply_to,
+                        correlation_id=properties.correlation_id
                     )
-                )
+
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+
+            except Exception as e:
+                logging.error(f"Error processing message: {e}")
+                logging.exception("Full traceback:")
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
         self.channel.basic_consume(
             queue=self.queue_name,
             on_message_callback=on_message,
-            auto_ack=True
+            auto_ack=False
         )
+
+        logging.info(f"Started consuming from queue: {self.queue_name}")
         self.channel.start_consuming()

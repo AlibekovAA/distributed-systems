@@ -138,6 +138,7 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
 		http.Error(w, "Failed get id", http.StatusInternalServerError)
+		return
 	}
 
 	var order models.Order

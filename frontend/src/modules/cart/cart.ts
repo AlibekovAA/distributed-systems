@@ -14,7 +14,7 @@ async function initializeCart() {
     if (!await authGuard()) return;
 
     const cartItemsContainer = document.querySelector('.cart-items-container');
-    if (!cartItemsContainer) return;
+    if (!(cartItemsContainer instanceof HTMLElement)) return;
 
     try {
         const cartItems = await LoaderManager.wrap(CatalogService.getCart(), true);
@@ -22,15 +22,14 @@ async function initializeCart() {
         cartItemsContainer.innerHTML = '';
 
         if (!Array.isArray(cartItems) || cartItems.length === 0) {
-            const emptyCart = document.createElement('div');
-            emptyCart.className = 'empty-cart';
-            emptyCart.innerHTML = `
-                <div class="empty-cart-icon">🛒</div>
-                <h2>Your Cart is Empty</h2>
-                <p>Browse our catalog to find products you like</p>
-                <a href="/pages/catalog/index.html" class="btn go-to-catalog-btn">Go to Catalog</a>
+            cartItemsContainer.innerHTML = `
+                <div class="empty-cart">
+                    <div class="empty-cart-icon">🛒</div>
+                    <h2>Your Cart is Empty</h2>
+                    <p>Browse our catalog to find products you like</p>
+                    <a href="/pages/catalog/index.html" class="btn go-to-catalog-btn">Go to Catalog</a>
+                </div>
             `;
-            cartItemsContainer.appendChild(emptyCart);
             return;
         }
 
@@ -41,11 +40,7 @@ async function initializeCart() {
         const groupedItems = cartItems.reduce<Record<string, GroupedProduct>>((acc, item) => {
             const key = `${item.id}`;
             if (!acc[key]) {
-                acc[key] = {
-                    ...item,
-                    quantity: 0,
-                    totalPrice: 0
-                };
+                acc[key] = { ...item, quantity: 0, totalPrice: 0 };
             }
             acc[key].quantity += 1;
             acc[key].totalPrice = acc[key].price * acc[key].quantity;
@@ -137,22 +132,23 @@ async function handlePayment(cartItems: Product[]): Promise<void> {
         const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
         const shouldProceed = await showPaymentModal(cartItems, totalPrice);
 
-        if (!shouldProceed) {
-            return;
-        }
+        if (!shouldProceed) return;
 
         try {
             await LoaderManager.wrap(CatalogService.payForOrder());
             NotificationManager.success('Order paid successfully');
-            setTimeout(() => window.location.reload(), 1500);
+            await CatalogService.clearCart();
+            setTimeout(() => window.location.reload(), 500);
         } catch (error) {
             if (error instanceof Error) {
-                const errorData = JSON.parse(error.message);
-                if (errorData.error === 'insufficient_funds') {
-                    NotificationManager.error(
-                        `Insufficient funds. Please add more money to your balance.`
-                    );
-                } else {
+                try {
+                    const errorData = JSON.parse(error.message);
+                    if (errorData.error === 'insufficient_funds') {
+                        NotificationManager.error('Insufficient funds. Please add more money to your balance.');
+                    } else {
+                        NotificationManager.error('An error occurred while paying for the order');
+                    }
+                } catch {
                     NotificationManager.error('An error occurred while paying for the order');
                 }
             } else {

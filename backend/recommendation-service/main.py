@@ -5,14 +5,14 @@ import json
 from app.messaging import RabbitMQConnection
 from app.logger import logging
 from app.database import get_db
-from app.crud import get_recommendations_for_user
+from app.crud import get_recommendations_for_user, update_user_preferences
 
 
 def handle_sigterm(*args):
     sys.exit(0)
 
 
-def process_message(message):
+def process_message(message, properties):
     try:
         logging.info(f"Received message: {message}, type: {type(message)}")
 
@@ -27,17 +27,19 @@ def process_message(message):
         logging.info(f"Processing for user_id: {user_id}")
 
         with get_db() as db:
+            update_user_preferences(db, user_id)
             recommendations = get_recommendations_for_user(db, user_id)
             response = {
                 'user_id': user_id,
                 'recommendations': recommendations
             }
-            logging.info(f"Sending response: {json.dumps(response, indent=2)}")
-            rabbit.send_message(response)
+            logging.info(f"Prepared response: {json.dumps(response, indent=2)}")
+            return response
 
     except Exception as e:
         logging.error(f"Error processing message: {e}")
         logging.exception("Full traceback:")
+        return None
 
 
 signal.signal(signal.SIGTERM, handle_sigterm)

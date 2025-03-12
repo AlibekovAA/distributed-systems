@@ -34,7 +34,7 @@ export class CatalogService {
         const response = await fetch(`${this.BASE_URL}${url}`, {
             ...options,
             credentials: 'include',
-            headers: { ...this.HEADERS_JSON, ...(options.headers || {}) },
+            headers: { ...this.HEADERS_JSON, ...options.headers },
             mode: 'cors',
         });
         return this.handleResponse<T>(response);
@@ -54,13 +54,12 @@ export class CatalogService {
     }
 
     static getProducts(): Promise<Product[]> {
-        return this.request<Product[]>(`/products/${encodeURIComponent(this.getAuthEmail())}`);
+        return this.request(`/products/${encodeURIComponent(this.getAuthEmail())}`);
     }
 
     static async getCart(): Promise<Product[]> {
         try {
-            const response = await this.request<Product[]>(`/order/${encodeURIComponent(this.getAuthEmail())}`);
-            return response || [];
+            return await this.request(`/order/${encodeURIComponent(this.getAuthEmail())}`) ?? [];
         } catch (error) {
             console.error('Error fetching cart:', error);
             return [];
@@ -75,38 +74,39 @@ export class CatalogService {
     }
 
     static removeFromCart(productId: number): Promise<void> {
-        return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/${productId}`, {
-            method: 'DELETE',
-        });
+        return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/${productId}`, { method: 'DELETE' });
     }
 
-    static clearCart(email: string): Promise<void> {
-        return this.request(`/order/${encodeURIComponent(email)}/clear`, { method: 'POST' });
+    static clearCart(): Promise<void> {
+        return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/clear`, { method: 'POST' });
     }
 
     static async payForOrder(): Promise<void> {
-        const response = await fetch(`${this.BASE_URL}/order/${this.getAuthEmail()}/pay`, {
-            method: 'POST',
-            headers: this.HEADERS_JSON,
-            body: JSON.stringify({}),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            if (response.status === 402) {
-                throw new Error(JSON.stringify(errorData));
+        try {
+            await this.request(`/order/${this.getAuthEmail()}/pay`, {
+                method: 'POST',
+                body: JSON.stringify({}),
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                try {
+                    const errorData = JSON.parse(error.message);
+                    if (errorData.error === 'insufficient_funds') {
+                        throw new Error(JSON.stringify(errorData));
+                    }
+                } catch {
+                    throw new Error('Failed to pay for order');
+                }
             }
-            throw new Error('Failed to pay for order');
+            throw error;
         }
-
-        return response.json();
     }
 
     static getProduct(id: number): Promise<Product | null> {
-        return this.request<Product>(`/products/${id}`);
+        return this.request(`/products/${id}`);
     }
 
     static getOrderHistory(): Promise<OrderHistoryResponse[]> {
-        return this.request<OrderHistoryResponse[]>(`/orders/${encodeURIComponent(this.getAuthEmail())}/history`);
+        return this.request(`/orders/${encodeURIComponent(this.getAuthEmail())}/history`);
     }
 }

@@ -17,22 +17,23 @@ export async function initializeProfile() {
     if (!authGuard()) return;
 
     try {
-        const { email, name } = await LoaderManager.wrap(AuthService.getProfile());
+        const profile = await LoaderManager.wrap(AuthService.getProfile());
+        if (!profile) throw new Error('Failed to fetch profile data');
 
-        const elements: Record<string, HTMLElement | null> = {
-            email: document.getElementById('userEmail'),
-            name: document.getElementById('userName'),
-        };
+        const emailElement = document.getElementById('userEmail');
+        const nameElement = document.getElementById('userName');
 
-        if (elements.email) elements.email.textContent = email;
-        if (elements.name) elements.name.textContent = name;
+        if (emailElement) emailElement.textContent = profile.email;
+        if (nameElement) nameElement.textContent = profile.name;
     } catch (error) {
         handleError(error, true);
     }
 }
 
-function validatePasswordFields(form: HTMLFormElement): { oldPassword: string; newPassword: string; confirmNewPassword: string } | null {
-    const fields = ['oldPassword', 'newPassword', 'confirmNewPassword'].map((name) => form.elements.namedItem(name) as HTMLInputElement);
+function validatePasswordFields(form: HTMLFormElement) {
+    const fields = ['oldPassword', 'newPassword', 'confirmNewPassword']
+        .map((name) => form.elements.namedItem(name) as HTMLInputElement | null)
+        .filter((field): field is HTMLInputElement => field !== null);
 
     for (const field of fields) {
         if (!field.value.trim()) {
@@ -54,14 +55,14 @@ function validatePasswordFields(form: HTMLFormElement): { oldPassword: string; n
         return null;
     }
 
-    return { oldPassword, newPassword, confirmNewPassword };
+    return { oldPassword, newPassword };
 }
 
 async function initializeChangePassword() {
-    const form = document.getElementById('changePasswordForm') as HTMLFormElement;
+    const form = document.getElementById('changePasswordForm') as HTMLFormElement | null;
     if (!form) return;
 
-    form.setAttribute('novalidate', 'true');
+    form.noValidate = true;
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
