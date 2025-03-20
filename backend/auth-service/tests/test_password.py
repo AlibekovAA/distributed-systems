@@ -1,5 +1,5 @@
 import time
-
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -7,6 +7,9 @@ from app.main import app
 client = TestClient(app)
 
 
+@pytest.mark.auth
+@pytest.mark.password
+@pytest.mark.security
 class TestPasswordChange:
     def test_successful_password_change(self, auth_token, test_user_data):
         response = client.post(

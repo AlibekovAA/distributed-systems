@@ -1,0 +1,41 @@
+services:
+  auth-service:
+    build:
+      context: ../../backend/auth-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/auth/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks:
+      - test-network
+
+  auth-tests:
+    build:
+      context: ../../backend/auth-service
+      dockerfile: Dockerfile.test
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ../allure-results:/app/allure-results
+      - ../allure-report:/app/allure-report
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    networks:
+      - test-network

@@ -13,8 +13,6 @@
    - **PgAdmin**: [http://localhost:5050](http://localhost:5050)
    - **Product Catalog Service**: [http://localhost:8080](http://localhost:8080)
 
-## Доступ к сервисам
-
 ### Recommendation service
 - Основные функции:
   - Персонализированные рекомендации товаров на основе:
@@ -86,20 +84,9 @@
    - Swagger UI: `https://petstore.swagger.io/?url=http://localhost:4040/combined-swagger.json`
 3. Для остановки сервера нажмите Enter в консоли.
 
-Для остановки сервера нажмите Enter в консоли.
-### База данных (через pgAdmin)
-1. Войдите в pgAdmin:
-   - Email: `admin@admin.com`
-   - Password: `admin`
-2. Добавьте новый сервер:
-   - Host: `db`
-   - Port: `5432`
-   - Database: `mydatabase`
-   - Username: `user`
-   - Password: `password`
-
-#### Структура бд
+### Структура бд
 ![БД](db/structure.jpg)
+
 ## Разработка
 
 ### Frontend
@@ -136,7 +123,10 @@
    python run_tests.py
    ```
 2. Просмотр отчетов:
-   - Allure отчет: `tests-report/index.html`
+   - Allure отчет: `allure-report/index.html`
+
+3. Пример отчёта:
+![Allure](tests/allure.jpg)
 
 ## Очистка Docker окружения
 

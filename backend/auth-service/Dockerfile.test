@@ -1,56 +1,25 @@
-FROM python:3.9-bookworm AS builder
+FROM base-test:latest AS base
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl --no-install-recommends && \
+RUN apt-get update && \
+    apt-get install -y python3.11 python3.11-venv python3-pip --no-install-recommends && \
+    python3.11 -m venv /opt/venv && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-
-
-RUN python3 -m ensurepip && python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY auth-service/requirements.txt ./
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir pytest allure-pytest pytest-cov
 
-RUN curl -Ls https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/2.24.1/allure-commandline-2.24.1.tgz | tar -xz -C /opt/ && \
-    ln -s /opt/allure-2.24.1/bin/allure /usr/bin/allure
-
-FROM python:3.9-slim-bookworm AS final
-
-
-WORKDIR /app
-
-
-
-
-COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /usr/bin/allure /usr/bin/allure
-COPY --from=builder /opt/allure-2.24.1 /opt/allure-2.24.1
-
-ENV PATH="/opt/allure-2.24.1/bin:$PATH"
-ENV PATH="/opt/venv/bin:$PATH"
-
-RUN apt-get update && apt-get install -y openjdk-17-jre-headless --no-install-recommends && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
-ENV PATH="$JAVA_HOME/bin:$PATH"
-
-COPY auth-service/ ./
+COPY . ./
 ENV PYTHONPATH=/app
-
-
-RUN mkdir -p /usr/lib/jvm && \
-    rm -rf /usr/lib/jvm/default-java && \
-    ln -s /usr/lib/jvm/java-17-openjdk-amd64 /usr/lib/jvm/default-java
 
 RUN echo '#!/bin/bash\n\
 set -e\n\
 trap "kill 0" EXIT\n\
-pytest -v --alluredir=/app/allure-results --cov=app --cov-report=term-missing --cov-report=xml && \
-allure generate /app/allure-results -o /app/allure-report --clean --single-file' > /app/run_tests.sh && \
+pytest -v --alluredir=/app/allure-results' > /app/run_tests.sh && \
 chmod +x /app/run_tests.sh
 
 CMD ["/app/run_tests.sh"]

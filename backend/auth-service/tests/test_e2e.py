@@ -1,10 +1,14 @@
 from fastapi.testclient import TestClient
+import pytest
 
 from app.main import app
 
 client = TestClient(app)
 
 
+@pytest.mark.auth
+@pytest.mark.e2e
+@pytest.mark.integration
 class TestEndToEnd:
     def test_complete_auth_flow(self, test_user_data):
         register_response = client.post("/auth/register", json=test_user_data)

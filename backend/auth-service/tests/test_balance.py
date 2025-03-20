@@ -1,11 +1,15 @@
 from fastapi.testclient import TestClient
+import pytest
 
 from app.main import app
 
 client = TestClient(app)
 
 
-class TestBalance:
+@pytest.mark.auth
+@pytest.mark.balance
+@pytest.mark.smoke
+class TestBalanceOperations:
     def test_successful_balance_add(self, auth_token):
         initial_profile = client.get(
             "/auth/profile",

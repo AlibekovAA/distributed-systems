@@ -3,6 +3,7 @@ import os
 import subprocess
 import logging
 import shutil
+import time
 from typing import NoReturn
 
 
@@ -22,7 +23,33 @@ def setup_logger() -> logging.Logger:
 def clean_directory(path: str) -> NoReturn:
     if os.path.exists(path):
         shutil.rmtree(path, ignore_errors=True)
-        logging.info(f"Removed old {path} directory")
+        os.makedirs(path, exist_ok=True)
+        logging.info(f"Cleaned {path} directory")
+
+
+def print_container_logs(logger: logging.Logger, service_name: str) -> None:
+    try:
+        logger.info(f"=== Logs for {service_name} ===")
+        subprocess.run(
+            ['docker', 'compose', '-f', 'docker-compose.test.yml', 'logs', service_name],
+            check=True
+        )
+        logger.info(f"=== End of logs for {service_name} ===")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to get logs for {service_name}: {e}")
+
+
+def run_test_suite(logger: logging.Logger, service_name: str) -> bool:
+    try:
+        logger.info(f"Running tests for {service_name}...")
+        result = subprocess.run([
+            'docker', 'compose', '-f', 'docker-compose.test.yml', 'run',
+            '--rm', f'{service_name}-tests'
+        ], check=False)
+        return result.returncode == 0
+    except Exception as e:
+        logger.error(f"{service_name} tests failed with error: {e}")
+        return False
 
 
 def run_tests() -> NoReturn:
@@ -33,46 +60,72 @@ def run_tests() -> NoReturn:
     for directory in ['allure-report', 'allure-results']:
         clean_directory(directory)
 
+    test_failures = []
+
     try:
-        logger.info("Starting test environment...")
+        subprocess.run(['docker', 'build', '-t', 'base-test:latest', '-f', 'base-test.Dockerfile', '.'], check=True)
 
         subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'build'], check=True)
-        subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'up', '--exit-code-from', 'tests'], check=True)
 
-        container_id = subprocess.check_output(
-            ['docker', 'ps', '-aq', '--filter', 'name=tests-tests']
-        ).decode().strip()
+        subprocess.run([
+            'docker', 'compose', '-f', 'docker-compose.test.yml', 'up',
+            '-d', 'postgres-test', 'rabbitmq-test'
+        ], check=True)
 
-        if not container_id:
-            raise Exception("Tests container not found")
+        time.sleep(15)
 
-        exit_code = subprocess.run(['docker', 'wait', container_id], capture_output=True, text=True).stdout.strip()
+        subprocess.run([
+            'docker', 'compose', '-f', 'docker-compose.test.yml', 'up',
+            '-d', 'auth-service', 'product-catalog-service'
+        ], check=True)
+
+        if not run_test_suite(logger, "auth"):
+            test_failures.append("auth-service")
+
+        if not run_test_suite(logger, "catalog"):
+            test_failures.append("product-catalog-service")
+
+        if test_failures:
+            logger.error(f"Tests failed for services: {', '.join(test_failures)}")
+        else:
+            logger.info("All tests completed successfully")
 
         try:
             subprocess.run([
-                'docker', 'exec', container_id, 'allure', 'generate',
-                '/app/allure-results', '-o', '/app/allure-report', '--clean', '--single-file'
+                'docker', 'run', '--rm',
+                '-v', f'{script_dir}/allure-results:/allure-results',
+                '-v', f'{script_dir}/allure-report:/allure-report',
+                'base-test:latest',
+                'allure', 'generate',
+                '/allure-results',
+                '-o', '/allure-report',
+                '--clean',
+                '--single-file'
             ], check=True)
-
-            clean_directory(os.path.join(script_dir, 'allure-report'))
-
-            logger.info("Allure report generated successfully.")
-
+            logger.info("Allure reports generated successfully.")
+            logger.info(f"Report is available at: {os.path.join(script_dir, 'allure-report')}")
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to generate Allure report: {e}")
 
-        subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'down'], check=True)
+    except Exception as e:
+        logger.error(f"Test execution failed: {e}")
+        raise
+    finally:
+        logger.info("Printing final service logs before shutdown...")
+        services = [
+            "postgres-test",
+            "rabbitmq-test",
+            "auth-service",
+            "product-catalog-service",
+            "auth-tests",
+            "catalog-tests"
+        ]
 
-        if exit_code != '0':
-            logger.error(f"Tests failed with exit code {exit_code}")
-            exit(int(exit_code))
-        else:
-            logger.info("Tests completed successfully")
+        for service in services:
+            print_container_logs(logger, service)
 
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Command failed: {e}")
+        logger.info("Shutting down test environment...")
         subprocess.run(['docker', 'compose', '-f', 'docker-compose.test.yml', 'down'], check=False)
-        exit(1)
 
 
 if __name__ == "__main__":

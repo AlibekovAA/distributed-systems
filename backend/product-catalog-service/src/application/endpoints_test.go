@@ -4,32 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	database "main/src/db"
 	"main/src/models"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
-
-	"github.com/joho/godotenv"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
 func setupTestServer() *Application {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Ошибка загрузки .env файла")
-	}
-
-	dbURL := os.Getenv("TEST_DATABASE_URL")
-	if dbURL == "" {
-		fmt.Println("TEST_DATABASE_URL is not set")
-		os.Exit(1)
-	}
+	dbURL := "postgresql://test_user:test_password@postgres-test:5432/test_db"
 
 	app := NewApplication()
 	db, err := sqlx.Open("postgres", dbURL)

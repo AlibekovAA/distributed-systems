@@ -1,10 +1,14 @@
 from fastapi.testclient import TestClient
+import pytest
 
 from app.main import app
 
 client = TestClient(app)
 
 
+@pytest.mark.auth
+@pytest.mark.profile
+@pytest.mark.security
 class TestProfile:
     def test_get_profile_authorized(self, auth_token):
         response = client.get(

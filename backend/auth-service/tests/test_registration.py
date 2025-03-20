@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+import pytest
 
 from app.main import app
 from app.core.database import get_db
@@ -7,6 +8,9 @@ from models.user_model import User as UserModel
 client = TestClient(app)
 
 
+@pytest.mark.auth
+@pytest.mark.registration
+@pytest.mark.smoke
 class TestRegistration:
     def test_successful_registration(self, test_user_data):
         with get_db() as db:

@@ -1,11 +1,15 @@
 from fastapi.testclient import TestClient
+import pytest
 
 from app.main import app
 
 client = TestClient(app)
 
 
-class TestAuthentication:
+@pytest.mark.auth
+@pytest.mark.login
+@pytest.mark.smoke
+class TestAuthenticationFlow:
     def test_successful_login(self, registered_user, test_user_data):
         response = client.post("/auth/login", json={
             "email": test_user_data["email"],

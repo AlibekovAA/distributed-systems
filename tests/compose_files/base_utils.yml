@@ -1,0 +1,8 @@
+services:
+  base-test:
+    build:
+      context: ..
+      dockerfile: base-test.Dockerfile
+    image: base-test:latest
+    networks:
+      - test-network

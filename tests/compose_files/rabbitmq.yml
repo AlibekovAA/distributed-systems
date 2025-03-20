@@ -1,0 +1,16 @@
+services:
+  rabbitmq-test:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_LOG_LEVEL: error
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log [{console,[{level,error}]}]
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - test-network

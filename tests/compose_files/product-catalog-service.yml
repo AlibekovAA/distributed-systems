@@ -1,0 +1,44 @@
+services:
+  product-catalog-service:
+    build:
+      context: ../../backend/product-catalog-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ADDR: ${ADDR}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/products"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+    networks:
+      - test-network
+
+  catalog-tests:
+    build:
+      context: ../../backend/product-catalog-service
+      dockerfile: Dockerfile.test
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ADDR: ${ADDR}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      GO111MODULE: on
+      CGO_ENABLED: 0
+    volumes:
+      - ../allure-results:/app/allure-results
+      - ../allure-report:/app/allure-report
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+      product-catalog-service:
+        condition: service_started
+    networks:
+      - test-network
