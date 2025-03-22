@@ -12,6 +12,7 @@
    - **Auth Service API**: [http://localhost:8000/auth](http://localhost:8000/auth)
    - **PgAdmin**: [http://localhost:5050](http://localhost:5050)
    - **Product Catalog Service**: [http://localhost:8080](http://localhost:8080)
+   - **Prometheus**: [http://localhost:9090](http://localhost:9090)
 
 ### Recommendation service
 - Основные функции:
@@ -127,6 +128,12 @@
 
 3. Пример отчёта:
 ![Allure](tests/allure.jpg)
+
+## Мониторинг
+
+Для сбора, обработки и хранения временных рядов данных используется ПО **Prometheus**. Поднимается как отдельный сервис, получить доступ: [http://localhost:9090](http://localhost:9090)
+
+Для демонстрации нужных сведений в удобном виде используется **Grafana**, получить доступ: [http://localhost:4000](http://localhost:4000)
 
 ## Очистка Docker окружения
 
