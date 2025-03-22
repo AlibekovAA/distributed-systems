@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // @Summary Add an item to the cart
@@ -17,26 +18,35 @@ import (
 // @Success 200
 // @Router /order/add [post]
 func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
+	requestCount.WithLabelValues(r.Method, "/order/add").Inc()
+
+	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/add"))
+	defer timer.ObserveDuration()
+
 	var order models.Order
 
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
 		http.Error(w, "Broken JSON", http.StatusBadRequest)
 		return
 	}
 
 	product, err := database.GetProduct(app.DB, order.ProductID)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
 		http.Error(w, "Failed get product from db", http.StatusInternalServerError)
 		return
 	}
 
 	if product.Quantity <= 0 {
+		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
 		http.Error(w, "Product is out of stock", http.StatusConflict)
 		return
 	}
 
 	err = database.AddProductToOrder(app.DB, order)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
 		http.Error(w, "Failed to add product to order", http.StatusInternalServerError)
 		return
 	}
@@ -45,6 +55,7 @@ func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 
 	err = database.UpdateProduct(app.DB, product)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
 		http.Error(w, "Failed to update product stock", http.StatusInternalServerError)
 		return
 	}
@@ -60,15 +71,23 @@ func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 // @Success 200
 // @Router /order/{email} [get]
 func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
+	requestCount.WithLabelValues(r.Method, "/order/{email}").Inc()
+
+	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}"))
+	defer timer.ObserveDuration()
+
 	email := mux.Vars(r)["email"]
 
 	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}").Inc()
 		http.Error(w, "Failed get id", http.StatusInternalServerError)
+		return
 	}
 
 	orders, err := database.GetOrder(app.DB, user.Email)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}").Inc()
 		http.Error(w, "Failed get order for user", http.StatusInternalServerError)
 		return
 	}
@@ -95,10 +114,16 @@ func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 // @Success 200
 // @Router /order/{email}/{product_id} [delete]
 func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) {
+	requestCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
+
+	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}/{product_id}"))
+	defer timer.ObserveDuration()
+
 	email := mux.Vars(r)["email"]
 
 	productID, err := strconv.Atoi(mux.Vars(r)["product_id"])
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
 		http.Error(w, "Failed get product_id", http.StatusInternalServerError)
 	}
 
@@ -107,18 +132,16 @@ func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) 
 		Email:     email,
 	}
 
-	log.Printf("order %+v", order)
-
 	err = database.DeleteProductFromOrder(app.DB, order)
 	if err != nil {
-		log.Printf("Failed delete product %+v", err)
-
+		errorCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
 		http.Error(w, "Failed delete product from order", http.StatusInternalServerError)
 		return
 	}
 
 	updatedOrder, err := database.GetOrder(app.DB, email)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
 		http.Error(w, "Failed to fetch updated cart", http.StatusInternalServerError)
 		return
 	}
@@ -133,10 +156,16 @@ func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) 
 // @Success 200
 // @Router /order/{email}/pay [post]
 func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
+	requestCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
+
+	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}/pay"))
+	defer timer.ObserveDuration()
+
 	email := mux.Vars(r)["email"]
 
 	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 		http.Error(w, "Failed get id", http.StatusInternalServerError)
 		return
 	}
@@ -144,6 +173,7 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 	var order models.Order
 
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 		http.Error(w, "Broken JSON", http.StatusBadRequest)
 		return
 	}
@@ -152,17 +182,20 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 
 	exists, err := database.OrderExists(app.DB, order)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 		http.Error(w, "Failed to check order", http.StatusInternalServerError)
 		return
 	}
 
 	if !exists {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 		http.Error(w, "Order not found", http.StatusNotFound)
 		return
 	}
 
 	orders, err := database.GetOrder(app.DB, order.Email)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 		http.Error(w, "Failed to calculate total price", http.StatusInternalServerError)
 		return
 	}
@@ -215,6 +248,7 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 
 	err = database.UpdateUser(app.DB, user)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 		http.Error(w, "Failed update user's balance", http.StatusInternalServerError)
 		return
 	}
@@ -222,6 +256,7 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 	for _, record := range historyRecords {
 		err = database.CreateHistoryRecord(app.DB, record)
 		if err != nil {
+			errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 			http.Error(w, "Failed create history record", http.StatusInternalServerError)
 			return
 		}
@@ -239,6 +274,7 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 
 			err = database.UpdateProduct(app.DB, product)
 			if err != nil {
+				errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
 				http.Error(w, "Failed to update product stock", http.StatusInternalServerError)
 				return
 			}
@@ -257,10 +293,16 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 // @Success 200
 // @Router /order/{email}/clear [post]
 func (app *Application) clearCart(w http.ResponseWriter, r *http.Request) {
+	requestCount.WithLabelValues(r.Method, "/order/{email}/clear").Inc()
+
+	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}/clear"))
+	defer timer.ObserveDuration()
+
 	email := mux.Vars(r)["email"]
 
 	err := database.ClearUserCart(app.DB, email)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/clear").Inc()
 		http.Error(w, "Failed to clear cart", http.StatusInternalServerError)
 		return
 	}

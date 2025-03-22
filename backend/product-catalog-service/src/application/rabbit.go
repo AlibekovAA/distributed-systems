@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/streadway/amqp"
 )
 
 const (
 	requestQueue = "recommendations"
-	timeout     = 30 * time.Second
+	timeout      = 30 * time.Second
 )
 
 type RabbitMQ struct {
@@ -31,8 +32,14 @@ func (r *RabbitMQ) initializeRequestQueue() error {
 }
 
 func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
+	rabbitmqRequestsTotal.WithLabelValues(requestQueue).Inc()
+
+	timer := prometheus.NewTimer(rabbitmqRequestDuration.WithLabelValues(requestQueue))
+	defer timer.ObserveDuration()
+
 	err := r.initializeRequestQueue()
 	if err != nil {
+		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
 		return "", "", err
 	}
 
@@ -46,6 +53,7 @@ func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
 	)
 	if err != nil {
 		log.Printf("Failed to create temporary queue: %v", err)
+		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
 		return "", "", err
 	}
 
@@ -59,13 +67,14 @@ func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
 		false,
 		amqp.Publishing{
 			ContentType:   "application/json",
-			Body:         []byte(userID),
-			MessageId:    userID,
+			Body:          []byte(userID),
+			MessageId:     userID,
 			CorrelationId: correlationID,
-			ReplyTo:      tempQueue.Name,
+			ReplyTo:       tempQueue.Name,
 		})
 
 	if err != nil {
+		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
 		log.Printf("Failed to send request: %v", err)
 		return "", "", err
 	}
@@ -74,6 +83,11 @@ func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
 }
 
 func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueName string) string {
+	rabbitmqRequestsTotal.WithLabelValues(queueName).Inc()
+
+	timer := prometheus.NewTimer(rabbitmqRequestDuration.WithLabelValues(queueName))
+	defer timer.ObserveDuration()
+
 	log.Printf("Waiting for response for user %s with correlation ID: %s on queue: %s", userID, correlationID, queueName)
 
 	msgs, err := r.channel.Consume(
@@ -87,6 +101,7 @@ func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueNam
 	)
 
 	if err != nil {
+		rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
 		log.Printf("Error connecting to response queue: %v", err)
 		return ""
 	}
@@ -105,12 +120,14 @@ func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueNam
 
 			var response map[string]interface{}
 			if err := json.Unmarshal(msg.Body, &response); err != nil {
+				rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
 				log.Printf("Error unmarshaling response: %v", err)
 				continue
 			}
 
 			if responseUserID, ok := response["user_id"].(float64); ok {
 				if strconv.FormatFloat(responseUserID, 'f', 0, 64) == userID {
+					rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
 					messageChannel <- string(msg.Body)
 					return
 				}
@@ -123,6 +140,7 @@ func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueNam
 		log.Printf("Received valid response for user %s", userID)
 		return response
 	case <-timeoutChannel:
+		rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
 		log.Printf("Timeout waiting for response for user %s", userID)
 		return ""
 	}

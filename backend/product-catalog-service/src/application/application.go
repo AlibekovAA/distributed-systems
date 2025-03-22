@@ -13,9 +13,80 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/streadway/amqp"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+var (
+	requestCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests",
+		},
+		[]string{"method", "endpoint"},
+	)
+
+	requestDuration = prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "http_request_duration_seconds",
+			Help: "Duration of HTTP requests",
+		},
+		[]string{"method", "endpoint"},
+	)
+
+	errorCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_errors_total",
+			Help: "Total number of HTTP errors",
+		},
+		[]string{"method", "endpoint"},
+	)
+
+	rabbitmqRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "rabbitmq_requests_total",
+			Help: "Total number of RabbitMQ requests",
+		},
+		[]string{"queue"},
+	)
+
+	rabbitmqResponsesTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "rabbitmq_responses_total",
+			Help: "Total number of RabbitMQ responses",
+		},
+		[]string{"queue"},
+	)
+
+	rabbitmqRequestDuration = prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "rabbitmq_request_duration_seconds",
+			Help: "Duration of RabbitMQ requests",
+		},
+		[]string{"queue"},
+	)
+
+	rabbitmqErrorsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "rabbitmq_errors_total",
+			Help: "Total number of RabbitMQ errors",
+		},
+		[]string{"queue"},
+	)
+)
+
+func initMetrics() {
+	prometheus.MustRegister(requestCount)
+	prometheus.MustRegister(requestDuration)
+	prometheus.MustRegister(errorCount)
+
+	prometheus.MustRegister(rabbitmqRequestsTotal)
+	prometheus.MustRegister(rabbitmqResponsesTotal)
+	prometheus.MustRegister(rabbitmqRequestDuration)
+	prometheus.MustRegister(rabbitmqErrorsTotal)
+}
 
 type Application struct {
 	DB            database.DB
@@ -65,6 +136,13 @@ func (app *Application) Configure(ctx context.Context, cfg *config.Config) error
 func (app *Application) Run(ctx context.Context) {
 	app.RegisterHandlers()
 
+	go func() {
+		log.Println("Starting metrics server on :8001")
+		if err := http.ListenAndServe(":8081", promhttp.Handler()); err != nil {
+			log.Printf("Failed to start metrics server: %v", err)
+		}
+	}()
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
@@ -107,6 +185,8 @@ func (app *Application) Run(ctx context.Context) {
 // @host localhost:8080
 // @BasePath /
 func (app *Application) RegisterHandlers() {
+	//метрики
+	app.Router.Handle("/metrics", promhttp.Handler())
 	// товары
 	app.Router.HandleFunc("/products/{email}", app.getProducts).Methods("GET")
 	//app.Router.HandleFunc("/products/{id}", updateProduct).Methods("PUT")

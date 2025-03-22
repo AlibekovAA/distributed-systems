@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // @Summary User's order history
@@ -16,16 +17,23 @@ import (
 // @Success 200
 // @Router /orders/{email}/history [get]
 func (app *Application) getHistoryOrders(w http.ResponseWriter, r *http.Request) {
+	requestCount.WithLabelValues(r.Method, "/orders/{email}/history").Inc()
+
+	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/orders/{email}/history"))
+	defer timer.ObserveDuration()
+
 	email := mux.Vars(r)["email"]
 
 	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/orders/{email}/history").Inc()
 		http.Error(w, "Failed get user", http.StatusInternalServerError)
 		return
 	}
 
 	history, err := database.GetHistoryOrders(app.DB, user.ID)
 	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/orders/{email}/history").Inc()
 		http.Error(w, "Failed to retrieve order history", http.StatusInternalServerError)
 		return
 	}
@@ -41,8 +49,8 @@ func (app *Application) getHistoryOrders(w http.ResponseWriter, r *http.Request)
 		if _, exists := historyMap[record.OrderNumber]; !exists {
 			historyMap[record.OrderNumber] = &models.HistoryResponse{
 				OrderNumber: record.OrderNumber,
-				Items:      []models.Product{},
-				TotalPrice: 0,
+				Items:       []models.Product{},
+				TotalPrice:  0,
 			}
 		}
 
