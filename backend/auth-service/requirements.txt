@@ -11,3 +11,4 @@ pytest
 httpx
 pytz
 bcrypt==4.0.1
+prometheus-client

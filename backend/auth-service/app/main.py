@@ -8,6 +8,8 @@ from app.core.database import engine
 from app.core.logger import logging
 from models import user_model
 
+from prometheus_client import start_http_server
+
 
 def handle_sigterm(signum, frame):
     logging.info("Received SIGTERM signal")
@@ -15,6 +17,8 @@ def handle_sigterm(signum, frame):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    start_http_server(8001)
+    logging.info("Prometheus metrics server started on port 8001")
     yield
     logging.info("Application shutdown")
 

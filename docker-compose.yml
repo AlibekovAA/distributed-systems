@@ -6,6 +6,7 @@ include:
   - compose_files/product-catalog-service.yml
   - compose_files/recommendation-service.yml
   - compose_files/pgadmin.yml
+  - compose_files/monitoring.yml
 
 volumes:
   data:
