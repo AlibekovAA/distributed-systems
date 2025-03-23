@@ -6,6 +6,11 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+      - "15692:15692"
+    environment:
+      - RABBITMQ_PLUGINS_EXPAND=rabbitmq_prometheus
+      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq.conf
+      - RABBITMQ_LOG_LEVEL=error
     env_file: "../.env"
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
@@ -15,3 +20,5 @@ services:
       start_period: 10s
     networks:
       - app-network
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro

@@ -22,7 +22,7 @@ import (
 var (
 	requestCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "http_requests_total",
+			Name: "product_http_requests_total",
 			Help: "Total number of HTTP requests",
 		},
 		[]string{"method", "endpoint"},
@@ -30,7 +30,7 @@ var (
 
 	requestDuration = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: "http_request_duration_seconds",
+			Name: "product_http_request_duration_seconds",
 			Help: "Duration of HTTP requests",
 		},
 		[]string{"method", "endpoint"},
@@ -38,7 +38,7 @@ var (
 
 	errorCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "http_errors_total",
+			Name: "product_http_errors_total",
 			Help: "Total number of HTTP errors",
 		},
 		[]string{"method", "endpoint"},
@@ -46,7 +46,7 @@ var (
 
 	rabbitmqRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "rabbitmq_requests_total",
+			Name: "product_rabbitmq_requests_total",
 			Help: "Total number of RabbitMQ requests",
 		},
 		[]string{"queue"},
@@ -134,6 +134,7 @@ func (app *Application) Configure(ctx context.Context, cfg *config.Config) error
 }
 
 func (app *Application) Run(ctx context.Context) {
+	initMetrics()
 	app.RegisterHandlers()
 
 	go func() {

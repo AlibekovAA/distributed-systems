@@ -1,11 +1,23 @@
 global:
   scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
 
 scrape_configs:
   - job_name: 'auth-service'
     static_configs:
       - targets: ['auth_service:8001']
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+
   - job_name: 'product-catalog-service'
     static_configs:
       - targets: ['product_catalog_service:8081']
+    scrape_interval: 5s
+    metrics_path: '/metrics'
 
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+    scrape_interval: 5s
+    metrics_path: '/metrics'
