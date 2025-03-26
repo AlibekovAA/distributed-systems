@@ -4,14 +4,22 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Request, status
 from jose import JWTError, jwt
-from prometheus_client import Counter, Summary
 from sqlalchemy.orm import Session
 
 from app.auth import db_dependency, get_current_user, token_dependency
 from app.core.config import ALGORITHM, SECRET_KEY
 from app.core.database import get_db
 from app.core.logger import logging
-from app.middleware.metrics import HTTP_STATUS_COUNTS, REQUEST_COUNT, SERVICE_VERSION, START_TIME
+from app.middleware.metrics import (
+    ERROR_COUNT,
+    HTTP_STATUS_COUNTS,
+    LOGIN_COUNT,
+    REQUEST_COUNT,
+    REQUEST_COUNT_PROM,
+    REQUEST_LATENCY,
+    SERVICE_VERSION,
+    START_TIME,
+)
 from models.category_model import Category
 from models.preference_model import UserPreference
 from models.user_model import User as UserModel
@@ -32,29 +40,6 @@ from services.auth_service import (
     create_user,
     get_password_hash,
     verify_password,
-)
-
-REQUEST_COUNT_PROM = Counter(
-    'auth_http_requests_total',
-    'Total number of HTTP requests',
-    ['method', 'endpoint']
-)
-
-REQUEST_LATENCY = Summary(
-    'auth_http_request_duration_seconds',
-    'Duration of HTTP requests',
-    ['method', 'endpoint']
-)
-ERROR_COUNT = Counter(
-    'auth_http_errors_total',
-    'Total number of HTTP errors',
-    ['method', 'endpoint']
-)
-
-DB_REQUEST_LATENCY = Summary(
-    'auth_db_request_duration_seconds',
-    'Duration of database operations',
-    ['operation']
 )
 
 router = APIRouter()
@@ -97,6 +82,9 @@ def login(user: UserLogin, request: Request):
 
         access_token = create_access_token(data={"sub": db_user.email})
         refresh_token = create_refresh_token(data={"sub": db_user.email})
+
+        LOGIN_COUNT.inc()
+
         logging.info(f"User logged in: {db_user.email}")
         REQUEST_LATENCY.labels('POST', '/login').observe(time.time() - start_time)
         return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}

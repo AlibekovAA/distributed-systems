@@ -10,13 +10,15 @@ graph TD
         Frontend --> Auth["Auth Service"]
         Frontend --> Products["Product Catalog"]
         Frontend --> Rec["Recommendation Service"]
+        Products -->|"user.id"| RMQ[("RabbitMQ")]
+        RMQ -->|"user.id"| Rec
+        Rec -->|"recommendation"| RMQ
+        RMQ -->|"recommendation"| Products
     end
 
     subgraph Мониторинг["Система мониторинга"]
         Auth --> Prometheus["Prometheus"]
         Products --> Prometheus
-        Rec --> Prometheus
-
         Prometheus --> Grafana["Grafana"]
     end
 
@@ -29,12 +31,14 @@ graph TD
     classDef service fill:#FFB74D,stroke:#F57C00,color:#000
     classDef monitor fill:#CE93D8,stroke:#7B1FA2,color:#000
     classDef database fill:#B39DDB,stroke:#512DA8,color:#000
+    classDef rabbit fill:#FFA500,stroke:#FF8C00,color:#000
 
     class Client client
     class Frontend frontend
     class Auth,Products,Rec service
     class Prometheus,Grafana monitor
     class DBAuth,DBProducts,DBRec database
+    class RMQ rabbit
 ```
 
 ## Запуск проекта
