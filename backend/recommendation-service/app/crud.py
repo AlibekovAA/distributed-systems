@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
-from app.recommendation_engine import RecommendationEngine
-from app.models import UserPreferences, History, Product
 from app.logger import logging
+from app.models import History, Product, UserPreferences
+from app.recommendation_engine import RecommendationEngine
 
 
 def get_recommendations_for_user(db: Session, user_id: int):

@@ -1,37 +1,40 @@
-from jose import jwt, JWTError
-from fastapi import (APIRouter,
-                     HTTPException,
-                     status,
-                     Request)
+import time
 from datetime import datetime
-from sqlalchemy.orm import Session
 from typing import List
 
-from models.user_schemas import (UserCreate,
-                                 UserLogin,
-                                 Token,
-                                 User,
-                                 PasswordChange,
-                                 BalanceUpdate,
-                                 BalanceResponse,
-                                 UserPreferenceCreate)
-from models.user_model import User as UserModel
-from models.preference_model import UserPreference
-from models.category_model import Category
-from services.auth_service import (authenticate_user,
-                                   create_user,
-                                   create_access_token,
-                                   create_refresh_token,
-                                   verify_password,
-                                   get_password_hash)
-from app.core.database import get_db
-from app.auth import get_current_user, token_dependency, db_dependency
-from app.core.config import SECRET_KEY, ALGORITHM
-from app.core.logger import logging
-import time
+from fastapi import APIRouter, HTTPException, Request, status
+from jose import JWTError, jwt
 from prometheus_client import Counter, Summary
+from sqlalchemy.orm import Session
 
-REQUEST_COUNT = Counter(
+from app.auth import db_dependency, get_current_user, token_dependency
+from app.core.config import ALGORITHM, SECRET_KEY
+from app.core.database import get_db
+from app.core.logger import logging
+from app.middleware.metrics import HTTP_STATUS_COUNTS, REQUEST_COUNT, SERVICE_VERSION, START_TIME
+from models.category_model import Category
+from models.preference_model import UserPreference
+from models.user_model import User as UserModel
+from models.user_schemas import (
+    BalanceResponse,
+    BalanceUpdate,
+    PasswordChange,
+    Token,
+    User,
+    UserCreate,
+    UserLogin,
+    UserPreferenceCreate,
+)
+from services.auth_service import (
+    authenticate_user,
+    create_access_token,
+    create_refresh_token,
+    create_user,
+    get_password_hash,
+    verify_password,
+)
+
+REQUEST_COUNT_PROM = Counter(
     'auth_http_requests_total',
     'Total number of HTTP requests',
     ['method', 'endpoint']
@@ -61,7 +64,7 @@ logging.info("API router initialized")
 
 @router.post("/register", response_model=User)
 def register(user: UserCreate, request: Request):
-    REQUEST_COUNT.labels('POST', '/register').inc()
+    REQUEST_COUNT_PROM.labels('POST', '/register').inc()
     start_time = time.time()
     with get_db() as db:
         db_user = db.query(UserModel).filter(UserModel.email == user.email).first()
@@ -83,7 +86,7 @@ def register(user: UserCreate, request: Request):
 
 @router.post("/login", response_model=Token)
 def login(user: UserLogin, request: Request):
-    REQUEST_COUNT.labels('POST', '/login').inc()
+    REQUEST_COUNT_PROM.labels('POST', '/login').inc()
     start_time = time.time()
     with get_db() as db:
         db_user = authenticate_user(db=db, email=user.email, password=user.password)
@@ -105,7 +108,7 @@ def get_profile(
     token: str = token_dependency,
     db: Session = db_dependency
 ):
-    REQUEST_COUNT.labels('GET', '/profile').inc()
+    REQUEST_COUNT_PROM.labels('GET', '/profile').inc()
     start_time = time.time()
     with get_db() as db:
         current_user = get_current_user(token, db)
@@ -141,8 +144,8 @@ async def health_check():
 
 
 @router.post("/change-password")
-def change_password(password_data: PasswordChange,  token: str = token_dependency,db: Session = db_dependency):
-    REQUEST_COUNT.labels('POST', '/change-password').inc()
+def change_password(password_data: PasswordChange, token: str = token_dependency, db: Session = db_dependency):
+    REQUEST_COUNT_PROM.labels('POST', '/change-password').inc()
     start_time = time.time()
     with get_db() as db:
         current_user = get_current_user(token, db)
@@ -165,8 +168,8 @@ def change_password(password_data: PasswordChange,  token: str = token_dependenc
 
 
 @router.post("/add-balance", response_model=BalanceResponse)
-def add_balance(balance_data: BalanceUpdate,  token: str = token_dependency,db: Session = db_dependency):
-    REQUEST_COUNT.labels('POST', '/add-balance').inc()
+def add_balance(balance_data: BalanceUpdate, token: str = token_dependency, db: Session = db_dependency):
+    REQUEST_COUNT_PROM.labels('POST', '/add-balance').inc()
     start_time = time.time()
     with get_db() as db:
         current_user = get_current_user(token, db)
@@ -185,8 +188,8 @@ def add_balance(balance_data: BalanceUpdate,  token: str = token_dependency,db: 
 
 
 @router.get("/preferences/check")
-def check_preferences(token: str = token_dependency,db: Session = db_dependency):
-    REQUEST_COUNT.labels('GET', '/preferences/check').inc()
+def check_preferences(token: str = token_dependency, db: Session = db_dependency):
+    REQUEST_COUNT_PROM.labels('GET', '/preferences/check').inc()
     start_time = time.time()
     try:
         with get_db() as db:
@@ -213,8 +216,8 @@ def check_preferences(token: str = token_dependency,db: Session = db_dependency)
 
 
 @router.post("/preferences/save")
-def save_preferences(preferences: List[UserPreferenceCreate],  token: str = token_dependency,db: Session = db_dependency):
-    REQUEST_COUNT.labels('POST', '/preferences/save').inc()
+def save_preferences(preferences: List[UserPreferenceCreate], token: str = token_dependency, db: Session = db_dependency):
+    REQUEST_COUNT_PROM.labels('POST', '/preferences/save').inc()
     start_time = time.time()
     with get_db() as db:
         current_user = get_current_user(token, db)
@@ -234,3 +237,20 @@ def save_preferences(preferences: List[UserPreferenceCreate],  token: str = toke
         db.commit()
         REQUEST_LATENCY.labels('POST', '/preferences/save').observe(time.time() - start_time)
         return {"success": True}
+
+
+@router.get("/metrics")
+async def get_metrics():
+    REQUEST_COUNT_PROM.labels('GET', '/metrics').inc()
+    start_time = time.time()
+
+    metrics = {
+        "version": SERVICE_VERSION,
+        "requests_processed": REQUEST_COUNT,
+        "http_status_codes": dict(HTTP_STATUS_COUNTS),
+        "start_time": START_TIME.isoformat(),
+        "uptime_seconds": (datetime.now() - START_TIME).total_seconds()
+    }
+
+    REQUEST_LATENCY.labels('GET', '/metrics').observe(time.time() - start_time)
+    return metrics

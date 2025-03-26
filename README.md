@@ -1,6 +1,42 @@
 # Проект
 Этот проект представляет собой распределенную систему с микросервисной архитектурой.
 
+## Общая архитектура системы
+```mermaid
+graph TD
+    Client["Клиентское приложение"] --> Frontend["Frontend"]
+
+    subgraph Основные["Основные сервисы"]
+        Frontend --> Auth["Auth Service"]
+        Frontend --> Products["Product Catalog"]
+        Frontend --> Rec["Recommendation Service"]
+    end
+
+    subgraph Мониторинг["Система мониторинга"]
+        Auth --> Prometheus["Prometheus"]
+        Products --> Prometheus
+        Rec --> Prometheus
+
+        Prometheus --> Grafana["Grafana"]
+    end
+
+    Auth --> DB["База данных"]
+    Products --> DB["База данных"]
+    Rec --> DB["База данных"]
+
+    classDef client fill:#90CAF9,stroke:#1976D2,color:#000
+    classDef frontend fill:#81C784,stroke:#388E3C,color:#000
+    classDef service fill:#FFB74D,stroke:#F57C00,color:#000
+    classDef monitor fill:#CE93D8,stroke:#7B1FA2,color:#000
+    classDef database fill:#B39DDB,stroke:#512DA8,color:#000
+
+    class Client client
+    class Frontend frontend
+    class Auth,Products,Rec service
+    class Prometheus,Grafana monitor
+    class DBAuth,DBProducts,DBRec database
+```
+
 ## Запуск проекта
 Для запуска проекта необходимо выполнить следующие шаги:
 
@@ -28,9 +64,9 @@ docker-compose up --build
 #### Мониторинг
 - Prometheus: [http://localhost:9090](http://localhost:9090)
 - Grafana: [http://localhost:4000](http://localhost:4000)
-  * Предустановленные дашборды:
-    - Auth Service Dashboard
-    - Product Catalog Service Dashboard
+* Предустановленные дашборды:
+  - Auth Service Dashboard
+  - Product Catalog Service Dashboard
 
 ## Система рекомендаций
 Сервис предоставляет персонализированные рекомендации товаров.
@@ -38,17 +74,15 @@ docker-compose up --build
 ### Архитектура системы рекомендаций
 ```mermaid
 graph TD
-    A["Предпочтения пользователя"] --> B["Анализ предпочтений"]
-    C["Коллаборативная фильтрация"] --> D["Матрица взаимодействий"]
+A["Предпочтения пользователя"] --> B["Анализ предпочтений"]
+C["Коллаборативная фильтрация"] --> D["Матрица взаимодействий"]
+B --> E["Финальные рекомендации"]
+D --> E
+F["Наличие товаров"] --> E
 
-    B --> E["Финальные рекомендации"]
-    D --> E
-
-    F["Наличие товаров"] --> E
-
-    style A fill:#f9f,stroke:#333,color:#000
-    style C fill:#bbf,stroke:#333,color:#000
-    style F fill:#bfb,stroke:#333,color:#000
+style A fill:#f9f,stroke:#333,color:#000
+style C fill:#bbf,stroke:#333,color:#000
+style F fill:#bfb,stroke:#333,color:#000
 ```
 
 ### Алгоритм работы
@@ -63,12 +97,6 @@ graph TD
 - Анализ покупок похожих пользователей
 - Нормализация коллаборативных оценок
 - Влияние на финальный результат: 30%
-
-### Формирование рекомендаций
-- Исключение ранее просмотренных товаров
-- Проверка наличия товара на складе
-- Расчет финального рейтинга как взвешенной суммы оценок
-- Сортировка по убыванию рейтинга
 
 ## Frontend
 Основные компоненты фронтенд части:
@@ -85,33 +113,42 @@ graph TD
 Основные эндпоинты:
 
 ### Аутентификация
-- `POST /auth/register` - регистрация
-- `POST /auth/login` - вход
-- `GET /auth/profile` - профиль пользователя
-- `POST /auth/change-password` - смена пароля
-- `POST /auth/add-balance` - пополнение баланса
-- `POST /auth/token/refresh` - обновление токена
-- `GET /preferences/check` - проверка анкеты предпочтений
-- `POST /preferences/save` - сохранение предпочтений
+```markdown
+POST /auth/register    - регистрация
+POST /auth/login      - вход
+GET /auth/profile     - профиль пользователя
+POST /auth/change-password - смена пароля
+POST /auth/add-balance    - пополнение баланса
+POST /auth/token/refresh  - обновление токена
+GET /preferences/check    - проверка анкеты предпочтений
+POST /preferences/save    - сохранение предпочтений
+```
 
 ### Здоровье сервиса
-- `GET /auth/health` - проверка состояния
+```markdown
+GET /auth/health      - проверка состояния
+GET /auth/metrics     - возвращает сервисную информацию
+```
 
 ## Product Catalog Service API
 Основные эндпоинты:
 
 ### Товары
-- `GET /products/{email}` - список товаров
-- `POST /products` - создание товара
-- `DELETE /products` - удаление товара
+```markdown
+GET /products/{email}   - список товаров
+POST /products         - создание товара
+DELETE /products       - удаление товара
+```
 
 ### Заказы
-- `GET /order/{email}` - корзина пользователя
-- `POST /order/add` - добавление в корзину
-- `DELETE /order/{email}/{product_id}` - удаление из корзины
-- `POST /order/{email}/pay` - оплата заказа
-- `GET /orders/{email}/history` - история заказов
-- `POST /order/{email}/clear` - очистка корзины
+```markdown
+GET /order/{email}     - корзина пользователя
+POST /order/add       - добавление в корзину
+DELETE /order/{email}/{product_id} - удаление из корзины
+POST /order/{email}/pay    - оплата заказа
+GET /orders/{email}/history - история заказов
+POST /order/{email}/clear  - очистка корзины
+```
 
 ## Swagger документация
 Для просмотра документации необходимо:
@@ -122,8 +159,108 @@ python swagger.py
 Документация доступна по адресу:
 [http://petstore.swagger.io/?url=http://localhost:4040/combined-swagger.json](http://petstore.swagger.io/?url=http://localhost:4040/combined-swagger.json)
 
-## Структура базы данных
-![Структура БД](db/structure.jpg)
+# Структура базы данных
+## Таблица пользователей (users)
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    hashed_password TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    balance BIGINT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+## Таблица товаров (product)
+```sql
+CREATE TABLE product (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price BIGINT NOT NULL,
+    quantity INTEGER NOT NULL
+);
+```
+
+## Таблица заказов (order)
+```sql
+CREATE TABLE "order" (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) REFERENCES users(email) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE
+);
+```
+
+## Таблица предпочтений пользователей (user_preferences)
+```sql
+CREATE TABLE user_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    preference_name VARCHAR(255) NOT NULL,
+    preference_value VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+## Таблица истории (history)
+```sql
+CREATE TABLE "history" (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
+    order_number INTEGER
+);
+```
+
+## Таблица категорий (categories)
+```sql
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL
+);
+```
+
+## Таблица связи товаров и категорий (product_categories)
+```sql
+CREATE TABLE product_categories (
+    product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
+    category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+    PRIMARY KEY (product_id, category_id)
+);
+```
+
+## Взаимосвязи между таблицами
+```mermaid
+graph TD
+    subgraph Основные["Основные таблицы"]
+        U[Пользователи] --> UP[Предпочтения]
+        U --> O[Заказы]
+        U --> H[История]
+        P[Товары] --> O
+        P --> PC[Товары-Категории]
+        PC --> C[Категории]
+    end
+
+    subgraph Связи["Типы связей"]
+        R1[ON DELETE CASCADE]
+        R2[UNIQUE]
+    end
+
+    U --> R1
+    C --> R2
+    P --> R2
+
+    classDef users fill:#90CAF9,stroke:#1976D2,color:#000
+    classDef products fill:#81C784,stroke:#388E3C,color:#000
+    classDef categories fill:#FFB74D,stroke:#F57C00,color:#000
+    classDef orders fill:#CE93D8,stroke:#7B1FA2,color:#000
+
+    class U,UP users
+    class P,PC products
+    class C categories
+    class O,H orders
+```
 
 ## Разработка
 ### Frontend
@@ -166,7 +303,6 @@ python run_tests.py
 
 ### Просмотр отчетов
 Открыть файл `allure-report/index.html`
-
 ![Allure](tests/allure.jpg)
 
 ## Очистка Docker окружения

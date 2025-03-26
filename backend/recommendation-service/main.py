@@ -1,11 +1,11 @@
+import json
 import signal
 import sys
-import json
 
-from app.messaging import RabbitMQConnection
-from app.logger import logging
-from app.database import get_db
 from app.crud import get_recommendations_for_user, update_user_preferences
+from app.database import get_db
+from app.logger import logging
+from app.messaging import RabbitMQConnection
 
 
 def handle_sigterm(*args):

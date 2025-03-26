@@ -335,6 +335,25 @@
           }
         ]
       }
+    },
+    "/auth/metrics": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get Metrics",
+        "operationId": "get_metrics_auth_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

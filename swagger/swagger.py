@@ -1,8 +1,8 @@
 import json
-import webbrowser
-import threading
 import os
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+import threading
+import webbrowser
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 os.chdir(BASE_DIR)

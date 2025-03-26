@@ -1,7 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
+
 from app.core.database import get_db
+from app.main import app
 from models.user_model import User as UserModel
 
 client = TestClient(app)

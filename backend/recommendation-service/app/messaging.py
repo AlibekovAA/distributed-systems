@@ -1,11 +1,12 @@
 import json
-import pika
 from urllib.parse import urlparse
 
-from app.logger import logging
+import pika
+
 from app.config import RABBITMQ_URL
-from app.database import get_db
 from app.crud import get_recommendations_for_user
+from app.database import get_db
+from app.logger import logging
 
 
 def process_message(ch, method, properties, body):

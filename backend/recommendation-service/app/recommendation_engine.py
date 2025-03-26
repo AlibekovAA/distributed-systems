@@ -1,11 +1,11 @@
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
-from sqlalchemy.orm import Session, joinedload
-from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from sqlalchemy.orm import Session, joinedload
 
-from app.models import History, Product, UserPreferences
 from app.logger import logging
+from app.models import History, Product, UserPreferences
 
 
 class RecommendationEngine:

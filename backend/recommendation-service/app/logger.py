@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+
 import pytz
 
 from app.config import LOG_LEVEL

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import os
-import subprocess
 import logging
+import os
 import shutil
+import subprocess
 import time
 from typing import NoReturn
 
