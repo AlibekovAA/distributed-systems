@@ -67,7 +67,17 @@ VALUES
   ('Garmin Fenix 7', 75000, 25, 'Premium sports smartwatch with GPS, heart rate sensor, and 18-day battery life.'),
   ('Asus ROG Zephyrus G14', 140000, 30, 'Gaming laptop with Ryzen 9 processor and RTX 4060 graphics card.'),
   ('Microsoft Xbox Series X', 59900, 25, 'Gaming console with 12 teraflops GPU and 4K 120FPS support.'),
-  ('Adidas Ultraboost 22', 17000, 150, 'Running shoes with Boost cushioning and breathable Primeknit upper.');
+  ('Adidas Ultraboost 22', 17000, 150, 'Running shoes with Boost cushioning and breathable Primeknit upper.'),
+  ('Apple Watch Series 8', 45900, 40, 'Smartwatch with advanced health features and always-on display.'),
+  ('Samsung Galaxy Watch 5', 39900, 35, 'Premium smartwatch with comprehensive health tracking and long battery life.'),
+  ('AirPods Pro 2', 29900, 45, 'Wireless earbuds with active noise cancellation and spatial audio.'),
+  ('Lenovo ThinkPad X1 Carbon', 159900, 25, 'Business laptop with Intel Core i7 and 14-inch display.'),
+  ('Nintendo Switch OLED', 39900, 30, 'Gaming console with 7-inch OLED screen and detachable controllers.'),
+  ('Puma RS-X', 12000, 100, 'Retro-style sneakers with chunky design and comfortable cushioning.'),
+  ('Sony WF-1000XM4', 19900, 30, 'True wireless earbuds with industry-leading noise cancellation.'),
+  ('Razer Blade 15', 189900, 20, 'Gaming laptop with RTX 4070 and 15.6-inch QHD display.'),
+  ('Apple iPad Pro 12.9', 129900, 25, 'Pro tablet with M2 chip and Liquid Retina XDR display.'),
+  ('DJI Mini 3 Pro', 99900, 15, 'Compact drone with 4K camera and advanced flight features.');
 
 
 INSERT INTO categories (name)
@@ -103,4 +113,19 @@ VALUES
     (13, 3),
     (14, 7),
     (15, 6),
-    (15, 4);
+    (15, 4),
+    (16, 8),
+    (16, 4),
+    (17, 8),
+    (17, 4),
+    (18, 2),
+    (18, 9),
+    (19, 3),
+    (20, 7),
+    (21, 6),
+    (21, 4),
+    (22, 2),
+    (22, 9),
+    (23, 3),
+    (24, 9),
+    (25, 9);

@@ -54,23 +54,28 @@ docker-compose up --build
 После успешного запуска будут доступны следующие сервисы:
 
 #### Frontend
-[http://localhost:3000](http://localhost:3000)
+🔗 [Frontend Interface](http://localhost:3000)
 
 #### Auth Service API
-[http://localhost:8000/auth](http://localhost:8000/auth)
-
-#### PgAdmin
-[http://localhost:5050](http://localhost:5050)
+🔒 [Authentication Service](http://localhost:8000/auth)
 
 #### Product Catalog Service
-[http://localhost:8080](http://localhost:8080)
+📚 [Product Management](http://localhost:8080)
 
-#### Мониторинг
-- Prometheus: [http://localhost:9090](http://localhost:9090)
-- Grafana: [http://localhost:4000](http://localhost:4000)
-* Предустановленные дашборды:
-  - Auth Service Dashboard
-  - Product Catalog Service Dashboard
+### Инструменты разработки
+#### PgAdmin
+🛠️ [Database Administration](http://localhost:5050)
+
+### Мониторинг системы
+
+#### Prometheus
+⚙️ [Monitoring Metrics](http://localhost:9090)
+
+#### Grafana
+📊 [Analytics Dashboard](http://localhost:4000)
+
+##### Дашборды
+* ⭐ Unified dashboard monitoring
 
 ## Система рекомендаций
 Сервис предоставляет персонализированные рекомендации товаров.
