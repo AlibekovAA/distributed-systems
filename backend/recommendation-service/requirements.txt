@@ -4,5 +4,4 @@ pytz
 python-dotenv
 pika
 numpy
-pandas
 scikit-learn

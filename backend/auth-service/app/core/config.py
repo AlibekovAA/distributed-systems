@@ -1,11 +1,40 @@
 import os
-
 from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
-LOG_LEVEL = os.getenv("LOG_LEVEL", "warning").upper()
+
+class _EnvConfig:
+    @property
+    def DATABASE_URL(self) -> str:
+        return self._get_required("DATABASE_URL")
+
+    @property
+    def SECRET_KEY(self) -> str:
+        return self._get_required("SECRET_KEY")
+
+    @property
+    def ALGORITHM(self) -> str:
+        return self._get_required("ALGORITHM")
+
+    @property
+    def ACCESS_TOKEN_EXPIRE_MINUTES(self) -> int:
+        return int(self._get_required("ACCESS_TOKEN_EXPIRE_MINUTES"))
+
+    @property
+    def LOG_LEVEL(self) -> str:
+        return os.getenv("LOG_LEVEL", "warning").upper()
+
+    def _get_required(self, key: str) -> str:
+        if (value := os.getenv(key)) is None:
+            raise ValueError(f"Missing required environment variable: {key}")
+        return value
+
+
+_config = _EnvConfig()
+
+DATABASE_URL = _config.DATABASE_URL
+SECRET_KEY = _config.SECRET_KEY
+ALGORITHM = _config.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = _config.ACCESS_TOKEN_EXPIRE_MINUTES
+LOG_LEVEL = _config.LOG_LEVEL
