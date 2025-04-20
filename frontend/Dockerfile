@@ -1,19 +1,14 @@
-FROM node:18-alpine
+FROM node:23-alpine AS builder
 
 WORKDIR /app
-
 RUN apk add --no-cache bash findutils
 
 COPY package*.json ./
 COPY tsconfig.json ./
-COPY bs-config.json ./
-
-RUN npm install
+RUN npm install --production
 
 COPY . .
-
 RUN npm run build
 
-EXPOSE 3000
-
-CMD ["npm", "start"]
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html

@@ -1,7 +1,7 @@
 include:
+  - compose_files/nginx.yml
   - compose_files/database.yml
   - compose_files/auth-service.yml
-  - compose_files/frontend.yml
   - compose_files/rabbitmq.yml
   - compose_files/product-catalog-service.yml
   - compose_files/recommendation-service.yml

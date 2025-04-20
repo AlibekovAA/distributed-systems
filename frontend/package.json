@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Frontend for e-commerce website",
   "scripts": {
-    "start": "lite-server --config bs-config.json",
     "build": "tsc && npm run copy-files",
     "copy-files": "bash -c 'cp src/favicon.ico src/index.html dist/ && cp -r src/{styles,modules,pages,services,utils} dist/'"
   },
@@ -11,11 +10,7 @@
   "author": "",
   "license": "ISC",
   "type": "module",
-  "dependencies": {
-    "lite-server": "^2.6.1",
-    "http-proxy-middleware": "^3.0.3",
-    "connect-history-api-fallback": "^2.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "typescript": "^5.7.3"
   }

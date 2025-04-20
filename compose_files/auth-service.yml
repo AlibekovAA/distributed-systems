@@ -2,7 +2,7 @@ services:
   auth-service:
     build: ../backend/auth-service
     container_name: auth_service
-    restart: always
+    restart: unless-stopped
     command: >
       sh -c "
         while ! timeout 2 bash -c 'cat < /dev/null > /dev/tcp/db/5432' 2>/dev/null; do

@@ -2,7 +2,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
-    restart: always
+    restart: unless-stopped
     env_file: "../.env"
     ports:
       - "5050:80"

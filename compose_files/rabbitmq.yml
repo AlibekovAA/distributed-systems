@@ -2,15 +2,15 @@ services:
   rabbitmq:
     image: "rabbitmq:management"
     container_name: rabbitmq
-    restart: always
+    restart: unless-stopped
     ports:
       - "15672:15672"
       - "5672:5672"
       - "15692:15692"
     environment:
-      - RABBITMQ_PLUGINS_EXPAND=rabbitmq_prometheus
       - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq.conf
-      - RABBITMQ_LOG_LEVEL=error
+      - RABBITMQ_LOGS=${RABBITMQ_LOGS}
+      - RABBITMQ_SASL_LOGS=${RABBITMQ_SASL_LOGS}
     env_file: "../.env"
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
@@ -21,4 +21,4 @@ services:
     networks:
       - app-network
     volumes:
-      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ../rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro

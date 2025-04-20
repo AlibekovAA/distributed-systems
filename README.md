@@ -4,12 +4,12 @@
 ## Общая архитектура системы
 ```mermaid
 graph TD
-    Client["Клиентское приложение"] --> Frontend["Frontend"]
+    Client["Клиентское приложение"] --> Nginx["Nginx (Frontend)"]
 
     subgraph Основные["Основные сервисы"]
-        Frontend --> Auth["Auth Service"]
-        Frontend --> Products["Product Catalog"]
-        Frontend --> Rec["Recommendation Service"]
+        Nginx --> Auth["Auth Service"]
+        Nginx --> Products["Product Catalog"]
+        Nginx --> Rec["Recommendation Service"]
         Products -->|"user.id"| RMQ[("RabbitMQ")]
         RMQ -->|"user.id"| Rec
         Rec -->|"recommendation"| RMQ
@@ -34,10 +34,10 @@ graph TD
     classDef rabbit fill:#FFA500,stroke:#FF8C00,color:#000
 
     class Client client
-    class Frontend frontend
+    class Nginx frontend
     class Auth,Products,Rec service
     class Prometheus,Grafana monitor
-    class DBAuth,DBProducts,DBRec database
+    class DB database
     class RMQ rabbit
 ```
 
@@ -53,8 +53,8 @@ docker-compose up --build
 ### 2. Доступные сервисы
 После успешного запуска будут доступны следующие сервисы:
 
-#### Frontend
-🔗 [Frontend Interface](http://localhost:3000)
+#### Frontend через Nginx
+🔗 [Frontend Interface](http://localhost)
 
 #### Auth Service API
 🔒 [Authentication Service](http://localhost:8000/auth)
@@ -106,6 +106,12 @@ style F fill:#bfb,stroke:#333,color:#000
 - Анализ покупок похожих пользователей
 - Нормализация коллаборативных оценок
 - Влияние на финальный результат: 30%
+
+## Конфигурация Nginx
+Nginx выступает в качестве:
+- Реверс-прокси для API сервисов
+- Статического сервера для фронтенда
+- Балансировщика нагрузки
 
 ## Frontend
 Основные компоненты фронтенд части:

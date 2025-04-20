@@ -2,7 +2,7 @@ services:
   product-catalog-service:
     build: ../backend/product-catalog-service
     container_name: product_catalog_service
-    restart: always
+    restart: unless-stopped
     command: >
       sh -c "
         while ! nc -z db 5432; do
@@ -23,7 +23,7 @@ services:
       - "8081:8081"
     env_file: "../.env"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:8080/products"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/products/"]
       interval: 30s
       timeout: 10s
       retries: 3

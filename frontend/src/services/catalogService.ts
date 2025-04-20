@@ -17,7 +17,7 @@ interface OrderHistoryResponse {
 }
 
 export class CatalogService {
-    private static readonly BASE_URL = 'http://localhost:8080';
+    private static readonly BASE_URL = '/api';
     private static readonly TOKEN_KEY = 'access_token';
     private static readonly HEADERS_JSON = { 'Content-Type': 'application/json', Accept: 'application/json' };
 

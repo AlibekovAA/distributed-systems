@@ -6,7 +6,7 @@ import (
 
 type Config struct {
 	Database    DatabaseConfig `envPrefix:"DATABASE_"`
-	Addr        string         `env:"ADDR"`
+	Addr        string         `env:"ADDR" envDefault:":8080"`
 	RabbitMQURL string         `env:"RABBITMQ_URL"`
 }
 

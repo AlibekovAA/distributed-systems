@@ -1,0 +1,14 @@
+services:
+  nginx:
+    build: ../frontend
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ../nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network
+    depends_on:
+      - auth-service
+      - product-catalog-service
+      - recommendation-service

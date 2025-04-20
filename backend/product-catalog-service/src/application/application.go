@@ -138,7 +138,7 @@ func (app *Application) Run(ctx context.Context) {
 	app.RegisterHandlers()
 
 	go func() {
-		log.Println("Starting metrics server on :8001")
+		log.Println("Starting metrics server on :8081")
 		if err := http.ListenAndServe(":8081", promhttp.Handler()); err != nil {
 			log.Printf("Failed to start metrics server: %v", err)
 		}
@@ -210,9 +210,10 @@ func (app *Application) RegisterHandlers() {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	allowedOrigins := map[string]bool{
-		"http://localhost:3000": true,
-		"http://127.0.0.1:3000": true,
-		"http://frontend:3000":  true,
+		"http://localhost":		true,
+		"http://localhost:80":	true,
+		"http://frontend":		true,
+		"http://nginx":			true,
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

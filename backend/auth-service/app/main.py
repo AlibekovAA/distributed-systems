@@ -34,9 +34,10 @@ user_model.Base.metadata.create_all(bind=engine)
 app = FastAPI(lifespan=lifespan)
 
 origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://frontend:3000"
+    "http://localhost",
+    "http://localhost:80",
+    "http://frontend",
+    "http://nginx"
 ]
 
 app.add_middleware(
