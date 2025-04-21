@@ -9,52 +9,45 @@ from app.database import get_db
 from app.logger import logging
 
 
-def process_message(ch, method, properties, body):
+def _parse_message(body) -> dict:
+    message = body.decode() if isinstance(body, bytes) else body
+
+    if isinstance(message, str):
+        try:
+            return json.loads(message)
+        except json.JSONDecodeError:
+            return {"user_id": int(message)}
+    return message
+
+
+def process_message(ch, method, properties, body) -> None:
     try:
-        logging.info(f"Received message: {body}, type: {type(body)}")
-        logging.info(f"Full message properties: {vars(properties)}")
-        logging.info(f"Method info: {vars(method)}")
+        logging.info(f"Received message: {body}")
 
-        if isinstance(body, bytes):
-            message = body.decode()
-        else:
-            message = body
-
-        if isinstance(message, str):
-            try:
-                message_data = json.loads(message)
-            except json.JSONDecodeError:
-                message_data = {"user_id": int(message)}
-        else:
-            message_data = message
-
-        user_id = message_data.get("user_id") or int(message)
-        logging.info(f"Processing for user_id: {user_id}")
+        message = _parse_message(body)
+        user_id = message.get("user_id") or int(message)
+        logging.info(f"Processing recommendations for user {user_id}")
 
         with get_db() as db:
-            recommendations = get_recommendations_for_user(db, user_id)
             response = {
                 'user_id': user_id,
-                'recommendations': recommendations
+                'recommendations': get_recommendations_for_user(db, user_id)
             }
-
-            response_json = json.dumps(response)
 
             ch.basic_publish(
                 exchange='',
                 routing_key='recommendations_response',
-                body=response_json,
+                body=json.dumps(response),
                 properties=pika.BasicProperties(
                     content_type='application/json',
                     message_id=str(user_id)
                 )
             )
-
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
     except Exception as e:
-        logging.error(f"Error processing message: {e}")
-        logging.exception("Full traceback:")
+        logging.error(f"Message processing failed: {e}")
+        logging.exception("Error details:")
 
 
 class RabbitMQConnection:
@@ -65,7 +58,7 @@ class RabbitMQConnection:
         self.connection = None
         self.channel = None
 
-    def connect(self):
+    def connect(self) -> None:
         try:
             credentials = pika.PlainCredentials(self.url.username, self.url.password)
             parameters = pika.ConnectionParameters(
@@ -74,104 +67,72 @@ class RabbitMQConnection:
                 credentials=credentials,
                 virtual_host=self.url.path[1:] or '/',
                 heartbeat=600,
-                blocked_connection_timeout=300,
-                connection_attempts=3,
-                retry_delay=5
+                blocked_connection_timeout=300
             )
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
 
-            for queue in [self.queue_name, self.response_queue]:
+            for queue in (self.queue_name, self.response_queue):
                 self.channel.queue_declare(
                     queue=queue,
                     durable=True,
-                    auto_delete=False,
-                    exclusive=False,
+                    auto_delete=False
                 )
 
             self.channel.basic_qos(prefetch_count=1)
-            logging.info("Successfully connected to RabbitMQ")
+            logging.info("RabbitMQ connection established")
 
         except Exception as e:
-            logging.error(f"Error connecting to RabbitMQ: {e}")
+            logging.error(f"RabbitMQ connection failed: {e}")
             raise
 
-    def close(self):
+    def close(self) -> None:
         if self.connection:
             self.connection.close()
-            logging.info("Connection to RabbitMQ closed.")
+            logging.info("RabbitMQ connection closed")
 
-    def send_message(self, message: dict, routing_key: str = None, correlation_id: str = None):
+    def send_message(self, message: dict, routing_key: str = None, correlation_id: str = None) -> None:
         if not self.channel:
-            raise Exception("Connection to RabbitMQ is not established")
-        try:
-            props = {
-                'delivery_mode': 2,
-                'content_type': 'application/json'
-            }
+            raise RuntimeError("RabbitMQ connection not established")
 
-            if correlation_id:
-                props['correlation_id'] = correlation_id
+        properties = pika.BasicProperties(
+            delivery_mode=2,
+            content_type='application/json',
+            correlation_id=correlation_id
+        )
 
-            properties = pika.BasicProperties(**props)
-            routing_key = routing_key or self.response_queue
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=routing_key or self.response_queue,
+            body=json.dumps(message),
+            properties=properties
+        )
+        logging.debug(f"Message sent to {routing_key}")
 
-            logging.info(f"Sending message to queue {routing_key} with correlation_id {correlation_id}")
-            logging.info(f"Message content: {json.dumps(message, indent=2)}")
-
-            self.channel.basic_publish(
-                exchange='',
-                routing_key=routing_key,
-                body=json.dumps(message),
-                properties=properties
-            )
-            logging.info("Message sent successfully")
-        except Exception as e:
-            logging.error(f"Error sending message: {e}")
-            raise
-
-    def receive_message(self, callback):
+    def receive_message(self, callback) -> None:
         if not self.channel:
-            raise Exception("Connection to RabbitMQ is not established")
+            raise RuntimeError("RabbitMQ connection not established")
 
-        def on_message(ch, method, properties, body):
+        def wrapped_callback(ch, method, properties, body):
             try:
-                logging.info(f"Received message with properties: {vars(properties)}")
-                logging.info(f"Message body: {body}")
-
-                if isinstance(body, bytes):
-                    message = body.decode()
-                else:
-                    message = body
-
-                if isinstance(message, str):
-                    try:
-                        message = json.loads(message)
-                    except json.JSONDecodeError:
-                        pass
-
+                message = _parse_message(body)
                 result = callback(message, properties)
 
-                if result is not None and properties.reply_to:
-                    logging.info(f"Sending response to {properties.reply_to} with correlation_id {properties.correlation_id}")
+                if result and properties.reply_to:
                     self.send_message(
                         message=result,
                         routing_key=properties.reply_to,
                         correlation_id=properties.correlation_id
                     )
-
                 ch.basic_ack(delivery_tag=method.delivery_tag)
-
             except Exception as e:
-                logging.error(f"Error processing message: {e}")
-                logging.exception("Full traceback:")
+                logging.error(f"Message processing failed: {e}")
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
         self.channel.basic_consume(
             queue=self.queue_name,
-            on_message_callback=on_message,
+            on_message_callback=wrapped_callback,
             auto_ack=False
         )
-
-        logging.info(f"Started consuming from queue: {self.queue_name}")
+        logging.info(f"Listening to queue: {self.queue_name}")
         self.channel.start_consuming()

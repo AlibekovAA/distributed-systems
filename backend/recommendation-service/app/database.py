@@ -13,7 +13,7 @@ _engine = None
 _SessionLocal = None
 
 
-def _init_db_connection():
+def _init_db_connection() -> None:
     global _engine, _SessionLocal
     try:
         _engine = create_engine(
@@ -27,10 +27,11 @@ def _init_db_connection():
         )
         Base.metadata.create_all(bind=_engine)
         _SessionLocal = scoped_session(
-            sessionmaker(autocommit=False, autoflush=False, bind=_engine))
-        logging.info("Database connection initialized successfully")
+            sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+        )
+        logging.info("Database connection initialized")
     except Exception as e:
-        logging.error(f"Database connection failed: {str(e)}")
+        logging.error(f"Database connection failed: {e}")
         raise
 
 
@@ -45,7 +46,7 @@ def get_db() -> Generator[Session, None, None]:
         db.commit()
     except Exception as e:
         db.rollback()
-        logging.error(f"Database transaction failed: {str(e)}")
+        logging.error(f"Database error: {e}")
         raise
     finally:
         db.close()

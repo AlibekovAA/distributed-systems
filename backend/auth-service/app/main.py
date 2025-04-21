@@ -27,7 +27,6 @@ async def lifespan(app: FastAPI):
     yield
     logging.info("Application shutdown")
 
-
 signal.signal(signal.SIGTERM, handle_sigterm)
 user_model.Base.metadata.create_all(bind=engine)
 
@@ -49,5 +48,4 @@ app.add_middleware(
 )
 
 app.middleware("http")(metrics_middleware)
-
 app.include_router(router, prefix="/auth", tags=["auth"])

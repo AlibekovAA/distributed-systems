@@ -19,36 +19,34 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+def _create_token(data: dict, expires_delta: timedelta) -> str:
+    expire = datetime.utcnow() + expires_delta
     to_encode = data.copy()
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def create_access_token(data: dict) -> str:
+    return _create_token(data, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
 
 
 def create_refresh_token(data: dict) -> str:
-    expire = datetime.utcnow() + timedelta(days=7)
-    to_encode = data.copy()
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return _create_token(data, timedelta(days=7))
 
 
 def authenticate_user(db: Session, email: str, password: str) -> User:
     user = db.query(User).filter(User.email == email).first()
-    if user and verify_password(password, user.hashed_password):
-        logging.info(f"User authenticated successfully: {email}")
-        return user
-    return None
+    if not user or not verify_password(password, user.hashed_password):
+        return None
+    logging.info(f"User authenticated successfully: {email}")
+    return user
 
 
 def create_user(db: Session, email: str, password: str, name: str = "") -> User:
     hashed_password = get_password_hash(password)
+    db_user = User(email=email, hashed_password=hashed_password, name=name)
+
     try:
-        db_user = User(
-            email=email,
-            hashed_password=hashed_password,
-            name=name
-        )
         db.add(db_user)
         db.commit()
         db.refresh(db_user)

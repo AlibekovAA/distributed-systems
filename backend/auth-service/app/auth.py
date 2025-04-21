@@ -19,16 +19,20 @@ def get_current_user(token: str = token_dependency, db: Session = db_dependency)
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
+        email = payload.get("sub")
+        if not email:
+            raise credentials_exception
     except JWTError:
         logging.warning("Token validation failed: JWTError")
         raise credentials_exception
 
     user = db.query(User).filter(User.email == email).first()
-    if user is None:
+    if not user:
         logging.warning(f"Token validation failed: User not found - {email}")
         raise credentials_exception
+
     logging.info(f"User validated: {user.email}")
     return user
