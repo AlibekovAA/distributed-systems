@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from typing import List
+import socket
 
 from fastapi import APIRouter, HTTPException, Request, status
 from jose import JWTError, jwt
@@ -128,7 +129,8 @@ def refresh_token(refresh_token: str):
 
 @router.get("/health")
 async def health_check():
-    return {"status": "Auth service started"}
+    hostname = socket.gethostname()
+    return {"status": "Auth service started", "instance": hostname}
 
 
 @router.post("/change-password")

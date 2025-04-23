@@ -5,10 +5,13 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ../nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      # - ../nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      # - ../nginx/conf.d/active_active.conf:/etc/nginx/conf.d/default.conf
+      - ../nginx/conf.d/active_passive.conf:/etc/nginx/conf.d/default.conf
     networks:
       - app-network
     depends_on:
-      - auth-service
+      - auth-service-primary
+      - auth-service-secondary
       - product-catalog-service
       - recommendation-service

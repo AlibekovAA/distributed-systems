@@ -1,7 +1,37 @@
+# services:
+#   auth-service:
+#     build: ../backend/auth-service
+#     container_name: auth_service
+#     restart: unless-stopped
+#     command: >
+#       sh -c "
+#         while ! timeout 2 bash -c 'cat < /dev/null > /dev/tcp/db/5432' 2>/dev/null; do
+#           sleep 1
+#         done &&
+#         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level $${LOG_LEVEL}
+#       "
+#     env_file: "../.env"
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     ports:
+#       - "8000:8000"
+#       - "8001:8001"
+#     volumes:
+#       - ../backend/auth-service:/app
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:8000/auth/health"]
+#       interval: 60s
+#       timeout: 10s
+#       retries: 3
+#       start_period: 40s
+#     networks:
+#       - app-network
+
 services:
-  auth-service:
+  auth-service-primary:
     build: ../backend/auth-service
-    container_name: auth_service
+    container_name: auth_service_primary
     restart: unless-stopped
     command: >
       sh -c "
@@ -21,9 +51,37 @@ services:
       - ../backend/auth-service:/app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/auth/health"]
-      interval: 60s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 20s
+    networks:
+      - app-network
+
+  auth-service-secondary:
+    build: ../backend/auth-service
+    container_name: auth_service_secondary
+    restart: unless-stopped
+    command: >
+      sh -c "
+        while ! timeout 2 bash -c 'cat < /dev/null > /dev/tcp/db/5432' 2>/dev/null; do
+          sleep 1
+        done &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload --log-level $${LOG_LEVEL}
+      "
+    env_file: "../.env"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+    volumes:
+      - ../backend/auth-service:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/auth/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     networks:
       - app-network
