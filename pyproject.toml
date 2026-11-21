@@ -1,0 +1,71 @@
+[project]
+name = "marketplace"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+auth = [
+    "bcrypt==4.0.1",
+    "fastapi",
+    "passlib[bcrypt]>=1.7.4",
+    "prometheus-client",
+    "psutil",
+    "psycopg2-binary",
+    "pydantic[email]",
+    "python-dotenv",
+    "python-jose[cryptography]",
+    "sqlalchemy",
+    "uvicorn",
+]
+recommendation = [
+    "pika",
+    "psycopg2-binary",
+    "python-dotenv",
+    "sqlalchemy",
+]
+test = [
+    "allure-pytest",
+    "httpx",
+    "pytest",
+    "pytest-cov",
+]
+lint = [
+    "mypy",
+    "ruff",
+]
+dev = [
+    { include-group = "auth" },
+    { include-group = "recommendation" },
+    { include-group = "test" },
+    { include-group = "lint" },
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+extend-exclude = [
+    "frontend",
+    "backend/product-catalog-service",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.13"
+check_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+

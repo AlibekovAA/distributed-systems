@@ -39,6 +39,16 @@ CREATE TABLE "history" (
   order_number INTEGER
 );
 
+CREATE TABLE user_order_counters (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  next_order_number BIGINT NOT NULL DEFAULT 1
+);
+
+CREATE INDEX idx_order_email ON "order" (email);
+CREATE INDEX idx_history_user_order ON history (user_id, order_number);
+CREATE INDEX idx_history_product_id ON history (product_id);
+CREATE INDEX idx_user_preferences_user_id ON user_preferences (user_id);
+
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL

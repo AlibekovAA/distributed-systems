@@ -26,6 +26,10 @@ class _EnvConfig:
     def LOG_LEVEL(self) -> str:
         return os.getenv("LOG_LEVEL", "warning").upper()
 
+    @property
+    def ADMIN_EMAIL(self) -> str:
+        return os.getenv("ADMIN_EMAIL", "").strip().lower()
+
     def _get_required(self, key: str) -> str:
         if (value := os.getenv(key)) is None:
             raise ValueError(f"Missing required environment variable: {key}")
@@ -39,3 +43,4 @@ SECRET_KEY = _config.SECRET_KEY
 ALGORITHM = _config.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = _config.ACCESS_TOKEN_EXPIRE_MINUTES
 LOG_LEVEL = _config.LOG_LEVEL
+ADMIN_EMAIL = _config.ADMIN_EMAIL

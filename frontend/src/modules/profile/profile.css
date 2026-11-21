@@ -17,31 +17,33 @@
 .info-group {
     margin: 15px 0;
     padding: 10px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.info-group label {
+.info-group .info-label {
     font-weight: 500;
-    color: #6b7280;
+    color: var(--color-text-muted);
     margin-right: 10px;
 }
 
 .info-group span {
-    color: #111827;
+    color: var(--color-text);
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .change-password-section {
     margin-top: 2rem;
     padding-top: 2rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--color-border);
 }
 
 .change-password-section h3 {
     margin-bottom: 1rem;
-    color: #374151;
+    color: var(--color-text);
 }
 
 .password-form {
@@ -54,31 +56,11 @@
 }
 
 .change-password-btn {
-    background-color: #4f46e5;
+    background-color: var(--color-primary);
     margin-top: 1rem;
     width: 100%;
 }
 
 .change-password-btn:hover {
-    background-color: #4338ca;
-}
-
-.balance-section {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid #e5e7eb;
-}
-
-.balance-section h3 {
-    margin-bottom: 1rem;
-    color: #374151;
-}
-
-.add-balance-btn {
-    background-color: #10B981;
-    width: 100%;
-}
-
-.add-balance-btn:hover {
-    background-color: #059669;
+    background-color: var(--color-primary-hover);
 }

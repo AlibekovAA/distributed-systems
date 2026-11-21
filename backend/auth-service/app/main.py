@@ -1,43 +1,38 @@
-import signal
 from contextlib import asynccontextmanager
-from datetime import datetime
+from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import start_http_server
 
 from app.api import router
-from app.core.database import engine
 from app.core.logger import logging
 from app.middleware.metrics import metrics_middleware
-from models import user_model
-
-
-def handle_sigterm(signum, frame):
-    logging.info("Received SIGTERM signal")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global START_TIME
-    START_TIME = datetime.now()
-
     start_http_server(8001)
     logging.info("Prometheus metrics server started on port 8001")
     yield
     logging.info("Application shutdown")
 
-signal.signal(signal.SIGTERM, handle_sigterm)
-user_model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(lifespan=lifespan)
 
-origins = [
-    "http://localhost",
-    "http://localhost:80",
-    "http://frontend",
-    "http://nginx"
-]
+
+@app.middleware("http")
+async def request_id_middleware(request, call_next):
+    request_id = request.headers.get("X-Request-ID", "").strip()
+    if not request_id or len(request_id) > 128:
+        request_id = uuid4().hex
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
+origins = ["http://localhost", "http://localhost:80", "http://frontend", "http://nginx"]
 
 app.add_middleware(
     CORSMiddleware,

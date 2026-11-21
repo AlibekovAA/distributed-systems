@@ -1,27 +1,15 @@
 services:
   recommendation-service:
     build:
-      context: ../backend/recommendation-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: backend/recommendation-service/Dockerfile
     container_name: recommendation_service
     restart: unless-stopped
-    command: >
-      sh -c "
-        while ! timeout 2 bash -c 'cat < /dev/null > /dev/tcp/db/5432' 2>/dev/null; do
-          sleep 1
-        done &&
-        while ! timeout 2 bash -c '</dev/tcp/rabbitmq/5672'; do
-          sleep 2;
-        done &&
-        python main.py
-      "
     env_file: "../.env"
     depends_on:
       db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    volumes:
-      - ../backend/recommendation-service:/app
     networks:
       - app-network

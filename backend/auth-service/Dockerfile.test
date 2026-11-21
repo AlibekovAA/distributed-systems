@@ -1,24 +1,21 @@
 FROM base-test:latest AS base
 
+COPY --from=ghcr.io/astral-sh/uv:0.13.9 /uv /uvx /bin/
+
 WORKDIR /app
 
-RUN apt-get update && \
-    apt-get install -y python3.11 python3.11-venv python3-pip --no-install-recommends && \
-    python3.11 -m venv /opt/venv && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV PATH="/opt/venv/bin:$PATH" \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_PYTHON_DOWNLOADS=0
 
-ENV PATH="/opt/venv/bin:$PATH"
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-default-groups --group auth --group test
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir pytest allure-pytest pytest-cov
-
-COPY . ./
+COPY backend/auth-service/ ./
 ENV PYTHONPATH=/app
 
 RUN echo '#!/bin/bash\n\
 set -e\n\
-trap "kill 0" EXIT\n\
 pytest -v --alluredir=/app/allure-results' > /app/run_tests.sh && \
 chmod +x /app/run_tests.sh
 

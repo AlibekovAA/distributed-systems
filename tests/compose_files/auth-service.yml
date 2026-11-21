@@ -1,8 +1,8 @@
 services:
   auth-service:
     build:
-      context: ../../backend/auth-service
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: backend/auth-service/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: ${SECRET_KEY}
@@ -21,8 +21,8 @@ services:
 
   auth-tests:
     build:
-      context: ../../backend/auth-service
-      dockerfile: Dockerfile.test
+      context: ../..
+      dockerfile: backend/auth-service/Dockerfile.test
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: ${SECRET_KEY}

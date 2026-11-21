@@ -1,7 +1,0 @@
-SQLAlchemy
-psycopg2-binary
-pytz
-python-dotenv
-pika
-numpy
-scikit-learn

@@ -1,9 +1,10 @@
 package application
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	database "main/src/db"
-	"main/src/models"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -13,7 +14,8 @@ import (
 // @Summary User's order history
 // @Tags Orders
 // @Produce json
-// @Param email path int true "User email"
+// @Security BearerAuth
+// @Param email path string true "User email"
 // @Success 200
 // @Router /orders/{email}/history [get]
 func (app *Application) getHistoryOrders(w http.ResponseWriter, r *http.Request) {
@@ -22,47 +24,31 @@ func (app *Application) getHistoryOrders(w http.ResponseWriter, r *http.Request)
 	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/orders/{email}/history"))
 	defer timer.ObserveDuration()
 
-	email := mux.Vars(r)["email"]
+	email, ok := requireOwnEmail(w, r, mux.Vars(r)["email"])
+	if !ok {
+		errorCount.WithLabelValues(r.Method, "/orders/{email}/history").Inc()
+		return
+	}
 
 	user, err := database.GetUserByEmail(app.DB, email)
 	if err != nil {
 		errorCount.WithLabelValues(r.Method, "/orders/{email}/history").Inc()
-		http.Error(w, "Failed get user", http.StatusInternalServerError)
+		if errors.Is(err, sql.ErrNoRows) {
+			writeJSONError(w, "User not found", http.StatusNotFound)
+		} else {
+			writeJSONError(w, "Failed get user", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	history, err := database.GetHistoryOrders(app.DB, user.ID)
+	history, err := database.GetHistoryResponses(app.DB, user.ID)
 	if err != nil {
 		errorCount.WithLabelValues(r.Method, "/orders/{email}/history").Inc()
-		http.Error(w, "Failed to retrieve order history", http.StatusInternalServerError)
+		writeJSONError(w, "Failed to retrieve order history", http.StatusInternalServerError)
 		return
 	}
 
-	historyMap := make(map[int64]*models.HistoryResponse)
-
-	for _, record := range history {
-		product, err := database.GetProduct(app.DB, record.ProductID)
-		if err != nil {
-			continue
-		}
-
-		if _, exists := historyMap[record.OrderNumber]; !exists {
-			historyMap[record.OrderNumber] = &models.HistoryResponse{
-				OrderNumber: record.OrderNumber,
-				Items:       []models.Product{},
-				TotalPrice:  0,
-			}
-		}
-
-		historyMap[record.OrderNumber].Items = append(historyMap[record.OrderNumber].Items, product)
-		historyMap[record.OrderNumber].TotalPrice += int(product.Price)
-	}
-
-	response := make([]models.HistoryResponse, 0, len(historyMap))
-	for _, order := range historyMap {
-		response = append(response, *order)
-	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(history)
 }

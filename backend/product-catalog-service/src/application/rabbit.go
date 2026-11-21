@@ -31,7 +31,7 @@ func (r *RabbitMQ) initializeRequestQueue() error {
 	return err
 }
 
-func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
+func (r *RabbitMQ) sendRequest(userID string, requestID string) (string, string, error) {
 	rabbitmqRequestsTotal.WithLabelValues(requestQueue).Inc()
 
 	timer := prometheus.NewTimer(rabbitmqRequestDuration.WithLabelValues(requestQueue))
@@ -57,8 +57,11 @@ func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
 		return "", "", err
 	}
 
-	correlationID := userID + "_" + strconv.FormatInt(time.Now().UnixNano(), 10)
-	log.Printf("Sending request for user %s with correlation ID: %s", userID, correlationID)
+	correlationID := requestID
+	if correlationID == "" {
+		correlationID = userID + "_" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	}
+	log.Printf("Sending recommendation request: request_id=%s", correlationID)
 
 	err = r.channel.Publish(
 		"",
@@ -76,6 +79,7 @@ func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
 	if err != nil {
 		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
 		log.Printf("Failed to send request: %v", err)
+		r.channel.QueueDelete(tempQueue.Name, false, false, false)
 		return "", "", err
 	}
 
@@ -83,16 +87,15 @@ func (r *RabbitMQ) sendRequest(userID string) (string, string, error) {
 }
 
 func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueName string) string {
-	rabbitmqRequestsTotal.WithLabelValues(queueName).Inc()
-
-	timer := prometheus.NewTimer(rabbitmqRequestDuration.WithLabelValues(queueName))
+	timer := prometheus.NewTimer(rabbitmqRequestDuration.WithLabelValues(requestQueue))
 	defer timer.ObserveDuration()
 
-	log.Printf("Waiting for response for user %s with correlation ID: %s on queue: %s", userID, correlationID, queueName)
+	log.Printf("Waiting for recommendation response: request_id=%s", correlationID)
+	consumerTag := "recommendation-" + newRequestID()
 
 	msgs, err := r.channel.Consume(
 		queueName,
-		"",
+		consumerTag,
 		true,
 		true,
 		false,
@@ -101,33 +104,32 @@ func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueNam
 	)
 
 	if err != nil {
-		rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
+		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
 		log.Printf("Error connecting to response queue: %v", err)
 		return ""
 	}
+	defer r.channel.Cancel(consumerTag, false)
 
-	messageChannel := make(chan string)
-	timeoutChannel := time.After(timeout)
+	messageChannel := make(chan string, 1)
+	timeoutTimer := time.NewTimer(timeout)
+	defer timeoutTimer.Stop()
 
 	go func() {
 		for msg := range msgs {
-			log.Printf("Received message with correlation ID: %s, expected: %s", msg.CorrelationId, correlationID)
-
 			if msg.CorrelationId != correlationID {
-				log.Printf("Skipping message with wrong correlation ID")
 				continue
 			}
 
 			var response map[string]interface{}
 			if err := json.Unmarshal(msg.Body, &response); err != nil {
-				rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
+				rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
 				log.Printf("Error unmarshaling response: %v", err)
 				continue
 			}
 
 			if responseUserID, ok := response["user_id"].(float64); ok {
 				if strconv.FormatFloat(responseUserID, 'f', 0, 64) == userID {
-					rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
+					rabbitmqResponsesTotal.WithLabelValues(requestQueue).Inc()
 					messageChannel <- string(msg.Body)
 					return
 				}
@@ -137,11 +139,11 @@ func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueNam
 
 	select {
 	case response := <-messageChannel:
-		log.Printf("Received valid response for user %s", userID)
+		log.Printf("Received recommendation response: request_id=%s", correlationID)
 		return response
-	case <-timeoutChannel:
-		rabbitmqErrorsTotal.WithLabelValues(queueName).Inc()
-		log.Printf("Timeout waiting for response for user %s", userID)
+	case <-timeoutTimer.C:
+		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
+		log.Printf("Recommendation response timeout: request_id=%s", correlationID)
 		return ""
 	}
 }

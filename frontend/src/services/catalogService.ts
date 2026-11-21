@@ -6,14 +6,22 @@ export interface Product {
     quantity: number;
 }
 
-export interface OrderHistoryItem extends Product {
-    order_number: number;
-}
-
 interface OrderHistoryResponse {
     order_number: number;
     items: Product[];
     total_price: number;
+}
+
+interface ApiErrorPayload {
+    detail?: string;
+    error?: string;
+}
+
+export class CatalogApiError extends Error {
+    constructor(message: string, readonly payload: ApiErrorPayload) {
+        super(message);
+        this.name = 'CatalogApiError';
+    }
 }
 
 export class CatalogService {
@@ -22,19 +30,24 @@ export class CatalogService {
     private static readonly HEADERS_JSON = { 'Content-Type': 'application/json', Accept: 'application/json' };
 
     private static async handleResponse<T>(response: Response): Promise<T> {
-        const data = await response.json();
+        const data: unknown = await response.json().catch(() => null);
         if (!response.ok) {
-            console.error('Response error:', data);
-            throw new Error(data.detail || 'Request failed');
+            const payload = data && typeof data === 'object' ? data as ApiErrorPayload : {};
+            throw new CatalogApiError(payload.detail || 'Request failed', payload);
         }
-        return data;
+        return data as T;
     }
 
     private static async request<T>(url: string, options: RequestInit = {}): Promise<T> {
+        const token = localStorage.getItem(this.TOKEN_KEY);
         const response = await fetch(`${this.BASE_URL}${url}`, {
             ...options,
             credentials: 'include',
-            headers: { ...this.HEADERS_JSON, ...options.headers },
+            headers: {
+                ...this.HEADERS_JSON,
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                ...options.headers,
+            },
             mode: 'cors',
         });
         return this.handleResponse<T>(response);
@@ -57,13 +70,8 @@ export class CatalogService {
         return this.request(`/products/${encodeURIComponent(this.getAuthEmail())}`);
     }
 
-    static async getCart(): Promise<Product[]> {
-        try {
-            return await this.request(`/order/${encodeURIComponent(this.getAuthEmail())}`) ?? [];
-        } catch (error) {
-            console.error('Error fetching cart:', error);
-            return [];
-        }
+    static getCart(): Promise<Product[]> {
+        return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}`);
     }
 
     static addToCart(productId: number): Promise<void> {
@@ -81,29 +89,11 @@ export class CatalogService {
         return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/clear`, { method: 'POST' });
     }
 
-    static async payForOrder(): Promise<void> {
-        try {
-            await this.request(`/order/${this.getAuthEmail()}/pay`, {
-                method: 'POST',
-                body: JSON.stringify({}),
-            });
-        } catch (error) {
-            if (error instanceof Error) {
-                try {
-                    const errorData = JSON.parse(error.message);
-                    if (errorData.error === 'insufficient_funds') {
-                        throw new Error(JSON.stringify(errorData));
-                    }
-                } catch {
-                    throw new Error('Failed to pay for order');
-                }
-            }
-            throw error;
-        }
-    }
-
-    static getProduct(id: number): Promise<Product | null> {
-        return this.request(`/products/${id}`);
+    static payForOrder(): Promise<void> {
+        return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/pay`, {
+            method: 'POST',
+            body: JSON.stringify({}),
+        });
     }
 
     static getOrderHistory(): Promise<OrderHistoryResponse[]> {

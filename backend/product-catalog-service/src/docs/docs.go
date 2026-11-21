@@ -4,243 +4,91 @@ package docs
 import "github.com/swaggo/swag"
 
 const docTemplate = `{
-    "schemes": {{ marshal .Schemes }},
-    "swagger": "2.0",
-    "info": {
-        "description": "{{escape .Description}}",
-        "title": "{{.Title}}",
-        "contact": {},
-        "version": "{{.Version}}"
+  "schemes": {{ marshal .Schemes }},
+  "swagger": "2.0",
+  "info": {
+    "title": "{{.Title}}",
+    "description": "{{escape .Description}}",
+    "version": "{{.Version}}"
+  },
+  "host": "{{.Host}}",
+  "basePath": "{{.BasePath}}",
+  "securityDefinitions": {
+    "BearerAuth": {"type": "apiKey", "name": "Authorization", "in": "header"}
+  },
+  "security": [{"BearerAuth": []}],
+  "paths": {
+    "/products": {
+      "post": {
+        "tags": ["Products"], "summary": "Create a new product", "produces": ["application/json"],
+        "responses": {"201": {"description": "Created"}, "400": {"description": "Invalid request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "500": {"description": "Internal server error"}}
+      }
     },
-    "host": "{{.Host}}",
-    "basePath": "{{.BasePath}}",
-    "paths": {
-        "/order/add": {
-            "post": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Orders"
-                ],
-                "summary": "Add an item to the cart",
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/order/{email}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Orders"
-                ],
-                "summary": "Get the user's current order",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/order/{email}/clear": {
-            "post": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Orders"
-                ],
-                "summary": "Clear shopping cart",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/order/{email}/pay": {
-            "post": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Orders"
-                ],
-                "summary": "Pay for the order",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/order/{email}/{product_id}": {
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Orders"
-                ],
-                "summary": "Delete an item from the shopping cart",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "ID of product",
-                        "name": "product_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/orders/{email}/history": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Orders"
-                ],
-                "summary": "User's order history",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
-        "/products": {
-            "post": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Create a new product",
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    }
-                }
-            },
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Delete a product",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/products/{email}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Get a list of products",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    "/products/{id}": {
+      "delete": {
+        "tags": ["Products"], "summary": "Delete a product", "produces": ["application/json"],
+        "parameters": [{"name": "id", "in": "path", "required": true, "type": "integer", "description": "Product ID"}],
+        "responses": {"200": {"description": "OK"}, "400": {"description": "Invalid product ID"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Product not found"}, "500": {"description": "Internal server error"}}
+      }
+    },
+    "/products/{email}": {
+      "get": {
+        "tags": ["Products"], "summary": "Get a list of products", "produces": ["application/json"],
+        "parameters": [{"name": "email", "in": "path", "required": true, "type": "string", "description": "User email"}],
+        "responses": {"200": {"description": "OK"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "User not found"}, "500": {"description": "Internal server error"}}
+      }
+    },
+    "/order/add": {
+      "post": {
+        "tags": ["Orders"], "summary": "Add an item to the cart", "produces": ["application/json"],
+        "responses": {"201": {"description": "Created"}, "400": {"description": "Invalid request"}, "401": {"description": "Unauthorized"}, "404": {"description": "Product not found"}, "409": {"description": "Product is out of stock"}, "500": {"description": "Internal server error"}}
+      }
+    },
+    "/order/{email}": {
+      "get": {
+        "tags": ["Orders"], "summary": "Get the user's current order", "produces": ["application/json"],
+        "parameters": [{"name": "email", "in": "path", "required": true, "type": "string", "description": "User email"}],
+        "responses": {"200": {"description": "OK"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "User not found"}, "500": {"description": "Internal server error"}}
+      }
+    },
+    "/order/{email}/{product_id}": {
+      "delete": {
+        "tags": ["Orders"], "summary": "Delete an item from the shopping cart", "produces": ["application/json"],
+        "parameters": [{"name": "email", "in": "path", "required": true, "type": "string", "description": "User email"}, {"name": "product_id", "in": "path", "required": true, "type": "integer", "description": "Product ID"}],
+        "responses": {"200": {"description": "OK"}, "400": {"description": "Invalid product ID"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "500": {"description": "Internal server error"}}
+      }
+    },
+    "/order/{email}/pay": {
+      "post": {
+        "tags": ["Orders"], "summary": "Pay for the order", "produces": ["application/json"],
+        "parameters": [{"name": "email", "in": "path", "required": true, "type": "string", "description": "User email"}],
+        "responses": {"200": {"description": "OK"}, "401": {"description": "Unauthorized"}, "402": {"description": "Insufficient funds"}, "403": {"description": "Forbidden"}, "404": {"description": "User or order not found"}, "500": {"description": "Internal server error"}}
+      }
+    },
+    "/order/{email}/clear": {
+      "post": {
+        "tags": ["Orders"], "summary": "Clear shopping cart", "produces": ["application/json"],
+        "parameters": [{"name": "email", "in": "path", "required": true, "type": "string", "description": "User email"}],
+        "responses": {"200": {"description": "OK"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "500": {"description": "Internal server error"}}
+      }
+    },
+    "/orders/{email}/history": {
+      "get": {
+        "tags": ["Orders"], "summary": "User's order history", "produces": ["application/json"],
+        "parameters": [{"name": "email", "in": "path", "required": true, "type": "string", "description": "User email"}],
+        "responses": {"200": {"description": "OK"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "User not found"}, "500": {"description": "Internal server error"}}
+      }
     }
+  }
 }`
 
-// SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Online Store API",
+	Description:      "API for managing goods and orders",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

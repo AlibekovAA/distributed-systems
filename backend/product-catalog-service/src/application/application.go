@@ -2,12 +2,14 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"main/src/config"
 	database "main/src/db"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -18,6 +20,8 @@ import (
 	"github.com/streadway/amqp"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+var metricsOnce sync.Once
 
 var (
 	requestCount = prometheus.NewCounterVec(
@@ -78,14 +82,15 @@ var (
 )
 
 func initMetrics() {
-	prometheus.MustRegister(requestCount)
-	prometheus.MustRegister(requestDuration)
-	prometheus.MustRegister(errorCount)
-
-	prometheus.MustRegister(rabbitmqRequestsTotal)
-	prometheus.MustRegister(rabbitmqResponsesTotal)
-	prometheus.MustRegister(rabbitmqRequestDuration)
-	prometheus.MustRegister(rabbitmqErrorsTotal)
+	metricsOnce.Do(func() {
+		prometheus.MustRegister(requestCount)
+		prometheus.MustRegister(requestDuration)
+		prometheus.MustRegister(errorCount)
+		prometheus.MustRegister(rabbitmqRequestsTotal)
+		prometheus.MustRegister(rabbitmqResponsesTotal)
+		prometheus.MustRegister(rabbitmqRequestDuration)
+		prometheus.MustRegister(rabbitmqErrorsTotal)
+	})
 }
 
 type Application struct {
@@ -95,6 +100,8 @@ type Application struct {
 	RabbitConn    *amqp.Connection
 	RabbitChannel *amqp.Channel
 	RabbitMQ      *RabbitMQ
+	JWTSecret     string
+	JWTAlgorithm  string
 }
 
 func NewApplication() *Application {
@@ -106,22 +113,31 @@ func NewApplication() *Application {
 func (app *Application) Configure(ctx context.Context, cfg *config.Config) error {
 	db, err := database.OpenDB(&cfg.Database)
 	if err != nil {
-		return err
+		return fmt.Errorf("open database: %w", err)
+	}
+	if err := db.PingContext(ctx); err != nil {
+		db.Close()
+		return fmt.Errorf("ping database: %w", err)
 	}
 
 	app.DB = db
 	app.Addr = cfg.Addr
+	app.JWTSecret = cfg.JWTSecret
+	app.JWTAlgorithm = cfg.JWTAlgorithm
 
 	conn, err := amqp.Dial(cfg.RabbitMQURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ %+v", err)
+		db.Close()
+		return fmt.Errorf("connect to RabbitMQ: %w", err)
 	}
 
 	app.RabbitConn = conn
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Fatalf("Failed to open a channel %+v", err)
+		conn.Close()
+		db.Close()
+		return fmt.Errorf("open RabbitMQ channel: %w", err)
 	}
 
 	app.RabbitChannel = ch
@@ -136,48 +152,57 @@ func (app *Application) Configure(ctx context.Context, cfg *config.Config) error
 func (app *Application) Run(ctx context.Context) {
 	initMetrics()
 	app.RegisterHandlers()
+	apiServer := &http.Server{Addr: app.Addr, Handler: corsMiddleware(app.Router), ReadHeaderTimeout: 5 * time.Second}
+	metricsServer := &http.Server{Addr: ":8081", Handler: promhttp.Handler(), ReadHeaderTimeout: 5 * time.Second}
+	serverErr := make(chan error, 2)
 
 	go func() {
 		log.Println("Starting metrics server on :8081")
-		if err := http.ListenAndServe(":8081", promhttp.Handler()); err != nil {
-			log.Printf("Failed to start metrics server: %v", err)
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- fmt.Errorf("metrics server: %w", err)
 		}
 	}()
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	serverErr := make(chan error, 1)
 
 	go func() {
-		log.Printf("Product-catalog-service running on  %s", app.Addr)
-		serverErr <- http.ListenAndServe(app.Addr, corsMiddleware(app.Router))
+		log.Printf("Product-catalog-service running on %s", app.Addr)
+		if err := apiServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- fmt.Errorf("API server: %w", err)
+		}
 	}()
 
+	stopCtx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	select {
 	case err := <-serverErr:
-		if err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed start product-catalog-service: %v", err)
-		}
-	case <-stop:
-		log.Println("Shutting down the product-catalog-service...")
+		log.Printf("Product-catalog-service stopped unexpectedly: %v", err)
+	case <-stopCtx.Done():
+		log.Println("Shutting down product-catalog-service")
 	}
 
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := apiServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("API server shutdown failed: %v", err)
+	}
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Metrics server shutdown failed: %v", err)
+	}
 	if app.RabbitChannel != nil {
-		log.Println("Closing RabbitMQ channel...")
-		app.RabbitChannel.Close()
+		if err := app.RabbitChannel.Close(); err != nil {
+			log.Printf("RabbitMQ channel close failed: %v", err)
+		}
 	}
 	if app.RabbitConn != nil {
-		log.Println("Closing RabbitMQ connection...")
-		app.RabbitConn.Close()
+		if err := app.RabbitConn.Close(); err != nil {
+			log.Printf("RabbitMQ connection close failed: %v", err)
+		}
 	}
-
-	shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	<-shutdownCtx.Done()
-
-	log.Println("The product-catalog-service is terminated correctly")
+	if app.DB != nil {
+		if err := app.DB.Close(); err != nil {
+			log.Printf("Database close failed: %v", err)
+		}
+	}
+	log.Println("Product-catalog-service stopped")
 }
 
 // @title Online Store API
@@ -185,46 +210,58 @@ func (app *Application) Run(ctx context.Context) {
 // @description API for managing goods and orders
 // @host localhost:8080
 // @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func (app *Application) RegisterHandlers() {
+	app.Router.Use(requestIDMiddleware)
+	app.Router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		writeJSONError(w, "Not found", http.StatusNotFound)
+	})
+	app.Router.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
+	})
 	//метрики
 	app.Router.Handle("/metrics", promhttp.Handler())
+
+	protected := app.Router.NewRoute().Subrouter()
+	protected.Use(app.authenticate)
+
 	// товары
-	app.Router.HandleFunc("/products/{email}", app.getProducts).Methods("GET")
-	//app.Router.HandleFunc("/products/{id}", updateProduct).Methods("PUT")
-	app.Router.HandleFunc("/products", app.createProduct).Methods("POST")
-	app.Router.HandleFunc("/products/{email}", app.deleteProduct).Methods("DELETE")
+	protected.HandleFunc("/products/{email}", app.getProducts).Methods("GET")
+	protected.Handle("/products", app.requireAdmin(http.HandlerFunc(app.createProduct))).Methods("POST")
+	protected.Handle("/products/{id}", app.requireAdmin(http.HandlerFunc(app.deleteProduct))).Methods("DELETE")
 
 	// Заказ (корзина)
-	app.Router.HandleFunc("/order/add", app.addToOrder).Methods("POST")
-	app.Router.HandleFunc("/order/{email}", app.getOrder).Methods("GET")
-	app.Router.HandleFunc("/order/{email}/pay", app.payForOrder).Methods("POST")
-	app.Router.HandleFunc("/order/{email}/{product_id}", app.removeFromOrder).Methods("DELETE")
-	app.Router.HandleFunc("/order/{email}/clear", app.clearCart).Methods("POST")
+	protected.HandleFunc("/order/add", app.addToOrder).Methods("POST")
+	protected.HandleFunc("/order/{email}", app.getOrder).Methods("GET")
+	protected.HandleFunc("/order/{email}/pay", app.payForOrder).Methods("POST")
+	protected.HandleFunc("/order/{email}/{product_id}", app.removeFromOrder).Methods("DELETE")
+	protected.HandleFunc("/order/{email}/clear", app.clearCart).Methods("POST")
 
 	// История заказов
-	app.Router.HandleFunc("/orders/{email}/history", app.getHistoryOrders).Methods("GET")
+	protected.HandleFunc("/orders/{email}/history", app.getHistoryOrders).Methods("GET")
 
-	app.Router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	protected.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
 	allowedOrigins := map[string]bool{
-		"http://localhost":		true,
-		"http://localhost:80":	true,
-		"http://frontend":		true,
-		"http://nginx":			true,
+		"http://localhost":    true,
+		"http://localhost:80": true,
+		"http://frontend":     true,
+		"http://nginx":        true,
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 		if allowedOrigins[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 		}
-
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)

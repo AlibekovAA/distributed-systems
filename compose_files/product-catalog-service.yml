@@ -3,16 +3,6 @@ services:
     build: ../backend/product-catalog-service
     container_name: product_catalog_service
     restart: unless-stopped
-    command: >
-      sh -c "
-        while ! nc -z db 5432; do
-          sleep 1
-        done &&
-        while ! nc -z rabbitmq 5672; do
-          sleep 1
-        done &&
-        /app/main
-      "
     depends_on:
       db:
         condition: service_healthy
@@ -23,7 +13,7 @@ services:
       - "8081:8081"
     env_file: "../.env"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/products/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/metrics"]
       interval: 30s
       timeout: 10s
       retries: 3

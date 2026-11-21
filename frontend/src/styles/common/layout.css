@@ -4,7 +4,7 @@
     top: 0;
     height: 100%;
     width: 40px;
-    background: #4f46e5;
+    background: var(--color-primary);
     transition: width 0.3s ease;
     overflow: hidden;
     z-index: 1000;
@@ -12,7 +12,8 @@
     flex-direction: column;
 }
 
-.side-menu:hover {
+.side-menu:hover,
+.side-menu:focus-within {
     width: 200px;
 }
 
@@ -38,16 +39,16 @@
     padding: 15px 0;
     color: white;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
     white-space: nowrap;
 }
 
 .menu-item:hover {
-    background-color: #4338ca;
+    background-color: var(--color-primary-hover);
 }
 
 .menu-item.active {
-    background-color: #3730a3;
+    background-color: var(--color-primary-active);
 }
 
 .menu-icon {
@@ -55,6 +56,15 @@
     width: 40px;
     text-align: center;
     margin-right: 15px;
+}
+
+.menu-icon svg {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .menu-text {
@@ -65,6 +75,6 @@
 .catalog-content h1 {
     text-align: center;
     margin-bottom: 2rem;
-    color: #1a1a1a;
+    color: var(--color-text);
     font-size: 2rem;
 }

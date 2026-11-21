@@ -1,16 +1,13 @@
 from contextlib import contextmanager
 
+from app.core.config import DATABASE_URL
+from app.core.logger import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from app.core.config import DATABASE_URL
-from app.core.logger import logging
+database_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=3600
-)
+engine = create_engine(database_url, pool_pre_ping=True, pool_recycle=3600)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -21,9 +18,14 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
-    except Exception as e:
+    except Exception:
         db.rollback()
-        logging.error(f"Database session error: {str(e)}")
+        logging.error("Database session error")
         raise
     finally:
         db.close()
+
+
+def get_db_dependency():
+    with get_db() as db:
+        yield db

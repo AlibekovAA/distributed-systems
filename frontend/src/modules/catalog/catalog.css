@@ -18,12 +18,13 @@
 }
 
 .product-card {
-    background: white;
-    border-radius: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-card);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    height: 280px;
+    min-height: 280px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -43,13 +44,14 @@
 .product-name {
     font-size: 18px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--color-text);
     margin-bottom: 8px;
+    overflow-wrap: anywhere;
 }
 
 .product-description {
     font-size: 14px;
-    color: #666;
+    color: var(--color-text-muted);
     margin-bottom: 12px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -66,13 +68,19 @@
 .product-price {
     font-size: 20px;
     font-weight: 600;
-    color: #4f46e5;
+    color: var(--color-primary);
     margin-bottom: 8px;
 }
 
 .product-quantity {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
     font-size: 14px;
-    color: #888;
+    color: var(--color-text-muted);
+    padding: 4px 8px;
+    background: var(--color-surface-muted);
+    border-radius: var(--radius-sm);
     margin-bottom: 15px;
 }
 
@@ -80,20 +88,20 @@
     width: 100%;
     padding: 10px;
     margin-top: auto;
-    background: #4f46e5;
+    background: var(--color-primary);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 .add-to-cart-btn:hover {
-    background: #4338ca;
+    background: var(--color-primary-hover);
     transform: translateY(-2px);
 }
 
@@ -102,5 +110,7 @@
 }
 
 .cart-icon {
-    font-size: 1.2em;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
 }

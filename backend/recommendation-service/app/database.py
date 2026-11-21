@@ -1,46 +1,24 @@
 from contextlib import contextmanager
-from typing import Generator
+from typing import Any, Generator
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app.config import DATABASE_URL
 from app.logger import logging
 
 Base = declarative_base()
-_engine = None
-_SessionLocal = None
-
-
-def _init_db_connection() -> None:
-    global _engine, _SessionLocal
-    try:
-        _engine = create_engine(
-            DATABASE_URL,
-            pool_size=20,
-            max_overflow=10,
-            pool_pre_ping=True,
-            pool_recycle=3600,
-            connect_args={"connect_timeout": 5},
-            echo=False
-        )
-        Base.metadata.create_all(bind=_engine)
-        _SessionLocal = scoped_session(
-            sessionmaker(autocommit=False, autoflush=False, bind=_engine)
-        )
-        logging.info("Database connection initialized")
-    except Exception as e:
-        logging.error(f"Database connection failed: {e}")
-        raise
+database_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+engine_options: dict[str, Any] = {"pool_pre_ping": True, "pool_recycle": 3600}
+if not database_url.startswith("sqlite"):
+    engine_options.update({"pool_size": 20, "max_overflow": 10, "connect_args": {"connect_timeout": 5}})
+engine = create_engine(database_url, **engine_options)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @contextmanager
 def get_db() -> Generator[Session, None, None]:
-    if _SessionLocal is None:
-        _init_db_connection()
-
-    db = _SessionLocal()
+    db = SessionLocal()
     try:
         yield db
         db.commit()

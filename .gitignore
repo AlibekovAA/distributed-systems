@@ -1,6 +1,17 @@
 node_modules/
 build/
 dist/
+.venv/
+.uv-cache/
+.uv-python/
+.go-cache/
+.go-mod-cache/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 .env
 *.local
@@ -26,9 +37,6 @@ db/migrations.sql
 backend/product-catalog-service/vendor
 tests/.env
 tests/allure-*
-
-backend/product-catalog-service/__pycache__
-backend/product-catalog-service/.pytest_cache
 
 backend/product-catalog-service/src/application/.env
 backend/product-catalog-service/src/tests

@@ -15,43 +15,37 @@
         <div class="menu-content">
             <div class="menu-items-top">
                 <a href="/pages/profile/index.html" class="menu-item">
-                    <span class="menu-icon">👤</span>
+                    <span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
                     <span class="menu-text">Profile</span>
                 </a>
                 <a href="/pages/catalog/index.html" class="menu-item">
-                    <span class="menu-icon">🏪</span>
+                    <span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h18l-2-6H5l-2 6Z"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></svg></span>
                     <span class="menu-text">Catalog</span>
                 </a>
                 <a href="/pages/cart/index.html" class="menu-item">
-                    <span class="menu-icon">🛒</span>
+                    <span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.5 11h10l2-7H6"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg></span>
                     <span class="menu-text">Cart</span>
                 </a>
-                <a href="#" class="menu-item active">
-                    <span class="menu-icon">📋</span>
+                <a href="#" class="menu-item active" aria-current="page">
+                    <span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6"/></svg></span>
                     <span class="menu-text">History</span>
                 </a>
             </div>
             <div class="menu-items-bottom">
                 <a href="#" id="logoutBtn" class="menu-item logout-item">
-                    <span class="menu-icon">🚪</span>
+                    <span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/></svg></span>
                     <span class="menu-text">Logout</span>
                 </a>
             </div>
         </div>
     </nav>
 
-    <main class="history-container">
+    <main class="history-container" aria-busy="false">
         <div class="history-content">
             <h1>Purchase History</h1>
         </div>
     </main>
 
     <script type="module" src="../../modules/history/history.js"></script>
-    <script type="module">
-        import { initializeLogout } from '../../utils/logout.js';
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeLogout();
-        });
-    </script>
 </body>
 </html>

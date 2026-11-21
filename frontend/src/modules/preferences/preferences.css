@@ -13,14 +13,15 @@
 }
 
 .preferences-form {
-    background: white;
+    background: var(--color-surface);
     padding: 40px;
-    border-radius: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     width: 90%;
     max-width: 800px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-modal);
 }
 
 .preferences-form::-webkit-scrollbar {
@@ -39,7 +40,7 @@
 
 .preferences-form h2 {
     font-size: 28px;
-    color: #1a1a1a;
+    color: var(--color-text);
     margin-bottom: 24px;
     text-align: center;
     font-weight: 600;
@@ -49,7 +50,7 @@
     text-align: center;
     margin: 0 auto 40px;
     max-width: 600px;
-    color: #4b5563;
+    color: var(--color-text-muted);
     font-size: 16px;
     line-height: 1.6;
 }
@@ -62,11 +63,12 @@
 }
 
 .preference-item {
-    background: #f8fafc;
+    min-width: 0;
+    background: var(--color-surface-muted);
     padding: 24px;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .preference-item:hover {
@@ -74,11 +76,11 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.preference-item label {
+.preference-title {
     display: block;
     font-size: 18px;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--color-text);
     margin-bottom: 16px;
 }
 
@@ -94,7 +96,10 @@
 }
 
 .rating-label input {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
 }
 
 .rating-label span {
@@ -103,43 +108,48 @@
     justify-content: center;
     width: 100%;
     height: 40px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
     font-weight: 500;
-    transition: all 0.2s;
-    color: #64748b;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    color: var(--color-text-muted);
 }
 
 .rating-label:hover span {
-    border-color: #6366f1;
-    color: #6366f1;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
     background: #eef2ff;
 }
 
 .rating-label input:checked + span {
-    background: #6366f1;
+    background: var(--color-primary);
     color: white;
-    border-color: #6366f1;
+    border-color: var(--color-primary);
+}
+
+.rating-label input:focus-visible + span {
+    outline: 3px solid #818cf8;
+    outline-offset: 2px;
 }
 
 .submit-btn {
-    background: #6366f1;
+    background: var(--color-primary);
     color: white;
     font-size: 18px;
     font-weight: 600;
     padding: 16px 32px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     border: none;
     cursor: pointer;
     width: 100%;
     max-width: 300px;
     margin: 40px auto 0;
     display: block;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .submit-btn:hover {
-    background: #4f46e5;
+    background: var(--color-primary-hover);
     transform: translateY(-2px);
 }
 

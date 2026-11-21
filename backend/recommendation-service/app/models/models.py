@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
@@ -11,7 +11,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
 
 
 class History(Base):
@@ -34,18 +34,6 @@ class UserPreferences(Base):
     preference_name = Column(String(255), nullable=False)
     preference_value = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-
-class Recommendation(Base):
-    __tablename__ = "recommendations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    product_id = Column(Integer, ForeignKey("product.id"))
-    score = Column(Integer, nullable=False)
-
-    user = relationship("User")
-    product = relationship("Product")
 
 
 class Category(Base):
@@ -73,7 +61,7 @@ class Product(Base):
             "description": self.description,
             "price": self.price,
             "quantity": self.quantity,
-            "categories": [category.name for category in self.categories] if self.categories else []
+            "categories": [category.name for category in self.categories] if self.categories else [],
         }
 
 

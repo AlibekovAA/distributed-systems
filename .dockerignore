@@ -1,0 +1,11 @@
+.git
+.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+frontend/node_modules
+frontend/dist
+tests/allure-report
+tests/allure-results
+

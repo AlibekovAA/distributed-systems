@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"main/src/models"
 )
 
@@ -22,7 +23,7 @@ func CreateProduct(db DB, product models.Product) error {
 }
 
 func GetProducts(db DB) ([]models.Product, error) {
-	query := `SELECT * FROM product`
+	query := `SELECT id, name, description, price, quantity FROM product ORDER BY id`
 
 	var products []models.Product
 	err := db.Select(&products, query)
@@ -35,27 +36,17 @@ func GetProducts(db DB) ([]models.Product, error) {
 
 func DeleteProduct(db DB, id int) error {
 	query := `DELETE FROM product WHERE id=$1`
-	_, err := db.Exec(query, id)
-
-	return err
-}
-
-func GetProduct(db DB, id int64) (models.Product, error) {
-	query := `SELECT * FROM product WHERE id=$1`
-
-	var product models.Product
-	err := db.Get(&product, query, id)
+	result, err := db.Exec(query, id)
 	if err != nil {
-		return models.Product{}, err
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
 	}
 
-	return product, err
-}
-
-func UpdateProduct(db DB, product models.Product) error {
-	query := `UPDATE product SET name = :name, description = :description, price = :price, quantity = :quantity WHERE id = :id`
-
-	_, err := db.NamedExec(query, product)
-
-	return err
+	return nil
 }

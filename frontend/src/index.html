@@ -4,48 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Authentication | E-Commerce Platform</title>
-    <link rel="preload" href="styles/common/base.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="styles/common/notifications.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="styles/common/loader.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="modules/auth/auth.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="modules/preferences/preferences.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="styles/common/base.css">
-        <link rel="stylesheet" href="styles/common/notifications.css">
-        <link rel="stylesheet" href="styles/common/loader.css">
-        <link rel="stylesheet" href="modules/auth/auth.css">
-        <link rel="stylesheet" href="modules/preferences/preferences.css">
-    </noscript>
+    <link rel="stylesheet" href="styles/common/base.css">
+    <link rel="stylesheet" href="styles/common/notifications.css">
+    <link rel="stylesheet" href="styles/common/loader.css">
+    <link rel="stylesheet" href="modules/auth/auth.css">
+    <link rel="stylesheet" href="modules/preferences/preferences.css">
 </head>
 <body>
     <div class="container">
         <div class="auth-container">
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="login">Login</button>
-                <button class="tab-btn" data-tab="register">Register</button>
+            <div class="tabs" role="tablist" aria-label="Authentication">
+                <button id="loginTab" class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="loginForm" data-tab="login">Login</button>
+                <button id="registerTab" class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="registerForm" data-tab="register">Register</button>
             </div>
 
-            <form id="loginForm" class="auth-form" novalidate>
+            <form id="loginForm" class="auth-form" role="tabpanel" aria-labelledby="loginTab" novalidate>
                 <div class="form-group">
+                    <label class="sr-only" for="loginEmail">Email</label>
                     <input type="email" id="loginEmail" class="input" placeholder="Email" required autocomplete="email">
                 </div>
                 <div class="form-group">
+                    <label class="sr-only" for="loginPassword">Password</label>
                     <input type="password" id="loginPassword" class="input" placeholder="Password" required autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn">Sign In</button>
             </form>
 
-            <form id="registerForm" class="auth-form hidden" novalidate>
+            <form id="registerForm" class="auth-form hidden" role="tabpanel" aria-labelledby="registerTab" aria-hidden="true" novalidate>
                 <div class="form-group">
+                    <label class="sr-only" for="registerName">Name</label>
                     <input type="text" id="registerName" class="input" placeholder="Name" required autocomplete="name">
                 </div>
                 <div class="form-group">
+                    <label class="sr-only" for="registerEmail">Email</label>
                     <input type="email" id="registerEmail" class="input" placeholder="Email" required autocomplete="email">
                 </div>
                 <div class="form-group">
+                    <label class="sr-only" for="registerPassword">Password</label>
                     <input type="password" id="registerPassword" class="input" placeholder="Password" required autocomplete="new-password">
                 </div>
                 <div class="form-group">
+                    <label class="sr-only" for="confirmPassword">Confirm Password</label>
                     <input type="password" id="confirmPassword" class="input" placeholder="Confirm Password" required autocomplete="new-password">
                 </div>
                 <button type="submit" class="btn">Create Account</button>

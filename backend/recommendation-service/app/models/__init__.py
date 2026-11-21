@@ -1,3 +1,10 @@
-from .models import History, Product, Recommendation, User, UserPreferences
+from .models import Category, History, Product, ProductCategory, User, UserPreferences
 
-__all__ = ['History', 'UserPreferences', 'Recommendation', 'User', 'Product']
+__all__ = [
+    "Category",
+    "History",
+    "Product",
+    "ProductCategory",
+    "User",
+    "UserPreferences",
+]

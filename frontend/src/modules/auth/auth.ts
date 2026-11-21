@@ -40,6 +40,10 @@ const handleLogin = async (form: HTMLFormElement) => {
         return;
     }
 
+    const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    submitButton?.setAttribute('aria-busy', 'true');
+    if (submitButton) submitButton.disabled = true;
+
     try {
         const { access_token, refresh_token } = await LoaderManager.wrap(AuthService.login(values.loginEmail, values.loginPassword));
         localStorage.setItem('access_token', access_token);
@@ -55,6 +59,9 @@ const handleLogin = async (form: HTMLFormElement) => {
         }
     } catch (error) {
         handleError(error);
+    } finally {
+        submitButton?.removeAttribute('aria-busy');
+        if (submitButton) submitButton.disabled = false;
     }
 };
 
@@ -70,6 +77,10 @@ const handleRegister = async (form: HTMLFormElement) => {
         return;
     }
 
+    const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    submitButton?.setAttribute('aria-busy', 'true');
+    if (submitButton) submitButton.disabled = true;
+
     try {
         await LoaderManager.wrap(AuthService.register({
             email: values.registerEmail,
@@ -82,6 +93,9 @@ const handleRegister = async (form: HTMLFormElement) => {
         document.querySelector<HTMLElement>('[data-tab="login"]')?.click();
     } catch (error) {
         handleError(error);
+    } finally {
+        submitButton?.removeAttribute('aria-busy');
+        if (submitButton) submitButton.disabled = false;
     }
 };
 
@@ -102,14 +116,29 @@ export function initializeAuth() {
         });
     });
 
-    document.querySelectorAll('.tab-btn').forEach(button =>
+    const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tab-btn'));
+    tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            document.querySelector('.tab-btn.active')?.classList.remove('active');
+            const activeTab = document.querySelector<HTMLButtonElement>('.tab-btn.active');
+            activeTab?.classList.remove('active');
+            activeTab?.setAttribute('aria-selected', 'false');
             button.classList.add('active');
+            button.setAttribute('aria-selected', 'true');
 
             const tabName = button.getAttribute('data-tab');
             forms.login.classList.toggle('hidden', tabName !== 'login');
             forms.register.classList.toggle('hidden', tabName !== 'register');
-        })
-    );
+            forms.login.setAttribute('aria-hidden', String(tabName !== 'login'));
+            forms.register.setAttribute('aria-hidden', String(tabName !== 'register'));
+        });
+        button.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            event.preventDefault();
+            const currentIndex = tabButtons.indexOf(button);
+            const direction = event.key === 'ArrowRight' ? 1 : -1;
+            const nextButton = tabButtons[(currentIndex + direction + tabButtons.length) % tabButtons.length];
+            nextButton.focus();
+            nextButton.click();
+        });
+    });
 }

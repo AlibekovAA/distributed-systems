@@ -1,8 +1,9 @@
 package application
 
 import (
+	"database/sql"
 	"encoding/json"
-	"log"
+	"errors"
 	database "main/src/db"
 	"main/src/models"
 	"net/http"
@@ -15,51 +16,41 @@ import (
 // @Summary Add an item to the cart
 // @Tags Orders
 // @Produce json
-// @Success 200
+// @Security BearerAuth
+// @Success 201
 // @Router /order/add [post]
 func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 	requestCount.WithLabelValues(r.Method, "/order/add").Inc()
-
 	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/add"))
 	defer timer.ObserveDuration()
 
 	var order models.Order
-
-	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+	if !decodeJSONBody(w, r, &order) {
 		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
-		http.Error(w, "Broken JSON", http.StatusBadRequest)
 		return
 	}
+	if order.ProductID <= 0 {
+		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
+		writeJSONError(w, "product_id must be positive", http.StatusBadRequest)
+		return
+	}
+	order.Email = authenticatedEmail(r)
 
-	product, err := database.GetProduct(app.DB, order.ProductID)
+	err := database.AddProductToOrder(app.DB, order)
 	if err != nil {
 		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
-		http.Error(w, "Failed get product from db", http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, database.ErrProductNotFound):
+			writeJSONError(w, "Product not found", http.StatusNotFound)
+		case errors.Is(err, database.ErrProductOutOfStock):
+			writeJSONError(w, "Product is out of stock", http.StatusConflict)
+		default:
+			writeJSONError(w, "Failed to add product to order", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	if product.Quantity <= 0 {
-		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
-		http.Error(w, "Product is out of stock", http.StatusConflict)
-		return
-	}
-
-	err = database.AddProductToOrder(app.DB, order)
-	if err != nil {
-		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
-		http.Error(w, "Failed to add product to order", http.StatusInternalServerError)
-		return
-	}
-
-	product.Quantity -= 1
-
-	err = database.UpdateProduct(app.DB, product)
-	if err != nil {
-		errorCount.WithLabelValues(r.Method, "/order/add").Inc()
-		http.Error(w, "Failed to update product stock", http.StatusInternalServerError)
-		return
-	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Product added to cart"})
 }
@@ -67,221 +58,134 @@ func (app *Application) addToOrder(w http.ResponseWriter, r *http.Request) {
 // @Summary Get the user's current order
 // @Tags Orders
 // @Produce json
-// @Param email path int true "User email"
+// @Security BearerAuth
+// @Param email path string true "User email"
 // @Success 200
 // @Router /order/{email} [get]
 func (app *Application) getOrder(w http.ResponseWriter, r *http.Request) {
 	requestCount.WithLabelValues(r.Method, "/order/{email}").Inc()
-
 	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}"))
 	defer timer.ObserveDuration()
 
-	email := mux.Vars(r)["email"]
-
-	user, err := database.GetUserByEmail(app.DB, email)
-	if err != nil {
+	email, ok := requireOwnEmail(w, r, mux.Vars(r)["email"])
+	if !ok {
 		errorCount.WithLabelValues(r.Method, "/order/{email}").Inc()
-		http.Error(w, "Failed get id", http.StatusInternalServerError)
 		return
 	}
 
-	orders, err := database.GetOrder(app.DB, user.Email)
-	if err != nil {
+	if _, err := database.GetUserByEmail(app.DB, email); err != nil {
 		errorCount.WithLabelValues(r.Method, "/order/{email}").Inc()
-		http.Error(w, "Failed get order for user", http.StatusInternalServerError)
-		return
-	}
-
-	var products []models.Product
-
-	for _, order := range orders {
-		product, err := database.GetProduct(app.DB, order.ProductID)
-		if err != nil {
-			log.Printf("Failed get product from db %+v", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			writeJSONError(w, "User not found", http.StatusNotFound)
+		} else {
+			writeJSONError(w, "Failed get user", http.StatusInternalServerError)
 		}
-
-		products = append(products, product)
+		return
 	}
 
+	products, err := database.GetOrderProducts(app.DB, email)
+	if err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}").Inc()
+		writeJSONError(w, "Failed get order for user", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(products)
 }
 
 // @Summary Delete an item from the shopping cart
 // @Tags Orders
 // @Produce json
-// @Param email path int true "User email"
+// @Security BearerAuth
+// @Param email path string true "User email"
 // @Param product_id path int true "ID of product"
 // @Success 200
 // @Router /order/{email}/{product_id} [delete]
 func (app *Application) removeFromOrder(w http.ResponseWriter, r *http.Request) {
 	requestCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
-
 	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}/{product_id}"))
 	defer timer.ObserveDuration()
 
-	email := mux.Vars(r)["email"]
+	email, ok := requireOwnEmail(w, r, mux.Vars(r)["email"])
+	if !ok {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
+		return
+	}
 
 	productID, err := strconv.Atoi(mux.Vars(r)["product_id"])
-	if err != nil {
+	if err != nil || productID <= 0 {
 		errorCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
-		http.Error(w, "Failed get product_id", http.StatusInternalServerError)
+		writeJSONError(w, "Invalid product_id", http.StatusBadRequest)
+		return
 	}
 
-	order := models.Order{
-		ProductID: int64(productID),
-		Email:     email,
-	}
-
-	err = database.DeleteProductFromOrder(app.DB, order)
-	if err != nil {
+	order := models.Order{ProductID: int64(productID), Email: email}
+	if err = database.DeleteProductFromOrder(app.DB, order); err != nil {
 		errorCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
-		http.Error(w, "Failed delete product from order", http.StatusInternalServerError)
+		writeJSONError(w, "Failed delete product from order", http.StatusInternalServerError)
 		return
 	}
 
 	updatedOrder, err := database.GetOrder(app.DB, email)
 	if err != nil {
 		errorCount.WithLabelValues(r.Method, "/order/{email}/{product_id}").Inc()
-		http.Error(w, "Failed to fetch updated cart", http.StatusInternalServerError)
+		writeJSONError(w, "Failed to fetch updated cart", http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedOrder)
 }
 
 // @Summary Pay for the order
 // @Tags Orders
 // @Produce json
-// @Param email path int true "User email"
+// @Security BearerAuth
+// @Param email path string true "User email"
 // @Success 200
 // @Router /order/{email}/pay [post]
 func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 	requestCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-
 	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}/pay"))
 	defer timer.ObserveDuration()
 
-	email := mux.Vars(r)["email"]
-
-	user, err := database.GetUserByEmail(app.DB, email)
-	if err != nil {
+	email, ok := requireOwnEmail(w, r, mux.Vars(r)["email"])
+	if !ok {
 		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-		http.Error(w, "Failed get id", http.StatusInternalServerError)
 		return
 	}
 
 	var order models.Order
-
-	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+	if !decodeJSONBody(w, r, &order) {
 		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-		http.Error(w, "Broken JSON", http.StatusBadRequest)
 		return
 	}
 
-	order.Email = email
-
-	exists, err := database.OrderExists(app.DB, order)
+	result, err := database.Checkout(app.DB, email)
 	if err != nil {
 		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-		http.Error(w, "Failed to check order", http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, database.ErrInsufficientFunds):
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusPaymentRequired)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error":           "insufficient_funds",
+				"message":         "Insufficient balance to complete the purchase",
+				"required_amount": strconv.Itoa(result.RequiredAmount),
+				"current_balance": strconv.Itoa(result.CurrentBalance),
+			})
+		case errors.Is(err, database.ErrOrderNotFound):
+			writeJSONError(w, "Order not found", http.StatusNotFound)
+		case errors.Is(err, sql.ErrNoRows):
+			writeJSONError(w, "User not found", http.StatusNotFound)
+		default:
+			writeJSONError(w, "Failed to pay for order", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	if !exists {
-		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-		http.Error(w, "Order not found", http.StatusNotFound)
-		return
-	}
-
-	orders, err := database.GetOrder(app.DB, order.Email)
-	if err != nil {
-		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-		http.Error(w, "Failed to calculate total price", http.StatusInternalServerError)
-		return
-	}
-
-	totalPrice := 0
-
-	var currentOrderNumber int64
-
-	history, err := database.GetLastHistory(app.DB, user.ID)
-	if err != nil {
-		currentOrderNumber = 1
-	} else {
-		currentOrderNumber = history.OrderNumber + 1
-	}
-
-	historyRecords := []models.History{}
-
-	for _, order := range orders {
-		product, err := database.GetProduct(app.DB, order.ProductID)
-		if err != nil {
-			log.Printf("Failed to get product from order %+v", err)
-			continue
-		}
-
-		historyRecord := models.History{
-			OrderNumber: currentOrderNumber,
-			UserID:      user.ID,
-			ProductID:   order.ProductID,
-		}
-
-		historyRecords = append(historyRecords, historyRecord)
-
-		totalPrice += int(product.Price)
-
-		product.Quantity -= 1
-	}
-
-	if user.Balance < totalPrice {
-		w.WriteHeader(http.StatusPaymentRequired)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error":           "insufficient_funds",
-			"message":         "Insufficient balance to complete the purchase",
-			"required_amount": strconv.Itoa(totalPrice),
-			"current_balance": strconv.Itoa(user.Balance),
-		})
-		return
-	}
-
-	user.Balance -= totalPrice
-
-	err = database.UpdateUser(app.DB, user)
-	if err != nil {
-		errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-		http.Error(w, "Failed update user's balance", http.StatusInternalServerError)
-		return
-	}
-
-	for _, record := range historyRecords {
-		err = database.CreateHistoryRecord(app.DB, record)
-		if err != nil {
-			errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-			http.Error(w, "Failed create history record", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	for _, order := range orders {
-		product, err := database.GetProduct(app.DB, order.ProductID)
-		if err != nil {
-			log.Printf("Failed to get product from order %+v", err)
-			continue
-		}
-
-		if product.Quantity < 3 {
-			product.Quantity += 10
-
-			err = database.UpdateProduct(app.DB, product)
-			if err != nil {
-				errorCount.WithLabelValues(r.Method, "/order/{email}/pay").Inc()
-				http.Error(w, "Failed to update product stock", http.StatusInternalServerError)
-				return
-			}
-		}
-
-	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Order paid successfully"})
 }
@@ -289,24 +193,28 @@ func (app *Application) payForOrder(w http.ResponseWriter, r *http.Request) {
 // @Summary Clear shopping cart
 // @Tags Orders
 // @Produce json
-// @Param email path int true "User email"
+// @Security BearerAuth
+// @Param email path string true "User email"
 // @Success 200
 // @Router /order/{email}/clear [post]
 func (app *Application) clearCart(w http.ResponseWriter, r *http.Request) {
 	requestCount.WithLabelValues(r.Method, "/order/{email}/clear").Inc()
-
 	timer := prometheus.NewTimer(requestDuration.WithLabelValues(r.Method, "/order/{email}/clear"))
 	defer timer.ObserveDuration()
 
-	email := mux.Vars(r)["email"]
-
-	err := database.ClearUserCart(app.DB, email)
-	if err != nil {
+	email, ok := requireOwnEmail(w, r, mux.Vars(r)["email"])
+	if !ok {
 		errorCount.WithLabelValues(r.Method, "/order/{email}/clear").Inc()
-		http.Error(w, "Failed to clear cart", http.StatusInternalServerError)
 		return
 	}
 
+	if err := database.ClearUserCart(app.DB, email); err != nil {
+		errorCount.WithLabelValues(r.Method, "/order/{email}/clear").Inc()
+		writeJSONError(w, "Failed to clear cart", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Cart cleared successfully"})
 }

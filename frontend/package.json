@@ -4,7 +4,7 @@
   "description": "Frontend for e-commerce website",
   "scripts": {
     "build": "tsc && npm run copy-files",
-    "copy-files": "bash -c 'cp src/favicon.ico src/index.html dist/ && cp -r src/{styles,modules,pages,services,utils} dist/'"
+    "copy-files": "node scripts/copy-static.mjs"
   },
   "keywords": [],
   "author": "",

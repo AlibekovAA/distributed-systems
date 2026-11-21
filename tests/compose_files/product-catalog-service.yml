@@ -8,7 +8,7 @@ services:
       ADDR: ${ADDR}
       RABBITMQ_URL: ${RABBITMQ_URL}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/products"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/metrics"]
       interval: 10s
       timeout: 5s
       retries: 5

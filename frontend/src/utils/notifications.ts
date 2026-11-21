@@ -34,12 +34,16 @@ class NotificationManager {
         notification.setAttribute('role', 'alert');
         notification.setAttribute('aria-live', 'assertive');
 
-        notification.innerHTML = `
-            <div class="notification-content">
-                <span class="notification-icon">${ICONS[type]}</span>
-                <span class="notification-message">${message}</span>
-            </div>
-        `;
+        const content = document.createElement('div');
+        content.className = 'notification-content';
+        const icon = document.createElement('span');
+        icon.className = 'notification-icon';
+        icon.textContent = ICONS[type];
+        const messageElement = document.createElement('span');
+        messageElement.className = 'notification-message';
+        messageElement.textContent = message;
+        content.append(icon, messageElement);
+        notification.appendChild(content);
 
         container.appendChild(notification);
         requestAnimationFrame(() => notification.classList.add('show'));

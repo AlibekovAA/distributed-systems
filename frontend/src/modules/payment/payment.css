@@ -12,139 +12,131 @@
     padding: 20px;
 }
 
-.payment-form {
-    background: white;
+.payment-modal .payment-form {
+    background: var(--color-surface);
     padding: 40px;
-    border-radius: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-modal);
 }
 
-.payment-form h2 {
+.payment-modal .payment-form h2 {
     text-align: center;
     margin-bottom: 30px;
-    color: #1a1a1a;
+    color: var(--color-text);
     font-size: 24px;
 }
 
-.payment-total {
+.payment-modal .payment-total {
     text-align: center;
     font-size: 24px;
     font-weight: 600;
-    color: #4f46e5;
+    color: var(--color-primary);
     margin-bottom: 30px;
 }
 
-.card-form {
+.payment-modal .card-form {
     margin-bottom: 30px;
 }
 
-.form-group {
+.payment-modal .form-group {
     margin-bottom: 20px;
 }
 
-.form-group label {
+.payment-modal .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #4b5563;
+    color: var(--color-text-muted);
     font-size: 14px;
 }
 
-.form-row {
+.payment-modal .form-row {
     display: flex;
     gap: 20px;
 }
 
-.form-row .form-group {
+.payment-modal .form-row .form-group {
     flex: 1;
 }
 
-.card-input {
+.payment-modal .card-input {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
     font-size: 16px;
-    transition: all 0.3s ease;
+    color: var(--color-text);
+    background: var(--color-surface);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card-input:focus {
-    border-color: #4f46e5;
-    outline: none;
+.payment-modal .card-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
-.add-balance-section {
+.payment-modal .add-balance-section {
     text-align: center;
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--color-border);
 }
 
-.add-balance-btn {
-    background: #10B981;
+.payment-modal .add-balance-btn {
+    background: var(--color-success);
     color: white;
     padding: 10px 20px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-.add-balance-btn:hover {
-    background: #059669;
+.payment-modal .add-balance-btn:hover {
+    background: #166534;
 }
 
-.payment-actions {
+.payment-modal .payment-actions {
     display: flex;
     gap: 15px;
     margin-top: 30px;
 }
 
-.payment-actions button {
+.payment-modal .payment-actions button {
     flex: 1;
     padding: 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
-.cancel-btn {
-    background: #f3f4f6;
+.payment-modal .cancel-btn {
+    background: var(--color-surface-muted);
     border: none;
-    color: #4b5563;
+    color: var(--color-text-muted);
 }
 
-.cancel-btn:hover {
-    background: #e5e7eb;
+.payment-modal .cancel-btn:hover {
+    background: var(--color-border);
 }
 
-.pay-btn {
-    background: #4f46e5;
+.payment-modal .pay-btn {
+    background: var(--color-primary);
     border: none;
     color: white;
 }
 
-.pay-btn:hover {
-    background: #4338ca;
+.payment-modal .pay-btn:hover {
+    background: var(--color-primary-hover);
 }
 
-.cart-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 10px;
-}
-
-.cart-item-name {
-    color: #4b5563;
-}
-
-.cart-item-price {
-    font-weight: 600;
-    color: #4f46e5;
+.payment-modal .pay-btn:active,
+.payment-modal .cancel-btn:active,
+.payment-modal .add-balance-btn:active {
+    transform: translateY(1px);
 }

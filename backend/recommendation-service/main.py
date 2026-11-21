@@ -12,19 +12,15 @@ def handle_sigterm(*args) -> None:
 
 
 def process_message(message: dict, properties) -> dict:
-    try:
-        user_id = message.get('user_id') if isinstance(message, dict) else int(message)
-        logging.info(f"Processing user {user_id}")
+    raw_user_id = message.get("user_id") if isinstance(message, dict) else message
+    if raw_user_id is None:
+        raise ValueError("user_id is required")
+    user_id = int(raw_user_id)
+    logging.info("Processing recommendation request: request_id=%s", properties.correlation_id)
 
-        with get_db() as db:
-            update_user_preferences(db, user_id)
-            return {
-                'user_id': user_id,
-                'recommendations': get_recommendations_for_user(db, user_id)
-            }
-    except Exception as e:
-        logging.error(f"Processing failed: {e}")
-        return None
+    with get_db() as db:
+        update_user_preferences(db, user_id)
+        return {"user_id": user_id, "recommendations": get_recommendations_for_user(db, user_id)}
 
 
 if __name__ == "__main__":

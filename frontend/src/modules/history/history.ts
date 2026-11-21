@@ -2,6 +2,7 @@ import { CatalogService } from '../../services/catalogService.js';
 import NotificationManager from '../../utils/notifications.js';
 import { authGuard } from '../../utils/authGuard.js';
 import LoaderManager from '../../utils/loader.js';
+import { initializeLogout } from '../../utils/logout.js';
 
 interface GroupedItem {
     name: string;
@@ -23,7 +24,7 @@ interface Order {
     total_price: number;
 }
 
-function formatGroupedItems(order: Order): string {
+function createGroupedItems(order: Order): DocumentFragment {
     const groupedItems = order.items.reduce((acc: Record<string, GroupedItem>, item: OrderItem) => {
         const key = `${item.name}-${item.price}`;
         if (!acc[key]) {
@@ -40,43 +41,90 @@ function formatGroupedItems(order: Order): string {
         return acc;
     }, {});
 
-    return Object.values(groupedItems)
-        .map(item => `
-            <div class="order-item">
-                <div class="item-info">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-quantity">Quantity: ${item.quantity}</div>
-                    <div class="cart-item-price">${item.total} ₽</div>
-                </div>
-            </div>
-        `).join('');
+    const fragment = document.createDocumentFragment();
+    Object.values(groupedItems).forEach((item) => {
+        const orderItem = document.createElement('div');
+        orderItem.className = 'order-item';
+
+        const itemInfo = document.createElement('div');
+        itemInfo.className = 'item-info';
+
+        const itemName = document.createElement('div');
+        itemName.className = 'cart-item-name';
+        itemName.textContent = item.name;
+
+        const itemQuantity = document.createElement('div');
+        itemQuantity.className = 'cart-item-quantity';
+        itemQuantity.textContent = `Quantity: ${item.quantity}`;
+
+        const itemPrice = document.createElement('div');
+        itemPrice.className = 'cart-item-price';
+        itemPrice.textContent = `${item.total} ₽`;
+
+        itemInfo.append(itemName, itemQuantity, itemPrice);
+        orderItem.appendChild(itemInfo);
+        fragment.appendChild(orderItem);
+    });
+    return fragment;
 }
 
-function generateOrderHTML(order: any): string {
-    const itemsHTML = formatGroupedItems(order);
-    return `
-        <div class="order-group">
-            <div class="order-header">
-                <h3>Order #${order.order_number}</h3>
-                <span class="order-total">Total: ${order.total_price} ₽</span>
-            </div>
-            <div class="order-items">
-                ${itemsHTML}
-            </div>
-        </div>
-    `;
+function createOrderElement(order: Order): HTMLElement {
+    const orderGroup = document.createElement('div');
+    orderGroup.className = 'order-group';
+
+    const orderHeader = document.createElement('div');
+    orderHeader.className = 'order-header';
+
+    const orderTitle = document.createElement('h3');
+    orderTitle.textContent = `Order #${order.order_number}`;
+
+    const orderTotal = document.createElement('span');
+    orderTotal.className = 'order-total';
+    orderTotal.textContent = `Total: ${order.total_price} ₽`;
+
+    const orderItems = document.createElement('div');
+    orderItems.className = 'order-items';
+    orderItems.appendChild(createGroupedItems(order));
+
+    orderHeader.append(orderTitle, orderTotal);
+    orderGroup.append(orderHeader, orderItems);
+    return orderGroup;
 }
 
-function generateEmptyHistoryHTML(): string {
-    return `
-        <h1>Purchase History</h1>
-        <div class="empty-history">
-            <div class="empty-history-icon">📋</div>
-            <h2>History is empty</h2>
-            <p>You have not made any purchases yet</p>
-            <a href="/pages/catalog/index.html" class="btn go-to-catalog-btn">Go to catalog</a>
-        </div>
-    `;
+function createHistoryState(type: 'empty' | 'error'): HTMLElement {
+    const panel = document.createElement('div');
+    panel.className = `${type === 'empty' ? 'empty-history ' : ''}state-panel`;
+    panel.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
+    const icon = document.createElement('div');
+    icon.className = `${type === 'empty' ? 'empty-history-icon ' : ''}state-icon`;
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = type === 'empty' ? '□' : '!';
+
+    const title = document.createElement('h2');
+    title.textContent = type === 'empty' ? 'History is empty' : "Couldn't load purchase history";
+
+    const description = document.createElement('p');
+    description.textContent = type === 'empty'
+        ? 'You have not made any purchases yet'
+        : 'Check your connection and try again.';
+
+    panel.append(icon, title, description);
+    if (type === 'empty') {
+        const link = document.createElement('a');
+        link.href = '/pages/catalog/index.html';
+        link.className = 'btn go-to-catalog-btn';
+        link.textContent = 'Go to Catalog';
+        panel.appendChild(link);
+    } else {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn retry-btn';
+        button.textContent = 'Try Again';
+        button.addEventListener('click', initializeHistory, { once: true });
+        panel.appendChild(button);
+    }
+    return panel;
 }
 
 async function initializeHistory() {
@@ -84,31 +132,41 @@ async function initializeHistory() {
 
     const historyContent = document.querySelector('.history-content');
     if (!historyContent) return;
+    const historyContainer = document.querySelector('.history-container');
+    historyContainer?.setAttribute('aria-busy', 'true');
 
     try {
         const orders = await LoaderManager.wrap(CatalogService.getOrderHistory(), true);
 
         if (!orders || orders.length === 0) {
-            historyContent.innerHTML = generateEmptyHistoryHTML();
+            const title = document.createElement('h1');
+            title.textContent = 'Purchase History';
+            historyContent.replaceChildren(title, createHistoryState('empty'));
             return;
         }
 
-        const ordersHTML = orders
+        const title = document.createElement('h1');
+        title.textContent = 'Purchase History';
+
+        const ordersContainer = document.createElement('div');
+        ordersContainer.className = 'orders-container';
+        orders
             .sort((a, b) => b.order_number - a.order_number)
-            .map(generateOrderHTML)
-            .join('');
+            .forEach((order) => ordersContainer.appendChild(createOrderElement(order)));
 
-        historyContent.innerHTML = `
-            <h1>Purchase History</h1>
-            <div class="orders-container">
-                ${ordersHTML}
-            </div>
-        `;
+        historyContent.replaceChildren(title, ordersContainer);
 
-    } catch (error) {
-        console.error('Error loading history:', error);
+    } catch {
         NotificationManager.error("Couldn't load purchase history");
+        const title = document.createElement('h1');
+        title.textContent = 'Purchase History';
+        historyContent.replaceChildren(title, createHistoryState('error'));
+    } finally {
+        historyContainer?.setAttribute('aria-busy', 'false');
     }
 }
 
-document.addEventListener('DOMContentLoaded', initializeHistory);
+document.addEventListener('DOMContentLoaded', () => {
+    initializeLogout();
+    initializeHistory();
+});

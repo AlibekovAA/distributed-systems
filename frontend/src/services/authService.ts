@@ -31,7 +31,7 @@ interface Preference {
 }
 
 export class AuthService {
-    private static readonly BASE_URL = '/api';
+    private static readonly BASE_URL = '/api/auth';
     private static readonly TOKEN_KEY = 'access_token';
     private static readonly HEADERS_JSON = { 'Content-Type': 'application/json' };
 
@@ -59,7 +59,6 @@ export class AuthService {
         });
         const data = await response.json();
         if (!response.ok) {
-            console.error('Request error:', data);
             throw new Error(data.detail || 'Request failed');
         }
         return data;
@@ -87,19 +86,6 @@ export class AuthService {
 
     static getProfile(): Promise<any> {
         return this.request('/profile');
-    }
-
-    static async refreshToken(refresh_token: string): Promise<AuthResponse> {
-        const data = await this.request<AuthResponse>('/token/refresh', {
-            method: 'POST',
-            body: JSON.stringify({ refresh_token }),
-        });
-        this.token = data.access_token;
-        return data;
-    }
-
-    static async logout(): Promise<void> {
-        this.token = null;
     }
 
     static async changePassword(oldPassword: string, newPassword: string): Promise<void> {

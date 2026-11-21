@@ -2,44 +2,44 @@ package database
 
 import "main/src/models"
 
-func CreateHistoryRecord(db DB, history models.History) error {
-	tx, err := db.Beginx()
-	if err != nil {
-		return err
+func GetHistoryResponses(db DB, userID int64) ([]models.HistoryResponse, error) {
+	var rows []struct {
+		OrderNumber int64  `db:"order_number"`
+		ID          int64  `db:"id"`
+		Name        string `db:"name"`
+		Description string `db:"description"`
+		Price       int64  `db:"price"`
+		Quantity    int    `db:"quantity"`
 	}
-
-	query := `INSERT INTO "history" (user_id, product_id, order_number) VALUES ($1, $2, $3) RETURNING id`
-
-	err = tx.QueryRowx(query, history.UserID, history.ProductID, history.OrderNumber).Scan(&history.ID)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func GetLastHistory(db DB, userID int64) (models.History, error) {
-	query := `SELECT * FROM "history" WHERE user_id = $1 ORDER BY order_number DESC LIMIT 1`
-
-	var history models.History
-
-	err := db.Get(&history, query, userID)
-	if err != nil {
-		return models.History{}, err
-	}
-
-	return history, nil
-}
-
-func GetHistoryOrders(db DB, userID int64) ([]models.History, error) {
-	var history []models.History
-	query := `SELECT * FROM "history" WHERE user_id = $1`
-
-	err := db.Select(&history, query, userID)
+	err := db.Select(&rows, `
+		SELECT h.order_number, p.id, p.name, p.description, p.price, p.quantity
+		FROM history h
+		JOIN product p ON p.id = h.product_id
+		WHERE h.user_id = $1
+		ORDER BY h.order_number, h.id`, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return history, nil
+	responses := make([]models.HistoryResponse, 0)
+	for _, row := range rows {
+		if len(responses) == 0 || responses[len(responses)-1].OrderNumber != row.OrderNumber {
+			responses = append(responses, models.HistoryResponse{
+				OrderNumber: row.OrderNumber,
+				Items:       []models.Product{},
+			})
+		}
+
+		response := &responses[len(responses)-1]
+		response.Items = append(response.Items, models.Product{
+			ID:          row.ID,
+			Name:        row.Name,
+			Description: row.Description,
+			Price:       row.Price,
+			Quantity:    row.Quantity,
+		})
+		response.TotalPrice += int(row.Price)
+	}
+
+	return responses, nil
 }

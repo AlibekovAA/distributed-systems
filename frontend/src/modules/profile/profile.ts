@@ -14,7 +14,9 @@ const handleError = (error: unknown, logout = false) => {
 };
 
 export async function initializeProfile() {
-    if (!authGuard()) return;
+    if (!await authGuard()) return;
+    const profileContainer = document.querySelector('.profile-container');
+    profileContainer?.setAttribute('aria-busy', 'true');
 
     try {
         const profile = await LoaderManager.wrap(AuthService.getProfile());
@@ -27,6 +29,8 @@ export async function initializeProfile() {
         if (nameElement) nameElement.textContent = profile.name;
     } catch (error) {
         handleError(error, true);
+    } finally {
+        profileContainer?.setAttribute('aria-busy', 'false');
     }
 }
 
@@ -69,12 +73,18 @@ async function initializeChangePassword() {
         const passwords = validatePasswordFields(form);
         if (!passwords) return;
 
+        const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        submitButton?.setAttribute('aria-busy', 'true');
         try {
             await LoaderManager.wrap(AuthService.changePassword(passwords.oldPassword, passwords.newPassword));
             NotificationManager.success('Password changed successfully');
             form.reset();
         } catch (error) {
             handleError(error);
+        } finally {
+            if (submitButton) submitButton.disabled = false;
+            submitButton?.removeAttribute('aria-busy');
         }
     });
 }
