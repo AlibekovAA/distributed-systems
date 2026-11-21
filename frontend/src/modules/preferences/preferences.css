@@ -65,7 +65,7 @@
 }
 
 .preference-item:hover {
-    border-color: #b7d88a;
+    border-color: #9ed6e3;
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(24, 24, 27, 0.06);
 }

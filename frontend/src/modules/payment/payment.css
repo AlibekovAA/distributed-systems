@@ -75,7 +75,7 @@
 
 .payment-modal .card-input:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.2);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.18);
 }
 
 .payment-modal .add-balance-section {
@@ -86,8 +86,8 @@
 }
 
 .payment-modal .add-balance-btn {
-    background: var(--color-success);
-    color: white;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
     padding: 10px 20px;
     border: none;
     border-radius: var(--radius-sm);
@@ -97,7 +97,7 @@
 }
 
 .payment-modal .add-balance-btn:hover {
-    background: #166534;
+    background: var(--color-primary-hover);
 }
 
 .payment-modal .payment-actions {
