@@ -15,9 +15,11 @@ def _parse_message(body: bytes | str) -> dict[str, Any]:
         decoded = json.loads(message)
     except json.JSONDecodeError:
         return {"user_id": int(message)}
-    if not isinstance(decoded, dict):
-        raise ValueError("RabbitMQ message must be a JSON object")
-    return decoded
+    if isinstance(decoded, dict):
+        return decoded
+    if isinstance(decoded, (int, str)) and not isinstance(decoded, bool):
+        return {"user_id": int(decoded)}
+    raise ValueError("RabbitMQ message must contain a JSON object or user ID")
 
 
 class RabbitMQConnection:

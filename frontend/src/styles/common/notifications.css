@@ -1,22 +1,27 @@
 .notification-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
+    top: 16px;
+    right: 16px;
+    z-index: 4000;
+    display: flex;
+    width: min(380px, calc(100vw - 32px));
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
 }
 
 .notification {
-    padding: 16px;
-    margin-bottom: 10px;
-    border-radius: var(--radius-sm);
-    width: 300px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    width: 100%;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
     opacity: 0;
     visibility: hidden;
     transform: translateX(20px);
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    pointer-events: auto;
 }
 
 .notification.show {
@@ -35,22 +40,26 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     font-size: 14px;
+    font-weight: 700;
+    flex: 0 0 auto;
 }
 
 .notification-message {
     font-size: 14px;
     color: var(--color-text);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
 .notification-success {
     border-left: 4px solid var(--color-success);
 }
 .notification-success .notification-icon {
-    background: #D1FAE5;
+    background: #dcfce7;
     color: var(--color-success);
 }
 
@@ -58,7 +67,7 @@
     border-left: 4px solid var(--color-danger);
 }
 .notification-error .notification-icon {
-    background: #FEE2E2;
+    background: #fee2e2;
     color: var(--color-danger);
 }
 
@@ -66,14 +75,22 @@
     border-left: 4px solid var(--color-warning);
 }
 .notification-warning .notification-icon {
-    background: #FEF3C7;
+    background: #fef3c7;
     color: var(--color-warning);
 }
 
 .notification-info {
-    border-left: 4px solid #3B82F6;
+    border-left: 4px solid var(--color-primary);
 }
 .notification-info .notification-icon {
-    background: #DBEAFE;
-    color: #3B82F6;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+@media (max-width: 480px) {
+    .notification-container {
+        top: 8px;
+        right: 8px;
+        width: calc(100vw - 16px);
+    }
 }

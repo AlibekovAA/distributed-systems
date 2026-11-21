@@ -12,7 +12,7 @@ import (
 
 const (
 	requestQueue = "recommendations"
-	timeout      = 30 * time.Second
+	timeout      = 5 * time.Second
 )
 
 type RabbitMQ struct {
@@ -62,6 +62,12 @@ func (r *RabbitMQ) sendRequest(userID string, requestID string) (string, string,
 		correlationID = userID + "_" + strconv.FormatInt(time.Now().UnixNano(), 10)
 	}
 	log.Printf("Sending recommendation request: request_id=%s", correlationID)
+	requestBody, err := json.Marshal(map[string]string{"user_id": userID})
+	if err != nil {
+		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
+		r.channel.QueueDelete(tempQueue.Name, false, false, false)
+		return "", "", err
+	}
 
 	err = r.channel.Publish(
 		"",
@@ -70,7 +76,7 @@ func (r *RabbitMQ) sendRequest(userID string, requestID string) (string, string,
 		false,
 		amqp.Publishing{
 			ContentType:   "application/json",
-			Body:          []byte(userID),
+			Body:          requestBody,
 			MessageId:     userID,
 			CorrelationId: correlationID,
 			ReplyTo:       tempQueue.Name,

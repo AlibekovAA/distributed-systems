@@ -4,11 +4,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(246, 247, 251, 0.86);
+    background: rgba(244, 246, 248, 0.82);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s;

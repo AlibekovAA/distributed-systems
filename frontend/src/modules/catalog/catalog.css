@@ -32,7 +32,8 @@
 
 .product-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    border-color: #cbd5e1;
+    box-shadow: var(--shadow-card-hover);
 }
 
 .product-info {
