@@ -4,6 +4,7 @@ import NotificationManager from '../../utils/notifications.js';
 import { authGuard } from '../../utils/authGuard.js';
 import LoaderManager from '../../utils/loader.js';
 import { initializeLogout } from '../../utils/logout.js';
+import { createEmptyStateIcon } from '../../utils/stateIcon.js';
 
 function createProductCard({ id, name, description, price, quantity }: Product): HTMLElement {
     const productCard = document.createElement('article');
@@ -90,10 +91,12 @@ function createStatePanel(type: 'empty' | 'error', retry?: () => void): HTMLElem
     panel.className = 'state-panel';
     panel.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
-    const icon = document.createElement('div');
-    icon.className = 'state-icon';
-    icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = type === 'empty' ? '□' : '!';
+    const icon = type === 'empty' ? createEmptyStateIcon() : document.createElement('div');
+    if (type === 'error') {
+        icon.className = 'state-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '!';
+    }
 
     const title = document.createElement('h2');
     title.textContent = type === 'empty' ? 'Catalog is empty' : "Couldn't load product catalog";

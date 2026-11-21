@@ -4,7 +4,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 23, 42, 0.62);
+    background: rgba(24, 24, 27, 0.66);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -75,7 +75,7 @@
 
 .payment-modal .card-input:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.2);
 }
 
 .payment-modal .add-balance-section {
@@ -129,7 +129,7 @@
 .payment-modal .pay-btn {
     background: var(--color-primary);
     border: none;
-    color: white;
+    color: var(--color-on-primary);
 }
 
 .payment-modal .pay-btn:hover {

@@ -32,7 +32,7 @@
 
 .product-card:hover {
     transform: translateY(-4px);
-    border-color: #cbd5e1;
+    border-color: #c7d3b6;
     box-shadow: var(--shadow-card-hover);
 }
 
@@ -90,7 +90,7 @@
     padding: 10px;
     margin-top: auto;
     background: var(--color-primary);
-    color: white;
+    color: var(--color-on-primary);
     border: none;
     border-radius: var(--radius-sm);
     cursor: pointer;

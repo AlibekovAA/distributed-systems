@@ -3,6 +3,7 @@ import NotificationManager from '../../utils/notifications.js';
 import { authGuard } from '../../utils/authGuard.js';
 import LoaderManager from '../../utils/loader.js';
 import { initializeLogout } from '../../utils/logout.js';
+import { createEmptyStateIcon } from '../../utils/stateIcon.js';
 
 interface GroupedItem {
     name: string;
@@ -96,10 +97,12 @@ function createHistoryState(type: 'empty' | 'error'): HTMLElement {
     panel.className = 'state-panel';
     panel.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
-    const icon = document.createElement('div');
-    icon.className = 'state-icon';
-    icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = type === 'empty' ? '□' : '!';
+    const icon = type === 'empty' ? createEmptyStateIcon() : document.createElement('div');
+    if (type === 'error') {
+        icon.className = 'state-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '!';
+    }
 
     const title = document.createElement('h2');
     title.textContent = type === 'empty' ? 'History is empty' : "Couldn't load purchase history";

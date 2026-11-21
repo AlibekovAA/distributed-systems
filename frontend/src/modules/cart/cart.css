@@ -99,7 +99,7 @@
 .cart-container .pay-for-order-btn {
     width: 100%;
     background-color: var(--color-primary);
-    color: white;
+    color: var(--color-on-primary);
     font-size: 18px;
     font-weight: 600;
     padding: 12px;

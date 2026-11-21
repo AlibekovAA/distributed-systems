@@ -5,6 +5,7 @@ import { authGuard } from '../../utils/authGuard.js';
 import LoaderManager from '../../utils/loader.js';
 import { showPaymentModal } from '../payment/payment.js';
 import { initializeLogout } from '../../utils/logout.js';
+import { createEmptyStateIcon } from '../../utils/stateIcon.js';
 
 interface GroupedProduct extends Product {
     quantity: number;
@@ -31,10 +32,7 @@ function createEmptyState(): HTMLElement {
     panel.className = 'state-panel';
     panel.setAttribute('role', 'status');
 
-    const icon = document.createElement('div');
-    icon.className = 'state-icon';
-    icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = '□';
+    const icon = createEmptyStateIcon();
 
     const title = document.createElement('h2');
     title.textContent = 'Your Cart is Empty';

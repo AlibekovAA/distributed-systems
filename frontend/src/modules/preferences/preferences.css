@@ -4,7 +4,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 23, 42, 0.64);
+    background: rgba(24, 24, 27, 0.68);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -65,9 +65,9 @@
 }
 
 .preference-item:hover {
-    border-color: #bfdbfe;
+    border-color: #b7d88a;
     transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 8px 20px rgba(24, 24, 27, 0.06);
 }
 
 .preference-title {
@@ -117,18 +117,18 @@
 
 .rating-label input:checked + span {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-on-primary);
     border-color: var(--color-primary);
 }
 
 .rating-label input:focus-visible + span {
-    outline: 3px solid #60a5fa;
+    outline: 3px solid var(--color-primary);
     outline-offset: 2px;
 }
 
 .submit-btn {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-on-primary);
     font-size: 18px;
     font-weight: 600;
     min-height: 46px;
