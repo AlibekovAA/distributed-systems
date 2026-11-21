@@ -14,7 +14,7 @@ const handleError = (error: unknown, logout = false) => {
 };
 
 export async function initializeProfile() {
-    if (!await authGuard()) return;
+    if (!authGuard()) return;
     const profileContainer = document.querySelector('.profile-container');
     profileContainer?.setAttribute('aria-busy', 'true');
 

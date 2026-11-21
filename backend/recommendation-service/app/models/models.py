@@ -22,9 +22,6 @@ class History(Base):
     product_id = Column(Integer, ForeignKey("product.id"))
     order_number = Column(Integer)
 
-    user = relationship("User")
-    product = relationship("Product")
-
 
 class UserPreferences(Base):
     __tablename__ = "user_preferences"

@@ -1,4 +1,3 @@
-from math import sqrt
 from typing import Any, Dict, List, Tuple, cast
 
 from sqlalchemy import func, select
@@ -76,25 +75,15 @@ class RecommendationEngine:
             .group_by(History.user_id)
             .subquery()
         )
-        aggregated_users = (
-            self.db.query(
-                overlap_counts.c.user_id,
-                overlap_counts.c.overlap_count,
-                user_product_counts.c.product_count,
-            )
+        similarity = overlap_counts.c.overlap_count / func.sqrt(target_count * user_product_counts.c.product_count)
+        similar_users = (
+            self.db.query(overlap_counts.c.user_id)
             .join(user_product_counts, user_product_counts.c.user_id == overlap_counts.c.user_id)
+            .order_by(similarity.desc(), overlap_counts.c.user_id.desc())
+            .limit(n_similar)
             .all()
         )
-
-        similarities = [
-            (
-                user_id,
-                overlap_count / sqrt(target_count * product_count),
-            )
-            for user_id, overlap_count, product_count in aggregated_users
-        ]
-        similarities.sort(key=lambda item: (item[1], item[0]), reverse=True)
-        return [user_id for user_id, _ in similarities[:n_similar]]
+        return [cast(int, user_id) for (user_id,) in similar_users]
 
     def get_recommendations(self) -> List[Tuple[Product, float]]:
         products = (

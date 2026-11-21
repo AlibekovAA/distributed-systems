@@ -48,8 +48,12 @@ export class CatalogService {
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 ...options.headers,
             },
-            mode: 'cors',
         });
+        if (response.status === 401) {
+            localStorage.removeItem(this.TOKEN_KEY);
+            localStorage.removeItem('refresh_token');
+            window.location.assign('/');
+        }
         return this.handleResponse<T>(response);
     }
 
@@ -77,16 +81,12 @@ export class CatalogService {
     static addToCart(productId: number): Promise<void> {
         return this.request('/order/add', {
             method: 'POST',
-            body: JSON.stringify({ product_id: productId, email: this.getAuthEmail() }),
+            body: JSON.stringify({ product_id: productId }),
         });
     }
 
     static removeFromCart(productId: number): Promise<void> {
         return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/${productId}`, { method: 'DELETE' });
-    }
-
-    static clearCart(): Promise<void> {
-        return this.request(`/order/${encodeURIComponent(this.getAuthEmail())}/clear`, { method: 'POST' });
     }
 
     static payForOrder(): Promise<void> {

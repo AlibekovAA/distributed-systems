@@ -176,6 +176,19 @@ button[aria-disabled="true"] {
     min-width: 140px;
 }
 
+.go-to-catalog-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.go-to-catalog-btn:hover,
+.go-to-catalog-btn:active {
+    color: #ffffff;
+    text-decoration: none;
+}
+
 [aria-busy="true"] {
     cursor: progress;
 }

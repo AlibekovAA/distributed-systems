@@ -16,30 +16,6 @@
     color: var(--color-text);
 }
 
-.empty-history {
-    text-align: center;
-    padding: 40px;
-    background: var(--color-surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-card);
-    margin-top: 40px;
-}
-
-.empty-history-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
-}
-
-.empty-history h2 {
-    color: var(--color-text);
-    margin-bottom: 10px;
-}
-
-.empty-history p {
-    color: var(--color-text-muted);
-    margin-bottom: 20px;
-}
-
 .order-group {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -108,22 +84,4 @@
     font-size: 18px;
     color: var(--color-primary);
     font-weight: 600;
-}
-
-.go-to-catalog-btn {
-    display: inline-block;
-    text-decoration: none;
-    background-color: var(--color-primary);
-    color: white;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    font-weight: 500;
-    transition: background-color 0.2s ease, transform 0.15s ease;
-}
-
-.go-to-catalog-btn:hover,
-.go-to-catalog-btn:active {
-    text-decoration: none;
-    background-color: var(--color-primary-hover);
-    transform: translateY(-2px);
 }

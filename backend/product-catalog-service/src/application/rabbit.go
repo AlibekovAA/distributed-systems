@@ -116,12 +116,15 @@ func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueNam
 	}
 	defer r.channel.Cancel(consumerTag, false)
 
-	messageChannel := make(chan string, 1)
 	timeoutTimer := time.NewTimer(timeout)
 	defer timeoutTimer.Stop()
 
-	go func() {
-		for msg := range msgs {
+	for {
+		select {
+		case msg, ok := <-msgs:
+			if !ok {
+				return ""
+			}
 			if msg.CorrelationId != correlationID {
 				continue
 			}
@@ -136,20 +139,14 @@ func (r *RabbitMQ) receiveResponse(userID string, correlationID string, queueNam
 			if responseUserID, ok := response["user_id"].(float64); ok {
 				if strconv.FormatFloat(responseUserID, 'f', 0, 64) == userID {
 					rabbitmqResponsesTotal.WithLabelValues(requestQueue).Inc()
-					messageChannel <- string(msg.Body)
-					return
+					log.Printf("Received recommendation response: request_id=%s", correlationID)
+					return string(msg.Body)
 				}
 			}
+		case <-timeoutTimer.C:
+			rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
+			log.Printf("Recommendation response timeout: request_id=%s", correlationID)
+			return ""
 		}
-	}()
-
-	select {
-	case response := <-messageChannel:
-		log.Printf("Received recommendation response: request_id=%s", correlationID)
-		return response
-	case <-timeoutTimer.C:
-		rabbitmqErrorsTotal.WithLabelValues(requestQueue).Inc()
-		log.Printf("Recommendation response timeout: request_id=%s", correlationID)
-		return ""
 	}
 }

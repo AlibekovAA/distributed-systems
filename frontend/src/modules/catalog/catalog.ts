@@ -1,10 +1,11 @@
 import { CatalogService } from '../../services/catalogService.js';
+import type { Product } from '../../services/catalogService.js';
 import NotificationManager from '../../utils/notifications.js';
 import { authGuard } from '../../utils/authGuard.js';
 import LoaderManager from '../../utils/loader.js';
 import { initializeLogout } from '../../utils/logout.js';
 
-function createProductCard({ id, name, description, price, quantity }: any): HTMLElement {
+function createProductCard({ id, name, description, price, quantity }: Product): HTMLElement {
     const productCard = document.createElement('article');
     productCard.className = 'product-card';
 
@@ -115,7 +116,7 @@ function createStatePanel(type: 'empty' | 'error', retry?: () => void): HTMLElem
 }
 
 async function initializeCatalog() {
-    if (!await authGuard()) return;
+    if (!authGuard()) return;
 
     const catalogContent = document.querySelector('.catalog-content');
     if (!catalogContent) return;
@@ -134,7 +135,7 @@ async function initializeCatalog() {
         const productsGrid = document.createElement('div');
         productsGrid.className = 'products-grid';
 
-        products.forEach((product: any) => {
+        products.forEach((product) => {
             const productCard = createProductCard(product);
             productsGrid.appendChild(productCard);
         });

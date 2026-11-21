@@ -28,7 +28,6 @@ test = [
     "allure-pytest",
     "httpx",
     "pytest",
-    "pytest-cov",
 ]
 lint = [
     "mypy",

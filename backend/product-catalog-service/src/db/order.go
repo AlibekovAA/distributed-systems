@@ -175,13 +175,12 @@ func Checkout(db DB, email string) (CheckoutResult, error) {
 
 	productIDs := sortedProductIDs(productCounts)
 	var products []struct {
-		ID       int64 `db:"id"`
-		Price    int64 `db:"price"`
-		Quantity int   `db:"quantity"`
+		ID    int64 `db:"id"`
+		Price int64 `db:"price"`
 	}
 	if err = tx.Select(
 		&products,
-		`SELECT id, price, quantity FROM product WHERE id = ANY($1) ORDER BY id FOR UPDATE`,
+		`SELECT id, price FROM product WHERE id = ANY($1) ORDER BY id FOR UPDATE`,
 		pq.Array(productIDs),
 	); err != nil {
 		return CheckoutResult{}, err

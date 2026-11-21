@@ -2,9 +2,8 @@ import { AuthService } from '../../services/authService.js';
 import NotificationManager from '../../utils/notifications.js';
 import LoaderManager from '../../utils/loader.js';
 import { handleDialogKeydown } from '../../utils/dialog.js';
-import type { Product } from '../../services/catalogService.js';
 
-export async function showPaymentModal(_cartItems: Product[], totalAmount: number): Promise<boolean> {
+export async function showPaymentModal(totalAmount: number): Promise<boolean> {
     return new Promise((resolve) => {
         const previouslyFocused = document.activeElement as HTMLElement | null;
         const modal = document.createElement('div');
@@ -94,7 +93,7 @@ export async function showPaymentModal(_cartItems: Product[], totalAmount: numbe
             try {
                 await LoaderManager.wrap(AuthService.addBalance(100000));
                 NotificationManager.success('Balance updated successfully');
-            } catch (error) {
+            } catch {
                 NotificationManager.error('Failed to update balance');
             } finally {
                 addBalanceBtn.disabled = false;

@@ -27,6 +27,11 @@ REQUEST_LATENCY = Summary("auth_http_request_duration_seconds", "Duration of HTT
 ERROR_COUNT = Counter("auth_http_errors_total", "Total number of HTTP errors", ["method", "endpoint"])
 
 
+def _endpoint_label(request: Request) -> str:
+    route = request.scope.get("route")
+    return getattr(route, "path", "unmatched")
+
+
 def get_version():
     try:
         with open("version.txt", "r") as f:
@@ -70,23 +75,19 @@ async def metrics_middleware(request: Request, call_next):
     try:
         response = await call_next(request)
     except Exception:
-        ERROR_COUNT.labels(request.method, request.url.path).inc()
+        ERROR_COUNT.labels(request.method, _endpoint_label(request)).inc()
         raise
     response_time = time.time() - start_time
+    endpoint = _endpoint_label(request)
 
     HTTP_STATUS_COUNTS[response.status_code] += 1
-    REQUEST_COUNT_PROM.labels(request.method, request.url.path).inc()
-    REQUEST_LATENCY.labels(request.method, request.url.path).observe(response_time)
+    REQUEST_COUNT_PROM.labels(request.method, endpoint).inc()
+    REQUEST_LATENCY.labels(request.method, endpoint).observe(response_time)
     if response.status_code >= 400:
-        ERROR_COUNT.labels(request.method, request.url.path).inc()
+        ERROR_COUNT.labels(request.method, endpoint).inc()
 
-    if (
-        request.url.path.endswith(".html")
-        or request.url.path == "/"
-        or request.url.path.endswith("/profile")
-        or request.url.path.endswith("/login")
-    ):
+    if endpoint.endswith(".html") or endpoint == "/" or endpoint.endswith("/profile") or endpoint.endswith("/login"):
         PAGE_LOAD_TIME.observe(response_time)
-        logging.info(f"Page load time for {request.url.path}: {response_time:.4f}s")
+        logging.info(f"Page load time for {endpoint}: {response_time:.4f}s")
 
     return response

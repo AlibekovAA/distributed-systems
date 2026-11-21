@@ -5,27 +5,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class _EnvConfig:
-    @property
-    def DATABASE_URL(self) -> str:
-        return self._get_required("DATABASE_URL")
-
-    @property
-    def RABBITMQ_URL(self) -> str:
-        return f"amqp://{self._get_required('RABBITMQ_USER')}:{self._get_required('RABBITMQ_PASSWORD')}@{self._get_required('RABBITMQ_HOST')}:{self._get_required('RABBITMQ_PORT')}/"
-
-    @property
-    def LOG_LEVEL(self) -> str:
-        return os.getenv("LOG_LEVEL", "warning").upper()
-
-    def _get_required(self, key: str) -> str:
-        if (value := os.getenv(key)) is None:
-            raise ValueError(f"Missing required environment variable: {key}")
-        return value
+def _required_env(key: str) -> str:
+    if (value := os.getenv(key)) is None:
+        raise ValueError(f"Missing required environment variable: {key}")
+    return value
 
 
-_config = _EnvConfig()
-
-DATABASE_URL = _config.DATABASE_URL
-RABBITMQ_URL = _config.RABBITMQ_URL
-LOG_LEVEL = _config.LOG_LEVEL
+DATABASE_URL = _required_env("DATABASE_URL")
+RABBITMQ_URL = (
+    f"amqp://{_required_env('RABBITMQ_USER')}:{_required_env('RABBITMQ_PASSWORD')}"
+    f"@{_required_env('RABBITMQ_HOST')}:{_required_env('RABBITMQ_PORT')}/"
+)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "warning").upper()

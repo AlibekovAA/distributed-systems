@@ -30,6 +30,16 @@ interface Preference {
     score: number;
 }
 
+interface UserProfile {
+    email: string;
+    name: string;
+    balance: number;
+}
+
+interface ApiErrorPayload {
+    detail?: string;
+}
+
 export class AuthService {
     private static readonly BASE_URL = '/api/auth';
     private static readonly TOKEN_KEY = 'access_token';
@@ -57,11 +67,17 @@ export class AuthService {
             headers: { ...this.getAuthHeaders(), ...(options.headers || {}) },
             credentials: 'include',
         });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.detail || 'Request failed');
+        const data: unknown = await response.json();
+        if (response.status === 401) {
+            this.token = null;
+            localStorage.removeItem('refresh_token');
+            window.location.assign('/');
         }
-        return data;
+        if (!response.ok) {
+            const payload = data && typeof data === 'object' ? data as ApiErrorPayload : {};
+            throw new Error(payload.detail || 'Request failed');
+        }
+        return data as T;
     }
 
     private static validateUserData({ email, password, name }: UserData): void {
@@ -84,7 +100,7 @@ export class AuthService {
         return data;
     }
 
-    static getProfile(): Promise<any> {
+    static getProfile(): Promise<UserProfile> {
         return this.request('/profile');
     }
 

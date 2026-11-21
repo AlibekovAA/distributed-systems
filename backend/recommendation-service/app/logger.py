@@ -27,6 +27,3 @@ logging.info(f"Logger initialized with level: {LOG_LEVEL}")
 
 pika_logger = logging.getLogger("pika")
 pika_logger.setLevel(logging.WARNING)
-
-app_logger = logging.getLogger("recommendation_app")
-app_logger.setLevel(logging.WARNING)

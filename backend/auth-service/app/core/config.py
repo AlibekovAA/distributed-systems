@@ -5,42 +5,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class _EnvConfig:
-    @property
-    def DATABASE_URL(self) -> str:
-        return self._get_required("DATABASE_URL")
-
-    @property
-    def SECRET_KEY(self) -> str:
-        return self._get_required("SECRET_KEY")
-
-    @property
-    def ALGORITHM(self) -> str:
-        return self._get_required("ALGORITHM")
-
-    @property
-    def ACCESS_TOKEN_EXPIRE_MINUTES(self) -> int:
-        return int(self._get_required("ACCESS_TOKEN_EXPIRE_MINUTES"))
-
-    @property
-    def LOG_LEVEL(self) -> str:
-        return os.getenv("LOG_LEVEL", "warning").upper()
-
-    @property
-    def ADMIN_EMAIL(self) -> str:
-        return os.getenv("ADMIN_EMAIL", "").strip().lower()
-
-    def _get_required(self, key: str) -> str:
-        if (value := os.getenv(key)) is None:
-            raise ValueError(f"Missing required environment variable: {key}")
-        return value
+def _required_env(key: str) -> str:
+    if (value := os.getenv(key)) is None:
+        raise ValueError(f"Missing required environment variable: {key}")
+    return value
 
 
-_config = _EnvConfig()
-
-DATABASE_URL = _config.DATABASE_URL
-SECRET_KEY = _config.SECRET_KEY
-ALGORITHM = _config.ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = _config.ACCESS_TOKEN_EXPIRE_MINUTES
-LOG_LEVEL = _config.LOG_LEVEL
-ADMIN_EMAIL = _config.ADMIN_EMAIL
+DATABASE_URL = _required_env("DATABASE_URL")
+SECRET_KEY = _required_env("SECRET_KEY")
+ALGORITHM = _required_env("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(_required_env("ACCESS_TOKEN_EXPIRE_MINUTES"))
+LOG_LEVEL = os.getenv("LOG_LEVEL", "warning").upper()
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip().lower()

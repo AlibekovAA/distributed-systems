@@ -26,7 +26,6 @@ class RabbitMQConnection:
     def __init__(self, url: str = RABBITMQ_URL, queue_name: str = "recommendations"):
         self.url = urlparse(url)
         self.queue_name = queue_name
-        self.response_queue = "recommendations_response"
         self.connection: BlockingConnection | None = None
         self.channel: BlockingChannel | None = None
 
@@ -44,8 +43,7 @@ class RabbitMQConnection:
         )
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
-        for queue in (self.queue_name, self.response_queue):
-            self.channel.queue_declare(queue=queue, durable=True, auto_delete=False)
+        self.channel.queue_declare(queue=self.queue_name, durable=True, auto_delete=False)
         self.channel.basic_qos(prefetch_count=1)
         logging.info("RabbitMQ connection established")
 
@@ -54,7 +52,7 @@ class RabbitMQConnection:
             self.connection.close()
             logging.info("RabbitMQ connection closed")
 
-    def send_message(self, message: dict, routing_key: str | None = None, correlation_id: str | None = None) -> None:
+    def send_message(self, message: dict, routing_key: str, correlation_id: str | None = None) -> None:
         if not self.channel:
             raise RuntimeError("RabbitMQ connection not established")
 
@@ -64,7 +62,7 @@ class RabbitMQConnection:
 
         self.channel.basic_publish(
             exchange="",
-            routing_key=routing_key or self.response_queue,
+            routing_key=routing_key,
             body=json.dumps(message).encode(),
             properties=properties,
         )

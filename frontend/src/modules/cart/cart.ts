@@ -28,11 +28,11 @@ function groupCartItems(cartItems: Product[]): GroupedProduct[] {
 
 function createEmptyState(): HTMLElement {
     const panel = document.createElement('div');
-    panel.className = 'empty-cart state-panel';
+    panel.className = 'state-panel';
     panel.setAttribute('role', 'status');
 
     const icon = document.createElement('div');
-    icon.className = 'empty-cart-icon state-icon';
+    icon.className = 'state-icon';
     icon.setAttribute('aria-hidden', 'true');
     icon.textContent = '□';
 
@@ -145,7 +145,7 @@ function renderCart(container: HTMLElement, cartItems: Product[]): void {
 }
 
 async function initializeCart() {
-    if (!await authGuard()) return;
+    if (!authGuard()) return;
 
     const cartItemsContainer = document.querySelector('.cart-items-container');
     if (!(cartItemsContainer instanceof HTMLElement)) return;
@@ -211,7 +211,7 @@ async function handleCartClick(event: Event): Promise<void> {
 async function handlePayment(cartItems: Product[], sourceButton: HTMLButtonElement): Promise<void> {
     try {
         const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
-        const shouldProceed = await showPaymentModal(cartItems, totalPrice);
+        const shouldProceed = await showPaymentModal(totalPrice);
 
         if (!shouldProceed) return;
         sourceButton.disabled = true;
@@ -220,7 +220,6 @@ async function handlePayment(cartItems: Product[], sourceButton: HTMLButtonEleme
         try {
             await LoaderManager.wrap(CatalogService.payForOrder());
             NotificationManager.success('Order paid successfully');
-            await CatalogService.clearCart();
             setTimeout(() => window.location.reload(), 500);
         } catch (error) {
             if (error instanceof CatalogApiError && error.payload.error === 'insufficient_funds') {

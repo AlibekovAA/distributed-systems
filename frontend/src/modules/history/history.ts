@@ -93,11 +93,11 @@ function createOrderElement(order: Order): HTMLElement {
 
 function createHistoryState(type: 'empty' | 'error'): HTMLElement {
     const panel = document.createElement('div');
-    panel.className = `${type === 'empty' ? 'empty-history ' : ''}state-panel`;
+    panel.className = 'state-panel';
     panel.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
     const icon = document.createElement('div');
-    icon.className = `${type === 'empty' ? 'empty-history-icon ' : ''}state-icon`;
+    icon.className = 'state-icon';
     icon.setAttribute('aria-hidden', 'true');
     icon.textContent = type === 'empty' ? '□' : '!';
 
@@ -128,7 +128,7 @@ function createHistoryState(type: 'empty' | 'error'): HTMLElement {
 }
 
 async function initializeHistory() {
-    if (!await authGuard()) return;
+    if (!authGuard()) return;
 
     const historyContent = document.querySelector('.history-content');
     if (!historyContent) return;

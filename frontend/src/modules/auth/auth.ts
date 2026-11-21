@@ -8,16 +8,9 @@ const handleError = (error: unknown) =>
 
 const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-const debounceMap = new WeakMap<Function, NodeJS.Timeout>();
-const debounce = <T extends (...args: any[]) => void>(fn: T, delay = 300) =>
-    (...args: Parameters<T>) => {
-        clearTimeout(debounceMap.get(fn));
-        debounceMap.set(fn, setTimeout(() => fn(...args), delay));
-    };
-
-const validateFormInput = debounce((input: HTMLInputElement) => {
+const validateFormInput = (input: HTMLInputElement) => {
     if (input.type === 'email') input.classList.toggle('invalid', !validateEmail(input.value));
-});
+};
 
 const validateAuthFields = (form: HTMLFormElement, fields: string[]): Record<string, string> | null => {
     const values: Record<string, string> = {};
