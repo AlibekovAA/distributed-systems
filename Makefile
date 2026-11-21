@@ -27,10 +27,6 @@ run:
 stop:
 	docker compose down
 
-clean:
-	rm -rf .venv .pytest_cache .mypy_cache .ruff_cache
-	find . -type d \( -name __pycache__ -o -name .pytest_cache \) -prune -exec rm -rf {} +
-
 docker-clean:
 	docker compose down --volumes --remove-orphans
 
@@ -39,4 +35,3 @@ docker-clean-all:
 	-docker rm $$(docker ps -a -q)
 	-docker rmi $$(docker images -q)
 	docker system prune -a --volumes -f
-
